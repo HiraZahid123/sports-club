@@ -236,7 +236,7 @@ export default function Welcome({ auth }: PageProps<{ laravelVersion: string, ph
                             <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center font-black text-sm italic text-white">S</div>
                             <span className="font-black text-gray-900">Sport<span className="text-indigo-600">Club</span></span>
                         </div>
-                        <p className="text-gray-400 text-sm">&copy; 2026 SportClub Advanced. Built with Laravel + React + Inertia.</p>
+                        <p className="text-gray-400 text-sm">&copy; 2026 SportClub Advanced.</p>
                         <div className="flex items-center gap-6 text-sm text-gray-400">
                             <a href="#" className="hover:text-gray-700 transition-colors">Privacy</a>
                             <a href="#" className="hover:text-gray-700 transition-colors">Terms</a>
