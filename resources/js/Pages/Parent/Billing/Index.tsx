@@ -1,0 +1,122 @@
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { Head, usePage } from '@inertiajs/react';
+
+export default function ParentBilling({ mySubscriptions, childrenSubscriptions }: { mySubscriptions: any[], childrenSubscriptions: any[] }) {
+    const { flash }: any = usePage().props;
+    const isLocked = flash.error === 'access-locked';
+    const allSubscriptions = [...mySubscriptions, ...childrenSubscriptions];
+
+    return (
+        <AuthenticatedLayout
+            header={
+                <div>
+                    <h2 className="text-xl font-bold text-gray-900">My Billing & Payments</h2>
+                    <p className="text-sm text-gray-500 mt-0.5">Manage family subscriptions and view payment history</p>
+                </div>
+            }
+        >
+            <Head title="My Billing" />
+
+            <div className="py-8">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+
+                    {/* Access Locked Alert */}
+                    {isLocked && (
+                        <div className="flex items-start gap-4 p-5 bg-red-50 border border-red-200 rounded-2xl">
+                            <div className="w-11 h-11 bg-red-100 rounded-xl flex items-center justify-center text-2xl shrink-0">🔒</div>
+                            <div>
+                                <h4 className="font-bold text-red-900 text-sm">Account Access Restricted</h4>
+                                <p className="text-sm text-red-700 mt-1 leading-relaxed">
+                                    Your dashboard access has been restricted due to outstanding payments. Please settle your dues below to restore full access.
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                        {/* Subscriptions */}
+                        <div className="lg:col-span-3 space-y-5">
+                            <h3 className="text-base font-bold text-gray-900">Family Subscriptions</h3>
+
+                            {allSubscriptions.length === 0 ? (
+                                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm py-12 text-center">
+                                    <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center text-xl mx-auto mb-3">💳</div>
+                                    <p className="text-sm font-medium text-gray-500">No active subscriptions found.</p>
+                                </div>
+                            ) : (
+                                allSubscriptions.map((sub, idx) => (
+                                    <div key={idx} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+                                        <div className="p-6">
+                                            <div className="flex items-start justify-between mb-4">
+                                                <div>
+                                                    <p className="text-xs font-bold text-indigo-600 uppercase tracking-widest mb-1">{sub.user.name}'s Plan</p>
+                                                    <h4 className="text-lg font-bold text-gray-900">{sub.plan_name}</h4>
+                                                </div>
+                                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold ${
+                                                    sub.status === 'active'
+                                                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                                                        : 'bg-red-50 text-red-700 border border-red-100'
+                                                }`}>
+                                                    <span className={`w-1.5 h-1.5 rounded-full ${sub.status === 'active' ? 'bg-emerald-500' : 'bg-red-500'}`}></span>
+                                                    {sub.status.charAt(0).toUpperCase() + sub.status.slice(1)}
+                                                </span>
+                                            </div>
+
+                                            <div className="flex items-end justify-between">
+                                                <div>
+                                                    <p className="text-xs text-gray-400 font-medium">Next Payment Due</p>
+                                                    <p className="font-semibold text-gray-900 text-sm mt-0.5">{sub.next_payment_at || 'Check with manager'}</p>
+                                                </div>
+                                                <div className="text-right">
+                                                    <p className="text-xs text-gray-400 font-medium">Amount</p>
+                                                    <p className="text-3xl font-black text-indigo-600 leading-none mt-0.5">${sub.amount}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="px-6 py-4 bg-slate-50 border-t border-gray-100">
+                                            <button className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-xl transition-all shadow-sm shadow-indigo-200">
+                                                Pay Now via Portal
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+
+                        {/* Payment History */}
+                        <div className="lg:col-span-2">
+                            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                                <div className="px-6 py-4 border-b border-gray-50">
+                                    <h3 className="text-base font-bold text-gray-900">Payment History</h3>
+                                    <p className="text-xs text-gray-500 mt-0.5">Your recent transactions</p>
+                                </div>
+
+                                <div className="divide-y divide-gray-50">
+                                    {[
+                                        { label: 'Monthly Fee - May 2026', member: 'Alex Smith', date: 'May 01, 2026', amount: '+$45.00', color: 'text-emerald-600' },
+                                        { label: 'Monthly Fee - May 2026', member: 'Sarah Smith', date: 'May 01, 2026', amount: '+$40.00', color: 'text-emerald-600' },
+                                        { label: 'Monthly Fee - Apr 2026', member: 'Alex Smith', date: 'Apr 01, 2026', amount: '+$45.00', color: 'text-emerald-600' },
+                                    ].map((payment, i) => (
+                                        <div key={i} className="flex items-center justify-between px-6 py-4 hover:bg-slate-50 transition-colors">
+                                            <div>
+                                                <p className="text-sm font-semibold text-gray-900">{payment.label}</p>
+                                                <p className="text-xs text-gray-400 mt-0.5">{payment.member} • {payment.date}</p>
+                                            </div>
+                                            <span className={`font-black text-sm ${payment.color}`}>{payment.amount}</span>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <div className="px-6 py-3.5 bg-slate-50 border-t border-gray-100 text-center">
+                                    <button className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 transition-colors">View Full History</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </AuthenticatedLayout>
+    );
+}
