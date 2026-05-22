@@ -1,10 +1,43 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, usePage } from '@inertiajs/react';
+import { Head, usePage, router } from '@inertiajs/react';
+import { useState } from 'react';
 
 export default function ParentBilling({ mySubscriptions, childrenSubscriptions }: { mySubscriptions: any[], childrenSubscriptions: any[] }) {
     const { flash }: any = usePage().props;
     const isLocked = flash?.error === 'access-locked';
     const allSubscriptions = [...mySubscriptions, ...childrenSubscriptions];
+    
+    const [loadingSubId, setLoadingSubId] = useState<number | null>(null);
+
+    // Aggregate real payments from all subscriptions
+    const paymentsList = allSubscriptions.reduce((acc: any[], sub: any) => {
+        if (sub.payments) {
+            const subPayments = sub.payments.map((p: any) => ({
+                ...p,
+                plan_name: sub.plan_name,
+                member_name: sub.user?.name || 'Member',
+            }));
+            return [...acc, ...subPayments];
+        }
+        return acc;
+    }, []);
+
+    // Sort by payment date descending
+    const sortedPayments = paymentsList.sort((a: any, b: any) => {
+        return new Date(b.payment_date).getTime() - new Date(a.payment_date).getTime();
+    });
+
+    const handlePayNow = (subId: number) => {
+        setLoadingSubId(subId);
+        router.post(route('parent.billing.checkout', { subscription: subId }), {}, {
+            onError: () => {
+                setLoadingSubId(null);
+            },
+            onFinish: () => {
+                setLoadingSubId(null);
+            }
+        });
+    };
 
     return (
         <AuthenticatedLayout
@@ -19,6 +52,32 @@ export default function ParentBilling({ mySubscriptions, childrenSubscriptions }
 
             <div className="py-8">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+
+                    {/* Success Alert */}
+                    {flash?.success && (
+                        <div className="flex items-start gap-4 p-5 bg-emerald-50 border border-emerald-200 rounded-2xl shadow-sm transition-all duration-300">
+                            <div className="w-11 h-11 bg-emerald-100 rounded-xl flex items-center justify-center text-2xl shrink-0">✅</div>
+                            <div>
+                                <h4 className="font-bold text-emerald-900 text-sm">Payment Successful</h4>
+                                <p className="text-sm text-emerald-700 mt-1 leading-relaxed">
+                                    {flash.success}
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Error Alert */}
+                    {flash?.error && !isLocked && (
+                        <div className="flex items-start gap-4 p-5 bg-rose-50 border border-rose-200 rounded-2xl shadow-sm transition-all duration-300">
+                            <div className="w-11 h-11 bg-rose-100 rounded-xl flex items-center justify-center text-2xl shrink-0">⚠️</div>
+                            <div>
+                                <h4 className="font-bold text-rose-900 text-sm">Payment Failed</h4>
+                                <p className="text-sm text-rose-700 mt-1 leading-relaxed">
+                                    {flash.error}
+                                </p>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Access Locked Alert */}
                     {isLocked && (
@@ -75,8 +134,28 @@ export default function ParentBilling({ mySubscriptions, childrenSubscriptions }
                                         </div>
 
                                         <div className="px-6 py-4 bg-slate-50 border-t border-gray-100">
-                                            <button className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-xl transition-all shadow-sm shadow-indigo-200">
-                                                Pay Now via Portal
+                                            <button
+                                                onClick={() => handlePayNow(sub.id)}
+                                                disabled={loadingSubId !== null}
+                                                className={`w-full py-3 text-white text-sm font-bold rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 ${
+                                                    loadingSubId === sub.id
+                                                        ? 'bg-indigo-400 cursor-not-allowed shadow-none'
+                                                        : loadingSubId !== null
+                                                        ? 'bg-indigo-300 cursor-not-allowed shadow-none'
+                                                        : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-200'
+                                                }`}
+                                            >
+                                                {loadingSubId === sub.id ? (
+                                                    <>
+                                                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                        </svg>
+                                                        Redirecting to Stripe...
+                                                    </>
+                                                ) : (
+                                                    'Pay Now via Portal'
+                                                )}
                                             </button>
                                         </div>
                                     </div>
@@ -93,19 +172,23 @@ export default function ParentBilling({ mySubscriptions, childrenSubscriptions }
                                 </div>
 
                                 <div className="divide-y divide-gray-50">
-                                    {[
-                                        { label: 'Monthly Fee - May 2026', member: 'Alex Smith', date: 'May 01, 2026', amount: '+$45.00', color: 'text-emerald-600' },
-                                        { label: 'Monthly Fee - May 2026', member: 'Sarah Smith', date: 'May 01, 2026', amount: '+$40.00', color: 'text-emerald-600' },
-                                        { label: 'Monthly Fee - Apr 2026', member: 'Alex Smith', date: 'Apr 01, 2026', amount: '+$45.00', color: 'text-emerald-600' },
-                                    ].map((payment, i) => (
-                                        <div key={i} className="flex items-center justify-between px-6 py-4 hover:bg-slate-50 transition-colors">
-                                            <div>
-                                                <p className="text-sm font-semibold text-gray-900">{payment.label}</p>
-                                                <p className="text-xs text-gray-400 mt-0.5">{payment.member} • {payment.date}</p>
-                                            </div>
-                                            <span className={`font-black text-sm ${payment.color}`}>{payment.amount}</span>
+                                    {sortedPayments.length === 0 ? (
+                                        <div className="py-8 text-center text-sm font-medium text-gray-500">
+                                            No payment history found.
                                         </div>
-                                    ))}
+                                    ) : (
+                                        sortedPayments.map((payment, i) => (
+                                            <div key={i} className="flex items-center justify-between px-6 py-4 hover:bg-slate-50 transition-colors">
+                                                <div>
+                                                    <p className="text-sm font-semibold text-gray-900">{payment.plan_name}</p>
+                                                    <p className="text-xs text-gray-400 mt-0.5">
+                                                        {payment.member_name} • {new Date(payment.payment_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                                    </p>
+                                                </div>
+                                                <span className="font-black text-sm text-emerald-600">+${parseFloat(payment.amount).toFixed(2)}</span>
+                                            </div>
+                                        ))
+                                    )}
                                 </div>
 
                                 <div className="px-6 py-3.5 bg-slate-50 border-t border-gray-100 text-center">

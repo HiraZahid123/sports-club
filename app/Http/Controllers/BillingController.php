@@ -74,4 +74,96 @@ class BillingController extends Controller
 
         return back()->with('status', 'payment-logged');
     }
+
+    /**
+     * Create a Stripe Checkout Session for a subscription.
+     */
+    public function createCheckoutSession(Request $request, Subscription $subscription, \App\Services\StripeService $stripeService)
+    {
+        $user = $request->user();
+
+        // Validate that the subscription belongs to the logged-in parent or one of their children
+        $isOwned = $subscription->user_id === $user->id || 
+                   $user->children()->where('users.id', $subscription->user_id)->exists();
+
+        if (!$isOwned) {
+            abort(403, 'Unauthorized access to subscription.');
+        }
+
+        try {
+            $checkoutSession = $stripeService->createCheckoutSession($subscription);
+
+            return Inertia::location($checkoutSession->url);
+        } catch (\Exception $e) {
+            return back()->with('error', 'Failed to create checkout session: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Handle the successful checkout callback.
+     */
+    public function paymentSuccess(Request $request, \App\Services\StripeService $stripeService)
+    {
+        $sessionId = $request->query('session_id');
+        if (!$sessionId) {
+            return redirect()->route('parent.billing')->with('error', 'Missing checkout session ID.');
+        }
+
+        try {
+            $session = $stripeService->retrieveCheckoutSession($sessionId);
+        } catch (\Exception $e) {
+            return redirect()->route('parent.billing')->with('error', 'Failed to retrieve checkout session details.');
+        }
+
+        if ($session->payment_status !== 'paid') {
+            return redirect()->route('parent.billing')->with('error', 'Payment has not been completed.');
+        }
+
+        $subscriptionId = $session->metadata->subscription_id ?? null;
+        if (!$subscriptionId) {
+            return redirect()->route('parent.billing')->with('error', 'Invalid payment metadata.');
+        }
+
+        $subscription = Subscription::with('user')->find($subscriptionId);
+        if (!$subscription) {
+            return redirect()->route('parent.billing')->with('error', 'Subscription not found.');
+        }
+
+        // Validate that the subscription belongs to the logged-in parent or one of their children
+        $user = $request->user();
+        $isOwned = $subscription->user_id === $user->id || 
+                   $user->children()->where('users.id', $subscription->user_id)->exists();
+
+        if (!$isOwned) {
+            abort(403, 'Unauthorized access to subscription.');
+        }
+
+        // Check for duplicate payment using session ID as transaction_id
+        $duplicate = Payment::where('transaction_id', $sessionId)->exists();
+        if ($duplicate) {
+            return redirect()->route('parent.billing')->with('status', 'payment-already-processed');
+        }
+
+        // Log the payment
+        Payment::create([
+            'subscription_id' => $subscription->id,
+            'amount' => $subscription->amount,
+            'payment_date' => now(),
+            'payment_method' => 'stripe',
+            'status' => 'completed',
+            'transaction_id' => $sessionId,
+            'notes' => 'Stripe Checkout completed for ' . ($subscription->user->name ?? 'member'),
+        ]);
+
+        // Update subscription status to active, last payment date, and next payment date (1 month from now)
+        $subscription->update([
+            'status' => 'active',
+            'last_payment_at' => now(),
+            'next_payment_at' => now()->addMonth(),
+        ]);
+
+        return redirect()->route('parent.billing')
+            ->with('success', 'Your subscription payment was processed successfully!')
+            ->with('status', 'payment-success');
+    }
 }

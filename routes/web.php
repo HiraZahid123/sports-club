@@ -82,6 +82,8 @@ Route::middleware(['auth', 'verified', 'role:Parent'])->prefix('parent')->name('
     })->middleware(\App\Http\Middleware\CheckSubscription::class)->name('dashboard');
 
     Route::get('/billing', [\App\Http\Controllers\BillingController::class, 'parentBilling'])->name('billing');
+    Route::post('/billing/{subscription}/checkout', [\App\Http\Controllers\BillingController::class, 'createCheckoutSession'])->name('billing.checkout');
+    Route::get('/billing/success', [\App\Http\Controllers\BillingController::class, 'paymentSuccess'])->name('billing.success');
 });
 
 Route::middleware('auth')->group(function () {
