@@ -3,7 +3,7 @@ import { Head, usePage } from '@inertiajs/react';
 
 export default function ParentBilling({ mySubscriptions, childrenSubscriptions }: { mySubscriptions: any[], childrenSubscriptions: any[] }) {
     const { flash }: any = usePage().props;
-    const isLocked = flash.error === 'access-locked';
+    const isLocked = flash?.error === 'access-locked';
     const allSubscriptions = [...mySubscriptions, ...childrenSubscriptions];
 
     return (

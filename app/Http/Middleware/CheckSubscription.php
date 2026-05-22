@@ -20,6 +20,10 @@ class CheckSubscription
         if (Auth::check()) {
             $user = Auth::user();
 
+            if (env('BYPASS_SUBSCRIPTION_CHECK', false)) {
+                return $next($request);
+            }
+
             // If user is NOT a manager/admin/coach and has NOT paid, restrict access
             if (!$user->isPaid()) {
                 // Allow access to billing/payment pages so they can actually pay
