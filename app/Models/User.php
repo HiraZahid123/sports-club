@@ -123,6 +123,18 @@ class User extends Authenticatable
             return true;
         }
 
+        if ($this->hasRole('Parent')) {
+            $childrenIds = $this->children()->pluck('athlete_id');
+
+            if ($childrenIds->isEmpty()) {
+                return true;
+            }
+
+            return !Subscription::whereIn('user_id', $childrenIds)
+                ->where('status', '!=', 'active')
+                ->exists();
+        }
+
         return $this->subscriptions()
             ->where('status', 'active')
             ->exists();
