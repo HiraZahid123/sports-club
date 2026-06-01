@@ -26,9 +26,13 @@ const skillConfig: Record<string, { bg: string; text: string; border: string }> 
     Elite: { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
 };
 
+const inputClass = "w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all";
+
 export default function GroupsIndex({ groups, coaches, athletes }: { groups: Group[], coaches: Coach[], athletes: any[] }) {
     const [isCreating, setIsCreating] = useState(false);
-    const { data, setData, post, processing, errors, reset } = useForm({
+    const [editingGroup, setEditingGroup] = useState<Group | null>(null);
+
+    const createForm = useForm({
         name: '',
         description: '',
         monthly_price: '',
@@ -37,12 +41,45 @@ export default function GroupsIndex({ groups, coaches, athletes }: { groups: Gro
         age_range: '',
     });
 
-    const submit: FormEventHandler = (e) => {
+    const editForm = useForm({
+        name: '',
+        description: '',
+        monthly_price: '',
+        capacity: '',
+        skill_level: 'Beginner',
+        age_range: '',
+    });
+
+    const submitCreate: FormEventHandler = (e) => {
         e.preventDefault();
-        post(route('manager.groups.store'), {
+        createForm.post(route('manager.groups.store'), {
             onSuccess: () => {
                 setIsCreating(false);
-                reset();
+                createForm.reset();
+            },
+        });
+    };
+
+    const openEdit = (group: Group) => {
+        editForm.setData({
+            name: group.name,
+            description: group.description ?? '',
+            monthly_price: group.monthly_price,
+            capacity: group.capacity ? String(group.capacity) : '',
+            skill_level: group.skill_level ?? 'Beginner',
+            age_range: group.age_range ?? '',
+        });
+        setEditingGroup(group);
+        setIsCreating(false);
+    };
+
+    const submitEdit: FormEventHandler = (e) => {
+        e.preventDefault();
+        if (!editingGroup) return;
+        editForm.put(route('manager.groups.update', editingGroup.id), {
+            onSuccess: () => {
+                setEditingGroup(null);
+                editForm.reset();
             },
         });
     };
@@ -56,7 +93,7 @@ export default function GroupsIndex({ groups, coaches, athletes }: { groups: Gro
                         <p className="text-sm text-gray-500 mt-0.5">{groups.length} groups active</p>
                     </div>
                     <button
-                        onClick={() => setIsCreating(!isCreating)}
+                        onClick={() => { setIsCreating(!isCreating); setEditingGroup(null); }}
                         className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${
                             isCreating
                                 ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -94,27 +131,27 @@ export default function GroupsIndex({ groups, coaches, athletes }: { groups: Gro
                                 <h3 className="text-sm font-bold text-indigo-900">Create Training Group</h3>
                                 <p className="text-xs text-indigo-600 mt-0.5">Define a new group for your club members</p>
                             </div>
-                            <form onSubmit={submit} className="p-6 space-y-5">
+                            <form onSubmit={submitCreate} className="p-6 space-y-5">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                     <div>
                                         <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Group Name</label>
                                         <input
                                             type="text"
-                                            value={data.name}
-                                            onChange={(e) => setData('name', e.target.value)}
+                                            value={createForm.data.name}
+                                            onChange={(e) => createForm.setData('name', e.target.value)}
                                             placeholder="e.g. Juniors Elite"
-                                            className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                                            className={inputClass}
                                         />
-                                        {errors.name && <p className="mt-1 text-xs text-red-600">{errors.name}</p>}
+                                        {createForm.errors.name && <p className="mt-1 text-xs text-red-600">{createForm.errors.name}</p>}
                                     </div>
                                     <div>
                                         <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Monthly Price ($)</label>
                                         <input
                                             type="number"
-                                            value={data.monthly_price}
-                                            onChange={(e) => setData('monthly_price', e.target.value)}
+                                            value={createForm.data.monthly_price}
+                                            onChange={(e) => createForm.setData('monthly_price', e.target.value)}
                                             placeholder="0.00"
-                                            className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                                            className={inputClass}
                                         />
                                     </div>
                                 </div>
@@ -122,9 +159,9 @@ export default function GroupsIndex({ groups, coaches, athletes }: { groups: Gro
                                     <div>
                                         <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Skill Level</label>
                                         <select
-                                            value={data.skill_level}
-                                            onChange={(e) => setData('skill_level', e.target.value)}
-                                            className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-900 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                                            value={createForm.data.skill_level}
+                                            onChange={(e) => createForm.setData('skill_level', e.target.value)}
+                                            className={inputClass}
                                         >
                                             <option value="Beginner">Beginner</option>
                                             <option value="Intermediate">Intermediate</option>
@@ -136,20 +173,20 @@ export default function GroupsIndex({ groups, coaches, athletes }: { groups: Gro
                                         <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Age Range</label>
                                         <input
                                             type="text"
-                                            value={data.age_range}
-                                            onChange={(e) => setData('age_range', e.target.value)}
+                                            value={createForm.data.age_range}
+                                            onChange={(e) => createForm.setData('age_range', e.target.value)}
                                             placeholder="e.g. 6–12 Years"
-                                            className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                                            className={inputClass}
                                         />
                                     </div>
                                     <div>
                                         <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Max Capacity</label>
                                         <input
                                             type="number"
-                                            value={data.capacity}
-                                            onChange={(e) => setData('capacity', e.target.value)}
+                                            value={createForm.data.capacity}
+                                            onChange={(e) => createForm.setData('capacity', e.target.value)}
                                             placeholder="20"
-                                            className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                                            className={inputClass}
                                         />
                                     </div>
                                 </div>
@@ -157,8 +194,102 @@ export default function GroupsIndex({ groups, coaches, athletes }: { groups: Gro
                                     <button type="button" onClick={() => setIsCreating(false)} className="px-5 py-2 bg-gray-100 text-gray-700 text-sm font-semibold rounded-xl hover:bg-gray-200 transition-all">
                                         Cancel
                                     </button>
-                                    <button type="submit" disabled={processing} className="px-6 py-2 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 transition-all disabled:opacity-50 shadow-sm">
-                                        {processing ? 'Saving...' : 'Create Group'}
+                                    <button type="submit" disabled={createForm.processing} className="px-6 py-2 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 transition-all disabled:opacity-50 shadow-sm">
+                                        {createForm.processing ? 'Saving...' : 'Create Group'}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    )}
+
+                    {/* Edit Group Form */}
+                    {editingGroup && (
+                        <div className="bg-white rounded-2xl border border-amber-200 shadow-sm overflow-hidden">
+                            <div className="bg-gradient-to-r from-amber-50 to-orange-50 px-6 py-4 border-b border-amber-100 flex items-center justify-between">
+                                <div>
+                                    <h3 className="text-sm font-bold text-amber-900">Edit Group — {editingGroup.name}</h3>
+                                    <p className="text-xs text-amber-600 mt-0.5">Update the training group information</p>
+                                </div>
+                                <button onClick={() => setEditingGroup(null)} className="text-amber-400 hover:text-amber-600 transition-colors">
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                            <form onSubmit={submitEdit} className="p-6 space-y-5">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Group Name</label>
+                                        <input
+                                            type="text"
+                                            value={editForm.data.name}
+                                            onChange={(e) => editForm.setData('name', e.target.value)}
+                                            className={inputClass}
+                                        />
+                                        {editForm.errors.name && <p className="mt-1 text-xs text-red-600">{editForm.errors.name}</p>}
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Monthly Price ($)</label>
+                                        <input
+                                            type="number"
+                                            value={editForm.data.monthly_price}
+                                            onChange={(e) => editForm.setData('monthly_price', e.target.value)}
+                                            className={inputClass}
+                                        />
+                                        {editForm.errors.monthly_price && <p className="mt-1 text-xs text-red-600">{editForm.errors.monthly_price}</p>}
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Description</label>
+                                    <textarea
+                                        value={editForm.data.description}
+                                        onChange={(e) => editForm.setData('description', e.target.value)}
+                                        rows={2}
+                                        placeholder="Optional description..."
+                                        className={inputClass}
+                                    />
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Skill Level</label>
+                                        <select
+                                            value={editForm.data.skill_level}
+                                            onChange={(e) => editForm.setData('skill_level', e.target.value)}
+                                            className={inputClass}
+                                        >
+                                            <option value="Beginner">Beginner</option>
+                                            <option value="Intermediate">Intermediate</option>
+                                            <option value="Advanced">Advanced</option>
+                                            <option value="Elite">Elite</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Age Range</label>
+                                        <input
+                                            type="text"
+                                            value={editForm.data.age_range}
+                                            onChange={(e) => editForm.setData('age_range', e.target.value)}
+                                            placeholder="e.g. 6–12 Years"
+                                            className={inputClass}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Max Capacity</label>
+                                        <input
+                                            type="number"
+                                            value={editForm.data.capacity}
+                                            onChange={(e) => editForm.setData('capacity', e.target.value)}
+                                            placeholder="20"
+                                            className={inputClass}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="flex justify-end gap-3">
+                                    <button type="button" onClick={() => setEditingGroup(null)} className="px-5 py-2 bg-gray-100 text-gray-700 text-sm font-semibold rounded-xl hover:bg-gray-200 transition-all">
+                                        Cancel
+                                    </button>
+                                    <button type="submit" disabled={editForm.processing} className="px-6 py-2 bg-amber-500 text-white text-sm font-bold rounded-xl hover:bg-amber-600 transition-all disabled:opacity-50 shadow-sm">
+                                        {editForm.processing ? 'Saving...' : 'Save Changes'}
                                     </button>
                                 </div>
                             </form>
@@ -181,9 +312,10 @@ export default function GroupsIndex({ groups, coaches, athletes }: { groups: Gro
                                 const skillStyle = skillConfig[group.skill_level] || { bg: 'bg-gray-50', text: 'text-gray-700', border: 'border-gray-200' };
                                 const fillRatio = group.capacity ? (group.athletes_count / group.capacity) : 0;
                                 const fillColor = fillRatio >= 0.9 ? 'bg-red-400' : fillRatio >= 0.6 ? 'bg-amber-400' : 'bg-emerald-400';
+                                const isEditing = editingGroup?.id === group.id;
 
                                 return (
-                                    <div key={group.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow flex flex-col overflow-hidden">
+                                    <div key={group.id} className={`bg-white rounded-2xl border shadow-sm hover:shadow-md transition-shadow flex flex-col overflow-hidden ${isEditing ? 'border-amber-300 ring-2 ring-amber-200' : 'border-gray-100'}`}>
                                         <div className="p-6 flex-1">
                                             <div className="flex items-start justify-between mb-3">
                                                 <h3 className="text-lg font-bold text-gray-900 leading-tight">{group.name}</h3>
@@ -237,8 +369,16 @@ export default function GroupsIndex({ groups, coaches, athletes }: { groups: Gro
                                         </div>
 
                                         <div className="px-6 py-3.5 bg-slate-50 border-t border-gray-100 flex items-center justify-between">
-                                            <button className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 transition-colors">Manage Group</button>
-                                            <button className="text-sm font-semibold text-gray-400 hover:text-gray-600 transition-colors">Settings</button>
+                                            <button
+                                                onClick={() => openEdit(group)}
+                                                className="inline-flex items-center gap-1.5 text-sm font-semibold text-amber-600 hover:text-amber-700 transition-colors"
+                                            >
+                                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                </svg>
+                                                Edit Group
+                                            </button>
+                                            <span className="text-xs text-gray-300 font-medium">ID #{group.id}</span>
                                         </div>
                                     </div>
                                 );

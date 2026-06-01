@@ -59,6 +59,25 @@ class TrainingGroupController extends Controller
     }
 
     /**
+     * Update the specified training group.
+     */
+    public function update(Request $request, TrainingGroup $group)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'monthly_price' => 'required|numeric|min:0',
+            'capacity' => 'nullable|integer|min:1',
+            'skill_level' => 'nullable|string',
+            'age_range' => 'nullable|string',
+        ]);
+
+        $group->update($validated);
+
+        return redirect()->route('manager.groups.index')->with('status', 'group-updated');
+    }
+
+    /**
      * Assign a user to a training group.
      */
     public function assignUser(Request $request, TrainingGroup $group)
