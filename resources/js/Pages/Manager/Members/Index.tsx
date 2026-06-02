@@ -1,5 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, useForm, Link } from '@inertiajs/react';
 import { FormEventHandler, useState } from 'react';
 
 interface Member {
@@ -19,22 +19,52 @@ const roleConfig: Record<string, { bg: string; text: string; dot: string }> = {
 };
 
 export default function MembersIndex({ members }: { members: Member[] }) {
-    const [isAddingMember, setIsAddingMember] = useState(false);
-    const { data, setData, post, processing, errors, reset } = useForm({
+    const [isFormOpen, setIsFormOpen] = useState(false);
+    const [editingMember, setEditingMember] = useState<Member | null>(null);
+    const { data, setData, post, put, processing, errors, reset, clearErrors } = useForm({
         name: '',
         email: '',
         role: 'Athlete',
         password: 'password123',
     });
 
+    const openAddForm = () => {
+        setEditingMember(null);
+        reset();
+        clearErrors();
+        setIsFormOpen(true);
+    };
+
+    const openEditForm = (member: Member) => {
+        setEditingMember(member);
+        setData({
+            name: member.name,
+            email: member.email,
+            role: member.roles[0]?.name || 'Athlete',
+            password: '', // Not updating password here
+        });
+        clearErrors();
+        setIsFormOpen(true);
+    };
+
+    const closeForm = () => {
+        setIsFormOpen(false);
+        setEditingMember(null);
+        reset();
+        clearErrors();
+    };
+
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
-        post(route('manager.members.store'), {
-            onSuccess: () => {
-                setIsAddingMember(false);
-                reset();
-            },
-        });
+        if (editingMember) {
+            put(route('manager.members.update', editingMember.id), {
+                onSuccess: () => closeForm(),
+            });
+        } else {
+            post(route('manager.members.store'), {
+                onSuccess: () => closeForm(),
+            });
+        }
     };
 
     const getRoleStyle = (roleName: string) => roleConfig[roleName] || { bg: 'bg-gray-50', text: 'text-gray-700', dot: 'bg-gray-400' };
@@ -48,14 +78,13 @@ export default function MembersIndex({ members }: { members: Member[] }) {
                         <p className="text-sm text-gray-500 mt-0.5">{members.length} total members in your club</p>
                     </div>
                     <button
-                        onClick={() => setIsAddingMember(!isAddingMember)}
-                        className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${
-                            isAddingMember
+                        onClick={isFormOpen ? closeForm : openAddForm}
+                        className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${isFormOpen
                                 ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                 : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm shadow-indigo-200'
-                        }`}
+                            }`}
                     >
-                        {isAddingMember ? (
+                        {isFormOpen ? (
                             <>
                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -79,12 +108,12 @@ export default function MembersIndex({ members }: { members: Member[] }) {
             <div className="py-8">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
 
-                    {/* Add Member Form */}
-                    {isAddingMember && (
+                    {/* Add/Edit Member Form */}
+                    {isFormOpen && (
                         <div className="bg-white rounded-2xl border border-indigo-100 shadow-sm overflow-hidden">
                             <div className="bg-gradient-to-r from-indigo-50 to-blue-50 px-6 py-4 border-b border-indigo-100">
-                                <h3 className="text-sm font-bold text-indigo-900">Create New Member</h3>
-                                <p className="text-xs text-indigo-600 mt-0.5">Fill in the details to add a new member to your club</p>
+                                <h3 className="text-sm font-bold text-indigo-900">{editingMember ? 'Edit Member' : 'Create New Member'}</h3>
+                                <p className="text-xs text-indigo-600 mt-0.5">{editingMember ? 'Update member details below' : 'Fill in the details to add a new member to your club'}</p>
                             </div>
                             <form onSubmit={submit} className="p-6">
                                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
@@ -127,7 +156,7 @@ export default function MembersIndex({ members }: { members: Member[] }) {
                                         disabled={processing}
                                         className="w-full py-2.5 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 transition-all disabled:opacity-50 shadow-sm"
                                     >
-                                        {processing ? 'Saving...' : 'Save Member'}
+                                        {processing ? 'Saving...' : (editingMember ? 'Update Member' : 'Save Member')}
                                     </button>
                                 </div>
                             </form>
@@ -172,8 +201,20 @@ export default function MembersIndex({ members }: { members: Member[] }) {
                                                 <td className="px-6 py-4 text-sm text-gray-500">{member.email}</td>
                                                 <td className="px-6 py-4 text-right">
                                                     <div className="flex items-center justify-end gap-2">
-                                                        <button className="px-3 py-1.5 text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors">Edit</button>
-                                                        <button className="px-3 py-1.5 text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors">Remove</button>
+                                                        <button 
+                                                            onClick={() => openEditForm(member)}
+                                                            className="px-3 py-1.5 text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors"
+                                                        >
+                                                            Edit
+                                                        </button>
+                                                        <Link 
+                                                            href={route('manager.members.destroy', member.id)} 
+                                                            method="delete" 
+                                                            as="button"
+                                                            className="px-3 py-1.5 text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
+                                                        >
+                                                            Remove
+                                                        </Link>
                                                     </div>
                                                 </td>
                                             </tr>

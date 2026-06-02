@@ -1,5 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, useForm, router } from '@inertiajs/react';
 import { FormEventHandler, useState } from 'react';
 
 interface Group {
@@ -58,6 +58,26 @@ export default function GroupsIndex({ groups, coaches, athletes }: { groups: Gro
                 createForm.reset();
             },
         });
+    };
+
+    const handleAssignCoach = (groupId: number, coachId: string) => {
+        if (!coachId) return;
+        router.post(route('manager.groups.assign', groupId), {
+            user_id: coachId,
+            role_in_group: 'Coach'
+        }, {
+            preserveScroll: true
+        });
+    };
+
+    const handleRemoveCoach = (groupId: number, coachId: number, coachName: string) => {
+        if (confirm(`Are you sure you want to remove Coach ${coachName} from this group?`)) {
+            router.post(route('manager.groups.remove', groupId), {
+                user_id: coachId
+            }, {
+                preserveScroll: true
+            });
+        }
     };
 
     const openEdit = (group: Group) => {
@@ -348,22 +368,51 @@ export default function GroupsIndex({ groups, coaches, athletes }: { groups: Gro
                                                 </div>
                                             </div>
 
-                                            <div>
+                                            <div className="mt-4">
                                                 <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Coaches</p>
-                                                <div className="flex items-center gap-2">
-                                                    <div className="flex -space-x-1.5">
-                                                        {group.coaches.slice(0, 4).map((coach, i) => (
-                                                            <div key={i} title={coach.name} className="w-7 h-7 rounded-full border-2 border-white bg-indigo-500 flex items-center justify-center text-white text-[10px] font-bold shadow-sm">
-                                                                {coach.name.charAt(0)}
+                                                <div className="space-y-2 mb-3">
+                                                    {group.coaches.map((coach) => (
+                                                        <div key={coach.id} className="flex items-center justify-between bg-slate-50 border border-slate-100 rounded-xl p-2">
+                                                            <div className="flex items-center gap-2">
+                                                                <div className="w-6 h-6 rounded-full bg-indigo-500 flex items-center justify-center text-white text-[10px] font-bold shadow-sm">
+                                                                    {coach.name.charAt(0).toUpperCase()}
+                                                                </div>
+                                                                <span className="text-xs font-medium text-gray-700">{coach.name}</span>
                                                             </div>
-                                                        ))}
-                                                    </div>
+                                                            <button
+                                                                onClick={() => handleRemoveCoach(group.id, coach.id, coach.name)}
+                                                                className="text-gray-400 hover:text-red-600 transition-colors p-0.5"
+                                                                title="Remove Coach"
+                                                            >
+                                                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                                </svg>
+                                                            </button>
+                                                        </div>
+                                                    ))}
                                                     {group.coaches.length === 0 && (
-                                                        <span className="text-xs text-gray-400 italic">No coach assigned</span>
+                                                        <p className="text-xs text-gray-400 italic py-1">No coaches assigned</p>
                                                     )}
-                                                    {group.coaches.length > 4 && (
-                                                        <span className="text-xs text-gray-500 font-medium">+{group.coaches.length - 4} more</span>
-                                                    )}
+                                                </div>
+
+                                                {/* Assign Coach Select */}
+                                                <div className="flex gap-2">
+                                                    <select
+                                                        onChange={(e) => {
+                                                            handleAssignCoach(group.id, e.target.value);
+                                                            e.target.value = ''; // Reset select
+                                                        }}
+                                                        className="w-full rounded-xl border border-gray-200 bg-gray-50 px-2 py-1.5 text-xs text-gray-700 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                                                        defaultValue=""
+                                                    >
+                                                        <option value="" disabled>+ Assign a Coach</option>
+                                                        {coaches
+                                                            .filter(c => !group.coaches.some(gc => gc.id === c.id))
+                                                            .map(c => (
+                                                                <option key={c.id} value={c.id}>{c.name}</option>
+                                                            ))
+                                                        }
+                                                    </select>
                                                 </div>
                                             </div>
                                         </div>

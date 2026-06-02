@@ -38,6 +38,8 @@ Route::middleware(['auth', 'verified', 'role:Manager|Super Admin'])->prefix('man
 
     Route::get('/members', [\App\Http\Controllers\MemberController::class, 'index'])->name('members.index');
     Route::post('/members', [\App\Http\Controllers\MemberController::class, 'store'])->name('members.store');
+    Route::put('/members/{user}', [\App\Http\Controllers\MemberController::class, 'update'])->name('members.update');
+    Route::delete('/members/{user}', [\App\Http\Controllers\MemberController::class, 'destroy'])->name('members.destroy');
 
     Route::get('/groups', [\App\Http\Controllers\TrainingGroupController::class, 'index'])->name('groups.index');
     Route::post('/groups', [\App\Http\Controllers\TrainingGroupController::class, 'store'])->name('groups.store');

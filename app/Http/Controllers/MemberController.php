@@ -54,8 +54,72 @@ class MemberController extends Controller
             AthleteProfile::create(['user_id' => $user->id]);
         } elseif ($validated['role'] === 'Parent') {
             ParentProfile::create(['user_id' => $user->id]);
+        } elseif ($validated['role'] === 'Coach') {
+            \App\Models\CoachProfile::create(['user_id' => $user->id]);
         }
 
         return redirect()->route('manager.members.index')->with('status', 'member-created');
+    }
+
+    /**
+     * Update the specified member in storage.
+     */
+    public function update(Request $request, User $user)
+    {
+        // Ensure the manager can only update members of their own club
+        if ($user->club_id !== $request->user()->club_id) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
+            'role' => 'required|string|in:Athlete,Parent,Coach',
+        ]);
+
+        $user->update([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+        ]);
+
+        $currentRole = $user->roles->first()?->name;
+        
+        if ($currentRole !== $validated['role']) {
+            // Remove old profile and create new one if role changes
+            if ($currentRole === 'Athlete') {
+                AthleteProfile::where('user_id', $user->id)->delete();
+            } elseif ($currentRole === 'Parent') {
+                ParentProfile::where('user_id', $user->id)->delete();
+            } elseif ($currentRole === 'Coach') {
+                \App\Models\CoachProfile::where('user_id', $user->id)->delete();
+            }
+
+            $user->syncRoles([$validated['role']]);
+
+            if ($validated['role'] === 'Athlete') {
+                AthleteProfile::create(['user_id' => $user->id]);
+            } elseif ($validated['role'] === 'Parent') {
+                ParentProfile::create(['user_id' => $user->id]);
+            } elseif ($validated['role'] === 'Coach') {
+                \App\Models\CoachProfile::create(['user_id' => $user->id]);
+            }
+        }
+
+        return redirect()->back()->with('status', 'member-updated');
+    }
+
+    /**
+     * Remove the specified member from storage.
+     */
+    public function destroy(Request $request, User $user)
+    {
+        // Ensure the manager can only delete members of their own club
+        if ($user->club_id !== $request->user()->club_id) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $user->delete();
+
+        return redirect()->back()->with('status', 'member-deleted');
     }
 }
