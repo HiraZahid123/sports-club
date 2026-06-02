@@ -229,18 +229,21 @@ export default function Welcome({ auth }: PageProps<{ laravelVersion: string, ph
             </div>
 
             {/* Footer */}
-            <footer className="bg-white border-t border-gray-100 py-12">
+            <footer className="bg-gradient-to-b from-blue-50 to-blue-100 border-t border-blue-100 py-10">
                 <div className="max-w-7xl mx-auto px-6">
-                    <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                        <div className="flex items-center gap-2.5">
-                            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center font-black text-sm italic text-white">S</div>
-                            <span className="font-black text-gray-900">Sport<span className="text-indigo-600">Club</span></span>
-                        </div>
-                        <p className="text-gray-400 text-sm">&copy; 2026 SportClub Advanced.</p>
-                        <div className="flex items-center gap-6 text-sm text-gray-400">
-                            <a href="#" className="hover:text-gray-700 transition-colors">Privacy</a>
-                            <a href="#" className="hover:text-gray-700 transition-colors">Terms</a>
-                            <a href="#" className="hover:text-gray-700 transition-colors">Support</a>
+                    <div className="flex flex-col items-center justify-center gap-3 text-center">
+                        <img 
+                            src="/build/assets/ml%20sports.png" 
+                            alt="ML SPORT Technologies" 
+                            className="h-8 w-auto mb-1" 
+                        />
+                        <p className="text-gray-600 text-xs">
+                            &copy; 2026 ML SPORT Technologies OÜ. All rights reserved.
+                        </p>
+                        <div className="flex items-center justify-center gap-3 text-xs text-gray-500">
+                            <a href="#" className="hover:text-blue-600 transition-colors">Privacy</a>
+                            <span className="text-gray-300">|</span>
+                            <a href="#" className="hover:text-blue-600 transition-colors">Terms</a>
                         </div>
                     </div>
                 </div>
