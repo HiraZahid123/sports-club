@@ -1,5 +1,6 @@
 import { Link, Head } from '@inertiajs/react';
 import { PageProps } from '@/types';
+import mlSportsLogo from '../ml-sports.png';
 
 export default function Welcome({ auth }: PageProps<{ laravelVersion: string, phpVersion: string }>) {
     return (
@@ -233,7 +234,7 @@ export default function Welcome({ auth }: PageProps<{ laravelVersion: string, ph
                 <div className="max-w-7xl mx-auto px-6">
                     <div className="flex flex-col items-center justify-center gap-3 text-center">
                         <img 
-                            src="/build/assets/ml%20sports.png" 
+                            src={mlSportsLogo} 
                             alt="ML SPORT Technologies" 
                             className="h-8 w-auto mb-1" 
                         />

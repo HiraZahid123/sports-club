@@ -15,3 +15,18 @@ declare global {
 declare module '@inertiajs/core' {
     interface PageProps extends InertiaPageProps, AppPageProps {}
 }
+
+declare module '*.png' {
+    const value: string;
+    export default value;
+}
+
+declare module '*.jpg' {
+    const value: string;
+    export default value;
+}
+
+declare module '*.svg' {
+    const value: string;
+    export default value;
+}
