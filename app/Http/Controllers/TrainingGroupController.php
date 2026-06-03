@@ -93,4 +93,18 @@ class TrainingGroupController extends Controller
 
         return redirect()->route('manager.groups.index')->with('status', 'user-assigned');
     }
+
+    /**
+     * Remove a user from a training group.
+     */
+    public function removeUser(Request $request, TrainingGroup $group)
+    {
+        $validated = $request->validate([
+            'user_id' => 'required|exists:users,id',
+        ]);
+
+        $group->users()->detach($validated['user_id']);
+
+        return redirect()->route('manager.groups.index')->with('status', 'user-removed');
+    }
 }

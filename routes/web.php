@@ -45,6 +45,7 @@ Route::middleware(['auth', 'verified', 'role:Manager|Super Admin'])->prefix('man
     Route::post('/groups', [\App\Http\Controllers\TrainingGroupController::class, 'store'])->name('groups.store');
     Route::put('/groups/{group}', [\App\Http\Controllers\TrainingGroupController::class, 'update'])->name('groups.update');
     Route::post('/groups/{group}/assign', [\App\Http\Controllers\TrainingGroupController::class, 'assignUser'])->name('groups.assign');
+    Route::post('/groups/{group}/remove', [\App\Http\Controllers\TrainingGroupController::class, 'removeUser'])->name('groups.remove');
 
     Route::get('/billing', [\App\Http\Controllers\BillingController::class, 'index'])->name('billing.index');
     Route::post('/billing/{subscription}/pay', [\App\Http\Controllers\BillingController::class, 'logPayment'])->name('billing.pay');
