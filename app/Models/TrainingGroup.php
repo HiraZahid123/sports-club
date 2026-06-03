@@ -49,4 +49,14 @@ class TrainingGroup extends Model
     {
         return $this->users()->wherePivot('role_in_group', 'Coach');
     }
+
+    /**
+     * Get the weekly schedule slots for this group.
+     */
+    public function schedules()
+    {
+        return $this->hasMany(GroupSchedule::class, 'training_group_id')
+            ->orderByRaw("FIELD(day_of_week,'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday')")
+            ->orderBy('start_time');
+    }
 }

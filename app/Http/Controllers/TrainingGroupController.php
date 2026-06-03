@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\GroupSchedule;
 use App\Models\TrainingGroup;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -15,9 +16,9 @@ class TrainingGroupController extends Controller
     public function index(Request $request)
     {
         $clubId = $request->user()->club_id;
-        
+
         $groups = TrainingGroup::where('club_id', $clubId)
-            ->with(['coaches', 'athletes'])
+            ->with(['coaches', 'athletes', 'schedules'])
             ->withCount('athletes')
             ->get();
 
@@ -30,8 +31,8 @@ class TrainingGroupController extends Controller
             ->get();
 
         return Inertia::render('Manager/Groups/Index', [
-            'groups' => $groups,
-            'coaches' => $coaches,
+            'groups'   => $groups,
+            'coaches'  => $coaches,
             'athletes' => $athletes,
         ]);
     }
@@ -42,15 +43,15 @@ class TrainingGroupController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'name'          => 'required|string|max:255',
+            'description'   => 'nullable|string',
             'monthly_price' => 'required|numeric|min:0',
-            'capacity' => 'nullable|integer|min:1',
-            'skill_level' => 'nullable|string',
-            'age_range' => 'nullable|string',
+            'capacity'      => 'nullable|integer|min:1',
+            'skill_level'   => 'nullable|string',
+            'age_range'     => 'nullable|string',
         ]);
 
-        $group = TrainingGroup::create([
+        TrainingGroup::create([
             ...$validated,
             'club_id' => $request->user()->club_id,
         ]);
@@ -64,12 +65,12 @@ class TrainingGroupController extends Controller
     public function update(Request $request, TrainingGroup $group)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'name'          => 'required|string|max:255',
+            'description'   => 'nullable|string',
             'monthly_price' => 'required|numeric|min:0',
-            'capacity' => 'nullable|integer|min:1',
-            'skill_level' => 'nullable|string',
-            'age_range' => 'nullable|string',
+            'capacity'      => 'nullable|integer|min:1',
+            'skill_level'   => 'nullable|string',
+            'age_range'     => 'nullable|string',
         ]);
 
         $group->update($validated);
@@ -83,7 +84,7 @@ class TrainingGroupController extends Controller
     public function assignUser(Request $request, TrainingGroup $group)
     {
         $validated = $request->validate([
-            'user_id' => 'required|exists:users,id',
+            'user_id'      => 'required|exists:users,id',
             'role_in_group' => 'required|string|in:Athlete,Coach',
         ]);
 
@@ -106,5 +107,30 @@ class TrainingGroupController extends Controller
         $group->users()->detach($validated['user_id']);
 
         return redirect()->route('manager.groups.index')->with('status', 'user-removed');
+    }
+
+    /**
+     * Replace the schedule slots for a training group.
+     * Accepts an array of { day_of_week, start_time, end_time, location, notes }.
+     */
+    public function updateSchedule(Request $request, TrainingGroup $group)
+    {
+        $request->validate([
+            'schedules'                 => 'present|array',
+            'schedules.*.day_of_week'   => 'required|string|in:Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday',
+            'schedules.*.start_time'    => 'required|date_format:H:i',
+            'schedules.*.end_time'      => 'required|date_format:H:i|after:schedules.*.start_time',
+            'schedules.*.location'      => 'nullable|string|max:255',
+            'schedules.*.notes'         => 'nullable|string|max:500',
+        ]);
+
+        // Delete old slots and insert fresh ones atomically
+        $group->schedules()->delete();
+
+        foreach ($request->schedules as $slot) {
+            $group->schedules()->create($slot);
+        }
+
+        return redirect()->route('manager.groups.index')->with('status', 'schedule-updated');
     }
 }
