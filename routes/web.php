@@ -60,7 +60,7 @@ Route::middleware(['auth', 'verified', 'role:Manager|Super Admin'])->prefix('man
 Route::middleware(['auth', 'verified', 'role:Coach', \App\Http\Middleware\CheckSubscription::class])->prefix('coach')->name('coach.')->group(function () {
     Route::get('/dashboard', function () {
         $coach  = auth()->user();
-        $groups = $coach->trainingGroups()->with(['athletes.athleteProfile'])->get();
+        $groups = $coach->trainingGroups()->with(['athletes.athleteProfile', 'athletes.trainingGoals'])->get();
 
         $nextPayout = \App\Models\CoachPayout::where('user_id', $coach->id)
             ->where('status', 'pending')
@@ -89,6 +89,10 @@ Route::middleware(['auth', 'verified', 'role:Coach', \App\Http\Middleware\CheckS
     Route::get('/schedule', function () {
         return Inertia::render('Coach/Schedule');
     })->name('schedule');
+
+    Route::post('/goals', [\App\Http\Controllers\GoalController::class, 'store'])->name('goals.store');
+    Route::put('/goals/{goal}', [\App\Http\Controllers\GoalController::class, 'update'])->name('goals.update');
+    Route::delete('/goals/{goal}', [\App\Http\Controllers\GoalController::class, 'destroy'])->name('goals.destroy');
 });
 
 // Athlete Routes

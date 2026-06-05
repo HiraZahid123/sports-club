@@ -161,4 +161,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(CoachPayout::class);
     }
+
+    public function trainingGoals()
+    {
+        return $this->hasMany(TrainingGoal::class, 'athlete_id')->orderBy('created_at', 'desc');
+    }
 }
