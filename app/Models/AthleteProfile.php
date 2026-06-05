@@ -13,6 +13,9 @@ class AthleteProfile extends Model
         'medical_info',
         'weight_class',
         'last_grading_date',
+        'speed',
+        'strength',
+        'flexibility',
     ];
 
     /**

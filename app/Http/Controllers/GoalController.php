@@ -60,4 +60,32 @@ class GoalController extends Controller
 
         return back()->with('status', 'goal-deleted');
     }
+
+    public function updateSkills(Request $request, User $user)
+    {
+        $validated = $request->validate([
+            'speed'       => 'required|integer|min:0|max:100',
+            'strength'    => 'required|integer|min:0|max:100',
+            'flexibility' => 'required|integer|min:0|max:100',
+        ]);
+
+        // Ensure coach has access to this athlete
+        $coach = $request->user();
+        $athleteInCoachGroup = $coach->trainingGroups()
+            ->whereHas('athletes', fn($q) => $q->where('users.id', $user->id))
+            ->exists();
+
+        abort_if(!$athleteInCoachGroup, 403, 'Athlete is not in your group.');
+
+        $user->athleteProfile()->updateOrCreate(
+            ['user_id' => $user->id],
+            [
+                'speed'       => $validated['speed'],
+                'strength'    => $validated['strength'],
+                'flexibility' => $validated['flexibility'],
+            ]
+        );
+
+        return back()->with('status', 'skills-updated');
+    }
 }

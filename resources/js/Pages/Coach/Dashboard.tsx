@@ -1,5 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link, router, useForm } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import { getBeltBadgeStyle, getBeltStyle } from '@/beltHelpers';
 
@@ -11,15 +11,9 @@ interface AthleteProfile {
     weight_class: string | null;
     medical_info: string | null;
     last_grading_date: string | null;
-}
-
-interface Goal {
-    id: number;
-    title: string;
-    description: string | null;
-    category: string;
-    status: string;
-    target_date: string | null;
+    speed: number | null;
+    strength: number | null;
+    flexibility: number | null;
 }
 
 interface Athlete {
@@ -27,7 +21,6 @@ interface Athlete {
     name: string;
     email: string;
     athlete_profile: AthleteProfile | null;
-    training_goals: Goal[];
 }
 
 interface Group {
@@ -46,46 +39,13 @@ interface Payout {
     notes: string | null;
 }
 
-interface CoachProfile {
-    specialization: string | null;
-    hourly_rate: string;
-}
-
 // ── Constants ────────────────────────────────────────────────────────────────
-
-const CATEGORIES = ['General', 'Technique', 'Fitness', 'Strength', 'Mental', 'Competition'];
-
-const STATUSES: { value: string; label: string; color: string; dot: string }[] = [
-    { value: 'not_started', label: 'Not Started', color: 'bg-gray-100 text-gray-600',    dot: 'bg-gray-400' },
-    { value: 'in_progress', label: 'In Progress', color: 'bg-blue-100 text-blue-700',    dot: 'bg-blue-500' },
-    { value: 'completed',   label: 'Completed',   color: 'bg-emerald-100 text-emerald-700', dot: 'bg-emerald-500' },
-];
-
-const CAT_COLORS: Record<string, string> = {
-    General:     'bg-gray-100 text-gray-600',
-    Technique:   'bg-indigo-100 text-indigo-700',
-    Fitness:     'bg-emerald-100 text-emerald-700',
-    Strength:    'bg-orange-100 text-orange-700',
-    Mental:      'bg-purple-100 text-purple-700',
-    Competition: 'bg-amber-100 text-amber-700',
-};
 
 const skillColors: Record<string, string> = {
     Beginner:     'bg-emerald-50 text-emerald-700 border-emerald-100',
     Intermediate: 'bg-blue-50 text-blue-700 border-blue-100',
     Advanced:     'bg-indigo-50 text-indigo-700 border-indigo-100',
     Elite:        'bg-amber-50 text-amber-700 border-amber-100',
-};
-
-const beltColors: Record<string, string> = {
-    White:  'bg-gray-100 text-gray-700',
-    Yellow: 'bg-yellow-100 text-yellow-700',
-    Orange: 'bg-orange-100 text-orange-700',
-    Green:  'bg-emerald-100 text-emerald-700',
-    Blue:   'bg-blue-100 text-blue-700',
-    Purple: 'bg-purple-100 text-purple-700',
-    Brown:  'bg-amber-900/20 text-amber-900',
-    Black:  'bg-gray-900 text-white',
 };
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -107,215 +67,84 @@ function daysUntil(dateStr: string) {
     return Math.ceil((new Date(dateStr).setHours(0,0,0,0) - new Date().setHours(0,0,0,0)) / 86400000);
 }
 
-function statusMeta(value: string) {
-    return STATUSES.find(s => s.value === value) ?? STATUSES[0];
-}
+// ── Athlete Skills Panel ──────────────────────────────────────────────────────
 
-const inputCls = 'w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all';
+const METRICS = [
+    { key: 'speed',       label: 'Speed',       color: 'from-blue-400 to-blue-600',    track: 'bg-blue-100',    fill: 'bg-blue-500',    icon: '⚡' },
+    { key: 'strength',    label: 'Strength',    color: 'from-orange-400 to-orange-600', track: 'bg-orange-100',  fill: 'bg-orange-500',  icon: '💪' },
+    { key: 'flexibility', label: 'Flexibility', color: 'from-emerald-400 to-emerald-600', track: 'bg-emerald-100', fill: 'bg-emerald-500', icon: '🤸' },
+] as const;
 
-// ── Goal Form (add or edit) ───────────────────────────────────────────────────
-
-function GoalForm({
-    athleteId,
-    editingGoal,
-    onCancel,
-}: {
-    athleteId: number;
-    editingGoal: Goal | null;
-    onCancel: () => void;
-}) {
-    const isEdit = !!editingGoal;
-
-    const { data, setData, post, put, processing, errors, reset } = useForm({
-        athlete_id:  athleteId,
-        title:       editingGoal?.title ?? '',
-        description: editingGoal?.description ?? '',
-        category:    editingGoal?.category ?? 'General',
-        status:      editingGoal?.status ?? 'not_started',
-        target_date: editingGoal?.target_date ?? '',
+function AthleteSkillsPanel({ athlete }: { athlete: Athlete }) {
+    const profile = athlete.athlete_profile;
+    const { data, setData, post, processing } = useForm({
+        speed:       profile?.speed       ?? 0,
+        strength:    profile?.strength    ?? 0,
+        flexibility: profile?.flexibility ?? 0,
     });
+    const [saved, setSaved] = useState(false);
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (isEdit) {
-            put(route('coach.goals.update', editingGoal!.id), {
-                preserveScroll: true,
-                onSuccess: () => { reset(); onCancel(); },
-            });
-        } else {
-            post(route('coach.goals.store'), {
-                preserveScroll: true,
-                onSuccess: () => { reset(); onCancel(); },
-            });
-        }
-    };
-
-    return (
-        <form onSubmit={submit} className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 space-y-3 mt-3">
-            <p className="text-xs font-bold text-indigo-700 uppercase tracking-wide">{isEdit ? 'Edit Goal' : 'Add New Goal'}</p>
-
-            <div>
-                <input
-                    type="text"
-                    placeholder="Goal title *"
-                    value={data.title}
-                    onChange={e => setData('title', e.target.value)}
-                    className={inputCls}
-                />
-                {errors.title && <p className="mt-1 text-xs text-red-600">{errors.title}</p>}
-            </div>
-
-            <textarea
-                placeholder="Description (optional)"
-                value={data.description}
-                onChange={e => setData('description', e.target.value)}
-                rows={2}
-                className={`${inputCls} resize-none`}
-            />
-
-            <div className="grid grid-cols-3 gap-2">
-                <div>
-                    <select value={data.category} onChange={e => setData('category', e.target.value)} className={inputCls}>
-                        {CATEGORIES.map(c => <option key={c}>{c}</option>)}
-                    </select>
-                </div>
-                <div>
-                    <select value={data.status} onChange={e => setData('status', e.target.value)} className={inputCls}>
-                        {STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-                    </select>
-                </div>
-                <div>
-                    <input
-                        type="date"
-                        value={data.target_date}
-                        onChange={e => setData('target_date', e.target.value)}
-                        className={inputCls}
-                    />
-                </div>
-            </div>
-
-            <div className="flex items-center gap-2 justify-end">
-                <button type="button" onClick={onCancel} className="px-3 py-1.5 text-xs font-semibold text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-all">
-                    Cancel
-                </button>
-                <button type="submit" disabled={processing} className="px-4 py-1.5 text-xs font-bold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-all disabled:opacity-50">
-                    {processing ? 'Saving…' : isEdit ? 'Update Goal' : 'Add Goal'}
-                </button>
-            </div>
-        </form>
-    );
-}
-
-// ── Athlete Goals Panel ───────────────────────────────────────────────────────
-
-function AthleteGoalsPanel({ athlete }: { athlete: Athlete }) {
-    const [showForm, setShowForm]       = useState(false);
-    const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
-
-    const deleteGoal = (goalId: number) => {
-        if (!confirm('Delete this goal?')) return;
-        router.delete(route('coach.goals.destroy', goalId), { preserveScroll: true });
+        post(route('coach.athletes.skills', athlete.id), {
+            preserveScroll: true,
+            onSuccess: () => { setSaved(true); setTimeout(() => setSaved(false), 2000); },
+        });
     };
 
     return (
         <div className="mt-4 border-t border-gray-100 pt-4">
             <div className="flex items-center justify-between mb-3">
                 <p className="text-xs font-bold text-gray-500 uppercase tracking-wide flex items-center gap-1.5">
-                    <svg className="w-3.5 h-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    Training Goals
-                    <span className="ml-1 px-1.5 py-0.5 bg-indigo-100 text-indigo-600 text-[10px] font-bold rounded-md">
-                        {athlete.training_goals.length}
-                    </span>
+                    <span className="text-sm">📊</span> Athlete Metrics
                 </p>
-                {!showForm && !editingGoal && (
-                    <button
-                        onClick={() => setShowForm(true)}
-                        className="inline-flex items-center gap-1 text-xs font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-lg transition-all"
-                    >
-                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                        </svg>
-                        Add Goal
-                    </button>
+                {saved && (
+                    <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg flex items-center gap-1">
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                        Saved!
+                    </span>
                 )}
             </div>
-
-            {/* Goals list */}
-            {athlete.training_goals.length === 0 && !showForm ? (
-                <p className="text-xs text-gray-400 italic px-1">No goals set yet. Click "Add Goal" to create one.</p>
-            ) : (
-                <div className="space-y-2">
-                    {athlete.training_goals.map(goal => {
-                        const st  = statusMeta(goal.status);
-                        const isEditing = editingGoal?.id === goal.id;
-                        return (
-                            <div key={goal.id}>
-                                {isEditing ? (
-                                    <GoalForm
-                                        athleteId={athlete.id}
-                                        editingGoal={goal}
-                                        onCancel={() => setEditingGoal(null)}
-                                    />
-                                ) : (
-                                    <div className="flex items-start justify-between bg-gray-50 border border-gray-100 rounded-xl px-3 py-2.5 gap-3">
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-2 flex-wrap">
-                                                <p className="text-sm font-semibold text-gray-800">{goal.title}</p>
-                                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${CAT_COLORS[goal.category] ?? 'bg-gray-100 text-gray-600'}`}>
-                                                    {goal.category}
-                                                </span>
-                                                <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md ${st.color}`}>
-                                                    <span className={`w-1.5 h-1.5 rounded-full ${st.dot}`}></span>
-                                                    {st.label}
-                                                </span>
-                                            </div>
-                                            {goal.description && (
-                                                <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{goal.description}</p>
-                                            )}
-                                            {goal.target_date && (
-                                                <p className="text-[10px] text-gray-400 mt-1">
-                                                    Target: <span className="font-semibold text-gray-600">{fmt(goal.target_date)}</span>
-                                                </p>
-                                            )}
-                                        </div>
-                                        <div className="flex items-center gap-1 shrink-0">
-                                            <button
-                                                onClick={() => { setEditingGoal(goal); setShowForm(false); }}
-                                                className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
-                                                title="Edit"
-                                            >
-                                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                                </svg>
-                                            </button>
-                                            <button
-                                                onClick={() => deleteGoal(goal.id)}
-                                                className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                                                title="Delete"
-                                            >
-                                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                </svg>
-                                            </button>
-                                        </div>
-                                    </div>
-                                )}
+            <form onSubmit={submit} className="space-y-4">
+                {METRICS.map(m => (
+                    <div key={m.key}>
+                        <div className="flex items-center justify-between mb-1.5">
+                            <span className="text-xs font-semibold text-gray-600 flex items-center gap-1.5">
+                                <span>{m.icon}</span> {m.label}
+                            </span>
+                            <span className="text-xs font-black text-gray-800 w-8 text-right">
+                                {data[m.key]}
+                            </span>
+                        </div>
+                        <div className="relative flex items-center gap-2">
+                            <div className={`flex-1 ${m.track} rounded-full h-2 overflow-hidden`}>
+                                <div
+                                    className={`${m.fill} h-2 rounded-full transition-all duration-200`}
+                                    style={{ width: `${data[m.key]}%` }}
+                                />
                             </div>
-                        );
-                    })}
-                </div>
-            )}
-
-            {/* Add form */}
-            {showForm && (
-                <GoalForm
-                    athleteId={athlete.id}
-                    editingGoal={null}
-                    onCancel={() => setShowForm(false)}
-                />
-            )}
+                            <input
+                                type="range"
+                                min={0}
+                                max={100}
+                                value={data[m.key]}
+                                onChange={e => setData(m.key, Number(e.target.value))}
+                                className="absolute inset-0 w-full opacity-0 cursor-pointer h-2"
+                            />
+                        </div>
+                        <div className="flex justify-between text-[9px] text-gray-300 mt-0.5 font-medium">
+                            <span>0</span><span>50</span><span>100</span>
+                        </div>
+                    </div>
+                ))}
+                <button
+                    type="submit"
+                    disabled={processing}
+                    className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition-all disabled:opacity-50 shadow-sm"
+                >
+                    {processing ? 'Saving…' : 'Save Metrics'}
+                </button>
+            </form>
         </div>
     );
 }
@@ -327,13 +156,11 @@ export default function CoachDashboard({
     nextPayout,
     payoutHistory,
     totalEarned,
-    coachProfile,
 }: {
     groups: Group[];
     nextPayout: Payout | null;
     payoutHistory: Payout[];
     totalEarned: number;
-    coachProfile: CoachProfile | null;
 }) {
     const [selectedGroupIdx, setSelectedGroupIdx] = useState(0);
     const [expandedAthleteId, setExpandedAthleteId] = useState<number | null>(null);
@@ -347,7 +174,7 @@ export default function CoachDashboard({
             header={
                 <div>
                     <h2 className="text-xl font-bold text-gray-900">Coach Dashboard</h2>
-                    <p className="text-sm text-gray-500 mt-0.5">Manage your training groups and athlete goals</p>
+                    <p className="text-sm text-gray-500 mt-0.5">Manage your training groups and athlete metrics</p>
                 </div>
             }
         >
@@ -540,7 +367,7 @@ export default function CoachDashboard({
                                     <div className="px-6 py-4 border-b border-gray-50 flex items-center justify-between">
                                         <div>
                                             <h3 className="text-base font-bold text-gray-900">Athletes — {selectedGroup.name}</h3>
-                                            <p className="text-xs text-gray-500 mt-0.5">{selectedGroup.athletes.length} athletes · click an athlete to manage goals</p>
+                                            <p className="text-xs text-gray-500 mt-0.5">{selectedGroup.athletes.length} athletes · click to edit metrics</p>
                                         </div>
                                         <div className="w-9 h-9 bg-indigo-50 rounded-xl flex items-center justify-center text-lg">🥋</div>
                                     </div>
@@ -557,8 +384,6 @@ export default function CoachDashboard({
                                                 const belt       = profile?.belt_rank ?? null;
                                                 const age        = getAge(profile?.date_of_birth ?? null);
                                                 const isExpanded = expandedAthleteId === athlete.id;
-                                                const goalCount  = athlete.training_goals.length;
-                                                const doneCount  = athlete.training_goals.filter(g => g.status === 'completed').length;
 
                                                 return (
                                                     <div key={athlete.id} className={`px-6 py-4 transition-colors ${isExpanded ? 'bg-indigo-50/40' : 'hover:bg-slate-50'}`}>
@@ -585,11 +410,22 @@ export default function CoachDashboard({
                                                                     <div className="flex items-center gap-4 mt-1.5 flex-wrap">
                                                                         {age !== '—' && <span className="text-xs text-gray-500">Age <strong>{age}</strong></span>}
                                                                         {profile?.weight_class && <span className="text-xs text-gray-500">Weight <strong>{profile.weight_class}</strong></span>}
-                                                                        {/* Goal progress pill */}
-                                                                        <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-600">
-                                                                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4" /></svg>
-                                                                            {doneCount}/{goalCount} goals
-                                                                        </span>
+                                                                        {/* Metrics pills */}
+                                                                        {profile?.speed != null && (
+                                                                            <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-50 text-blue-600">
+                                                                                ⚡ {profile.speed}
+                                                                            </span>
+                                                                        )}
+                                                                        {profile?.strength != null && (
+                                                                            <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-orange-50 text-orange-600">
+                                                                                💪 {profile.strength}
+                                                                            </span>
+                                                                        )}
+                                                                        {profile?.flexibility != null && (
+                                                                            <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-600">
+                                                                                🤸 {profile.flexibility}
+                                                                            </span>
+                                                                        )}
                                                                     </div>
                                                                 </div>
                                                                 <svg className={`w-4 h-4 text-gray-400 shrink-0 mt-1 transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -598,8 +434,8 @@ export default function CoachDashboard({
                                                             </div>
                                                         </button>
 
-                                                        {/* Expanded goals panel */}
-                                                        {isExpanded && <AthleteGoalsPanel athlete={athlete} />}
+                                                        {/* Expanded metrics panel */}
+                                                        {isExpanded && <AthleteSkillsPanel athlete={athlete} />}
                                                     </div>
                                                 );
                                             })

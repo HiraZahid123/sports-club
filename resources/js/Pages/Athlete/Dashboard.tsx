@@ -1,13 +1,71 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
-import { getBeltBadgeStyle, getBeltStyle, getBeltCardGradient, getNextBelt } from '@/beltHelpers';
+import { getBeltStyle, getBeltCardGradient, getNextBelt } from '@/beltHelpers';
 
 interface AthleteProfile {
     belt_rank?: string | null;
     date_of_birth?: string | null;
     medical_info?: string | null;
     weight_class?: string | null;
+    speed?: number | null;
+    strength?: number | null;
+    flexibility?: number | null;
 }
+
+// ── Metrics Card ─────────────────────────────────────────────────────────────
+
+const METRICS = [
+    { key: 'speed'       as const, label: 'Speed',       icon: '⚡', track: 'bg-blue-100',    fill: 'bg-blue-500',    text: 'text-blue-700',    badge: 'bg-blue-50 text-blue-600' },
+    { key: 'strength'    as const, label: 'Strength',    icon: '💪', track: 'bg-orange-100',  fill: 'bg-orange-500',  text: 'text-orange-700',  badge: 'bg-orange-50 text-orange-600' },
+    { key: 'flexibility' as const, label: 'Flexibility', icon: '🤸', track: 'bg-emerald-100', fill: 'bg-emerald-500', text: 'text-emerald-700', badge: 'bg-emerald-50 text-emerald-600' },
+];
+
+function MetricsCard({ athleteProfile }: { athleteProfile?: AthleteProfile | null }) {
+    const hasAny = METRICS.some(m => (athleteProfile?.[m.key] ?? null) !== null);
+
+    return (
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+            <div className="flex items-center justify-between mb-5">
+                <h3 className="text-base font-bold text-gray-900">My Metrics</h3>
+                <span className="text-xs text-gray-400 font-medium">Set by coach</span>
+            </div>
+
+            {hasAny ? (
+                <div className="space-y-5">
+                    {METRICS.map(m => {
+                        const val = athleteProfile?.[m.key] ?? 0;
+                        return (
+                            <div key={m.key}>
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className={`text-xs font-bold flex items-center gap-1.5 ${m.text}`}>
+                                        <span>{m.icon}</span> {m.label}
+                                    </span>
+                                    <span className={`text-xs font-black px-2 py-0.5 rounded-lg ${m.badge}`}>
+                                        {val}<span className="text-[10px] font-medium opacity-70">/100</span>
+                                    </span>
+                                </div>
+                                <div className={`w-full ${m.track} rounded-full h-2.5 overflow-hidden`}>
+                                    <div
+                                        className={`${m.fill} h-2.5 rounded-full transition-all duration-700`}
+                                        style={{ width: `${val}%` }}
+                                    />
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            ) : (
+                <div className="flex flex-col items-center justify-center py-6 text-center">
+                    <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center text-xl mb-3">📊</div>
+                    <p className="text-sm font-medium text-gray-500">No metrics set yet</p>
+                    <p className="text-xs text-gray-400 mt-1">Your coach will update your metrics soon.</p>
+                </div>
+            )}
+        </div>
+    );
+}
+
+// ── Main Component ────────────────────────────────────────────────────────────
 
 export default function AthleteDashboard({ athleteProfile }: { athleteProfile?: AthleteProfile | null }) {
     const belt = athleteProfile?.belt_rank || '10. WHITE';
@@ -81,7 +139,7 @@ export default function AthleteDashboard({ athleteProfile }: { athleteProfile?: 
                         </div>
                     </div>
 
-                    {/* Schedule + Goals Row */}
+                    {/* Schedule + Metrics Row */}
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         {/* Upcoming Schedule */}
                         <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
@@ -110,40 +168,10 @@ export default function AthleteDashboard({ athleteProfile }: { athleteProfile?: 
                             </div>
                         </div>
 
-                        {/* Goals & Tips */}
+                        {/* Metrics & Tip */}
                         <div className="space-y-5">
-                            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-                                <h3 className="text-base font-bold text-gray-900 mb-4">Training Goals</h3>
-                                <div className="space-y-4">
-                                    <div>
-                                        <div className="flex justify-between text-xs mb-1.5">
-                                            <span className="font-medium text-gray-600">Kick Accuracy</span>
-                                            <span className="font-bold text-indigo-600">78%</span>
-                                        </div>
-                                        <div className="w-full bg-gray-100 rounded-full h-2">
-                                            <div className="bg-indigo-500 h-2 rounded-full" style={{ width: '78%' }}></div>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <div className="flex justify-between text-xs mb-1.5">
-                                            <span className="font-medium text-gray-600">Flexibility</span>
-                                            <span className="font-bold text-emerald-600">62%</span>
-                                        </div>
-                                        <div className="w-full bg-gray-100 rounded-full h-2">
-                                            <div className="bg-emerald-500 h-2 rounded-full" style={{ width: '62%' }}></div>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <div className="flex justify-between text-xs mb-1.5">
-                                            <span className="font-medium text-gray-600">Pattern Forms</span>
-                                            <span className="font-bold text-amber-500">90%</span>
-                                        </div>
-                                        <div className="w-full bg-gray-100 rounded-full h-2">
-                                            <div className="bg-amber-400 h-2 rounded-full" style={{ width: '90%' }}></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            {/* Coach-set Metrics */}
+                            <MetricsCard athleteProfile={athleteProfile} />
 
                             <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl border border-amber-100 p-5">
                                 <div className="flex items-start gap-2 mb-2">
