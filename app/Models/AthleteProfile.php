@@ -16,6 +16,8 @@ class AthleteProfile extends Model
         'speed',
         'strength',
         'flexibility',
+        'kyorugi',
+        'poomsae',
     ];
 
     /**

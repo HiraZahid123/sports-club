@@ -10,6 +10,8 @@ interface AthleteProfile {
     speed?: number | null;
     strength?: number | null;
     flexibility?: number | null;
+    kyorugi?: number | null;
+    poomsae?: number | null;
 }
 
 // ── Metrics Card ─────────────────────────────────────────────────────────────
@@ -18,6 +20,8 @@ const METRICS = [
     { key: 'speed'       as const, label: 'Speed',       icon: '⚡', track: 'bg-blue-100',    fill: 'bg-blue-500',    text: 'text-blue-700',    badge: 'bg-blue-50 text-blue-600' },
     { key: 'strength'    as const, label: 'Strength',    icon: '💪', track: 'bg-orange-100',  fill: 'bg-orange-500',  text: 'text-orange-700',  badge: 'bg-orange-50 text-orange-600' },
     { key: 'flexibility' as const, label: 'Flexibility', icon: '🤸', track: 'bg-emerald-100', fill: 'bg-emerald-500', text: 'text-emerald-700', badge: 'bg-emerald-50 text-emerald-600' },
+    { key: 'kyorugi'     as const, label: 'Kyorugi',     icon: '🥊', track: 'bg-rose-100',    fill: 'bg-rose-500',    text: 'text-rose-700',    badge: 'bg-rose-50 text-rose-600' },
+    { key: 'poomsae'     as const, label: 'Poomsae',     icon: '🎽', track: 'bg-purple-100', fill: 'bg-purple-500',  text: 'text-purple-700',  badge: 'bg-purple-50 text-purple-600' },
 ];
 
 function MetricsCard({ athleteProfile }: { athleteProfile?: AthleteProfile | null }) {

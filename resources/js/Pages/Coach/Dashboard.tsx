@@ -14,6 +14,8 @@ interface AthleteProfile {
     speed: number | null;
     strength: number | null;
     flexibility: number | null;
+    kyorugi: number | null;
+    poomsae: number | null;
 }
 
 interface Athlete {
@@ -37,6 +39,7 @@ interface Payout {
     payout_date: string;
     status: string;
     notes: string | null;
+    payment_type: string | null;
 }
 
 // ── Constants ────────────────────────────────────────────────────────────────
@@ -73,6 +76,8 @@ const METRICS = [
     { key: 'speed',       label: 'Speed',       color: 'from-blue-400 to-blue-600',    track: 'bg-blue-100',    fill: 'bg-blue-500',    icon: '⚡' },
     { key: 'strength',    label: 'Strength',    color: 'from-orange-400 to-orange-600', track: 'bg-orange-100',  fill: 'bg-orange-500',  icon: '💪' },
     { key: 'flexibility', label: 'Flexibility', color: 'from-emerald-400 to-emerald-600', track: 'bg-emerald-100', fill: 'bg-emerald-500', icon: '🤸' },
+    { key: 'kyorugi',     label: 'Kyorugi',     color: 'from-rose-400 to-rose-600',    track: 'bg-rose-100',    fill: 'bg-rose-500',    icon: '🥊' },
+    { key: 'poomsae',     label: 'Poomsae',     color: 'from-purple-400 to-purple-600', track: 'bg-purple-100', fill: 'bg-purple-500',  icon: '🎽' },
 ] as const;
 
 function AthleteSkillsPanel({ athlete }: { athlete: Athlete }) {
@@ -81,6 +86,8 @@ function AthleteSkillsPanel({ athlete }: { athlete: Athlete }) {
         speed:       profile?.speed       ?? 0,
         strength:    profile?.strength    ?? 0,
         flexibility: profile?.flexibility ?? 0,
+        kyorugi:     profile?.kyorugi     ?? 0,
+        poomsae:     profile?.poomsae     ?? 0,
     });
     const [saved, setSaved] = useState(false);
 
@@ -235,10 +242,16 @@ export default function CoachDashboard({
                                                 </div>
                                             )}
                                         </div>
-                                        <div className="grid grid-cols-2 gap-3">
+                                        <div className="grid grid-cols-3 gap-3">
                                             <div className="bg-slate-50 rounded-xl p-3">
                                                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Payout Date</p>
                                                 <p className="text-sm font-bold text-gray-800">{fmt(nextPayout.payout_date)}</p>
+                                            </div>
+                                            <div className="bg-slate-50 rounded-xl p-3">
+                                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Type</p>
+                                                <span className="inline-flex items-center text-xs font-extrabold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-lg border border-indigo-100">
+                                                    {nextPayout.payment_type ?? 'Monthly Salary'}
+                                                </span>
                                             </div>
                                             <div className="bg-slate-50 rounded-xl p-3">
                                                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Status</p>
@@ -293,9 +306,22 @@ export default function CoachDashboard({
                                                     <p className="text-xs text-gray-400">{fmt(payout.payout_date)}</p>
                                                 </div>
                                             </div>
-                                            <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-lg">
-                                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Paid
-                                            </span>
+                                            <div className="flex items-center gap-2">
+                                                <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-lg">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Paid
+                                                </span>
+                                                {payout.payment_type && (
+                                                    <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md border ${
+                                                        payout.payment_type === 'Monthly Salary' ? 'bg-indigo-50 border-indigo-100 text-indigo-700' :
+                                                        payout.payment_type === 'Hourly Rate' ? 'bg-emerald-50 border-emerald-100 text-emerald-700' :
+                                                        payout.payment_type === 'Per Session' ? 'bg-purple-50 border-purple-100 text-purple-700' :
+                                                        payout.payment_type === 'Commission' ? 'bg-amber-50 border-amber-100 text-amber-700' :
+                                                        'bg-rose-50 border-rose-100 text-rose-700'
+                                                    }`}>
+                                                        {payout.payment_type}
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
                                     ))
                                 )}
@@ -424,6 +450,16 @@ export default function CoachDashboard({
                                                                         {profile?.flexibility != null && (
                                                                             <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-600">
                                                                                 🤸 {profile.flexibility}
+                                                                            </span>
+                                                                        )}
+                                                                        {profile?.kyorugi != null && (
+                                                                            <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-rose-50 text-rose-600">
+                                                                                🥊 {profile.kyorugi}
+                                                                            </span>
+                                                                        )}
+                                                                        {profile?.poomsae != null && (
+                                                                            <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-purple-50 text-purple-600">
+                                                                                🎽 {profile.poomsae}
                                                                             </span>
                                                                         )}
                                                                     </div>

@@ -57,6 +57,7 @@ class ReportController extends Controller
             'user_id' => 'required|exists:users,id',
             'amount' => 'required|numeric|min:1',
             'payout_date' => 'required|date',
+            'payment_type' => 'required|string|in:Monthly Salary,Hourly Rate,Per Session,Commission,Bonus',
             'notes' => 'nullable|string',
         ]);
 

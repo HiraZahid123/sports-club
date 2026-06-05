@@ -2,12 +2,29 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm } from '@inertiajs/react';
 import { FormEventHandler, useState } from 'react';
 
+const PAYMENT_TYPES = [
+    { value: 'Monthly Salary', label: 'Monthly Salary', icon: '💰' },
+    { value: 'Hourly Rate', label: 'Hourly Rate', icon: '⏱️' },
+    { value: 'Per Session', label: 'Per Session', icon: '📋' },
+    { value: 'Commission', label: 'Commission', icon: '💹' },
+    { value: 'Bonus', label: 'Bonus', icon: '🎁' },
+];
+
+const paymentTypeBadges: Record<string, string> = {
+    'Monthly Salary': 'bg-indigo-50 text-indigo-700 border-indigo-100',
+    'Hourly Rate':    'bg-emerald-50 text-emerald-700 border-emerald-100',
+    'Per Session':    'bg-purple-50 text-purple-700 border-purple-100',
+    'Commission':     'bg-amber-50 text-amber-700 border-amber-100',
+    'Bonus':          'bg-rose-50 text-rose-700 border-rose-100',
+};
+
 export default function ReportsIndex({ revenueData, coaches, recentPayouts }: any) {
     const [selectedCoach, setSelectedCoach] = useState<any>(null);
     const { data, setData, post, processing, reset } = useForm({
         user_id: '',
         amount: '',
         payout_date: new Date().toISOString().split('T')[0],
+        payment_type: 'Monthly Salary',
         notes: '',
     });
 
@@ -130,7 +147,14 @@ export default function ReportsIndex({ revenueData, coaches, recentPayouts }: an
                                                 {payout.user.name.charAt(0).toUpperCase()}
                                             </div>
                                             <div>
-                                                <p className="font-semibold text-gray-900 text-sm">{payout.user.name}</p>
+                                                <div className="flex items-center gap-2">
+                                                    <p className="font-semibold text-gray-900 text-sm">{payout.user.name}</p>
+                                                    {payout.payment_type && (
+                                                        <span className={`inline-block px-1.5 py-0.5 rounded-md text-[9px] font-bold border ${paymentTypeBadges[payout.payment_type] || 'bg-gray-50 text-gray-700 border-gray-100'}`}>
+                                                            {payout.payment_type}
+                                                        </span>
+                                                    )}
+                                                </div>
                                                 <p className="text-xs text-gray-400">{payout.payout_date}</p>
                                             </div>
                                         </div>
@@ -159,6 +183,16 @@ export default function ReportsIndex({ revenueData, coaches, recentPayouts }: an
                         </div>
 
                         <form onSubmit={submit} className="p-6 space-y-4">
+                            {selectedCoach && (
+                                <div className="bg-indigo-50/50 border border-indigo-100 rounded-xl px-4 py-3 flex items-center justify-between text-xs text-indigo-900">
+                                    <div className="flex items-center gap-1.5">
+                                        <span className="text-sm">⏱️</span>
+                                        <span className="font-semibold">Hourly Rate Reference:</span>
+                                    </div>
+                                    <span className="font-black">${Number((selectedCoach.coach_profile || selectedCoach.coachProfile)?.hourly_rate ?? 0).toFixed(2)}/hr</span>
+                                </div>
+                            )}
+
                             <div>
                                 <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Payout Amount ($)</label>
                                 <input
@@ -168,6 +202,30 @@ export default function ReportsIndex({ revenueData, coaches, recentPayouts }: an
                                     placeholder="0.00"
                                     className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
                                 />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">Payment Category</label>
+                                <div className="flex flex-wrap gap-2">
+                                    {PAYMENT_TYPES.map((type) => {
+                                        const isSelected = data.payment_type === type.value;
+                                        return (
+                                            <button
+                                                key={type.value}
+                                                type="button"
+                                                onClick={() => setData('payment_type', type.value)}
+                                                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-bold transition-all ${
+                                                    isSelected
+                                                        ? 'bg-indigo-600 border-indigo-600 text-white shadow-sm'
+                                                        : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'
+                                                }`}
+                                            >
+                                                <span>{type.icon}</span>
+                                                <span>{type.label}</span>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
                             </div>
                             <div>
                                 <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Payout Date</label>

@@ -67,6 +67,8 @@ class GoalController extends Controller
             'speed'       => 'required|integer|min:0|max:100',
             'strength'    => 'required|integer|min:0|max:100',
             'flexibility' => 'required|integer|min:0|max:100',
+            'kyorugi'     => 'required|integer|min:0|max:100',
+            'poomsae'     => 'required|integer|min:0|max:100',
         ]);
 
         // Ensure coach has access to this athlete
@@ -83,6 +85,8 @@ class GoalController extends Controller
                 'speed'       => $validated['speed'],
                 'strength'    => $validated['strength'],
                 'flexibility' => $validated['flexibility'],
+                'kyorugi'     => $validated['kyorugi'],
+                'poomsae'     => $validated['poomsae'],
             ]
         );
 

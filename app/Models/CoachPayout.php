@@ -13,6 +13,7 @@ class CoachPayout extends Model
         'payout_date',
         'status',
         'notes',
+        'payment_type',
     ];
 
     protected $casts = [
