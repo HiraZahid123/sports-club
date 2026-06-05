@@ -1,6 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, useForm } from '@inertiajs/react';
-import { FormEventHandler } from 'react';
+import { Head, useForm, router } from '@inertiajs/react';
+import { FormEventHandler, useRef, useState } from 'react';
 
 interface Club {
     id: number;
@@ -9,9 +9,10 @@ interface Club {
     phone: string;
     address: string;
     description: string;
+    logo_path?: string | null;
 }
 
-export default function ClubEdit({ club, status }: { club: Club, status?: string }) {
+export default function ClubEdit({ club, status }: { club: Club; status?: string }) {
     const { data, setData, patch, processing, errors, recentlySuccessful } = useForm({
         name: club.name || '',
         email: club.email || '',
@@ -24,6 +25,47 @@ export default function ClubEdit({ club, status }: { club: Club, status?: string
         e.preventDefault();
         patch(route('manager.club.update'));
     };
+
+    // --- Logo upload state ---
+    const fileInput = useRef<HTMLInputElement>(null);
+    const [preview, setPreview] = useState<string | null>(null);
+    const [logoFile, setLogoFile] = useState<File | null>(null);
+    const [uploading, setUploading] = useState(false);
+    const [logoError, setLogoError] = useState<string | null>(null);
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setLogoFile(file);
+        setLogoError(null);
+        setPreview(URL.createObjectURL(file));
+    };
+
+    const handleLogoUpload = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!logoFile) return;
+        setUploading(true);
+        setLogoError(null);
+        const form = new FormData();
+        form.append('logo', logoFile);
+        router.post(route('manager.club.logo'), form, {
+            onSuccess: () => {
+                setLogoFile(null);
+                setPreview(null);
+                setUploading(false);
+            },
+            onError: (errs) => {
+                setLogoError(errs.logo ?? 'Upload failed.');
+                setUploading(false);
+            },
+        });
+    };
+
+    const currentLogo = preview ?? (club.logo_path ? `/storage/${club.logo_path}` : null);
+
+    const inputClass =
+        'w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all';
+    const labelClass = 'block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5';
 
     return (
         <AuthenticatedLayout
@@ -39,6 +81,101 @@ export default function ClubEdit({ club, status }: { club: Club, status?: string
             <div className="py-8">
                 <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
 
+                    {/* Flash messages */}
+                    {status === 'logo-updated' && (
+                        <div className="flex items-center gap-2 px-4 py-3 bg-emerald-50 border border-emerald-200 rounded-xl text-sm font-semibold text-emerald-700">
+                            <svg className="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                            Club photo updated successfully.
+                        </div>
+                    )}
+
+                    {/* Club Photo */}
+                    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                        <div className="bg-gradient-to-r from-indigo-50 to-blue-50 px-6 py-5 border-b border-indigo-100">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600 text-lg">📷</div>
+                                <div>
+                                    <h3 className="text-base font-bold text-indigo-900">Club Photo</h3>
+                                    <p className="text-xs text-indigo-600 mt-0.5">Shown on your club profile. JPG, PNG, GIF or WEBP · max 3 MB</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <form onSubmit={handleLogoUpload} className="p-6">
+                            <div className="flex items-center gap-6">
+                                {/* Avatar */}
+                                <div className="shrink-0">
+                                    {currentLogo ? (
+                                        <img
+                                            src={currentLogo}
+                                            alt="Club logo"
+                                            className="w-24 h-24 rounded-2xl object-cover border-2 border-gray-100 shadow-sm"
+                                        />
+                                    ) : (
+                                        <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-indigo-100 to-blue-100 border-2 border-indigo-100 flex items-center justify-center">
+                                            <svg className="w-10 h-10 text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21H5a2 2 0 01-2-2V7a2 2 0 012-2h4l2-3h4l2 3h4a2 2 0 012 2v12a2 2 0 01-2 2z" />
+                                                <circle cx="12" cy="13" r="3" strokeWidth={1.5} />
+                                            </svg>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Controls */}
+                                <div className="flex-1 space-y-3">
+                                    <input
+                                        ref={fileInput}
+                                        type="file"
+                                        accept="image/jpeg,image/png,image/gif,image/webp"
+                                        onChange={handleFileChange}
+                                        className="hidden"
+                                    />
+
+                                    {!logoFile ? (
+                                        <button
+                                            type="button"
+                                            onClick={() => fileInput.current?.click()}
+                                            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-200 bg-white text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-all shadow-sm"
+                                        >
+                                            <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                            </svg>
+                                            {club.logo_path ? 'Change Photo' : 'Upload Photo'}
+                                        </button>
+                                    ) : (
+                                        <div className="flex items-center gap-3">
+                                            <button
+                                                type="submit"
+                                                disabled={uploading}
+                                                className="px-4 py-2 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 transition-all disabled:opacity-50 shadow-sm"
+                                            >
+                                                {uploading ? 'Uploading…' : 'Save Photo'}
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => { setLogoFile(null); setPreview(null); setLogoError(null); if (fileInput.current) fileInput.current.value = ''; }}
+                                                className="px-4 py-2 border border-gray-200 text-gray-600 text-sm font-semibold rounded-xl hover:bg-gray-50 transition-all"
+                                            >
+                                                Cancel
+                                            </button>
+                                            <span className="text-xs text-gray-400 truncate max-w-40">{logoFile.name}</span>
+                                        </div>
+                                    )}
+
+                                    {logoError && <p className="text-xs text-red-600">{logoError}</p>}
+
+                                    {!logoFile && (
+                                        <p className="text-xs text-gray-400">
+                                            {club.logo_path ? 'Click "Change Photo" to upload a new image.' : 'No photo uploaded yet.'}
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
                     {/* Profile Form */}
                     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                         <div className="bg-gradient-to-r from-indigo-50 to-blue-50 px-6 py-5 border-b border-indigo-100">
@@ -53,61 +190,61 @@ export default function ClubEdit({ club, status }: { club: Club, status?: string
 
                         <form onSubmit={submit} className="p-6 space-y-5">
                             <div>
-                                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Club Name</label>
+                                <label className={labelClass}>Club Name</label>
                                 <input
                                     type="text"
                                     value={data.name}
                                     onChange={(e) => setData('name', e.target.value)}
                                     placeholder="e.g. Dragon Taekwondo Academy"
-                                    className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                                    className={inputClass}
                                 />
                                 {errors.name && <p className="mt-1.5 text-xs text-red-600">{errors.name}</p>}
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                 <div>
-                                    <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Email Address</label>
+                                    <label className={labelClass}>Email Address</label>
                                     <input
                                         type="email"
                                         value={data.email}
                                         onChange={(e) => setData('email', e.target.value)}
                                         placeholder="club@example.com"
-                                        className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                                        className={inputClass}
                                     />
                                     {errors.email && <p className="mt-1.5 text-xs text-red-600">{errors.email}</p>}
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Phone Number</label>
+                                    <label className={labelClass}>Phone Number</label>
                                     <input
                                         type="text"
                                         value={data.phone}
                                         onChange={(e) => setData('phone', e.target.value)}
                                         placeholder="+1 (555) 000-0000"
-                                        className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                                        className={inputClass}
                                     />
                                     {errors.phone && <p className="mt-1.5 text-xs text-red-600">{errors.phone}</p>}
                                 </div>
                             </div>
 
                             <div>
-                                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Address</label>
+                                <label className={labelClass}>Address</label>
                                 <textarea
                                     value={data.address}
                                     onChange={(e) => setData('address', e.target.value)}
                                     placeholder="123 Sports Ave, City, State 12345"
                                     rows={3}
-                                    className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all resize-none"
+                                    className={`${inputClass} resize-none`}
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Club Description</label>
+                                <label className={labelClass}>Club Description</label>
                                 <textarea
                                     value={data.description}
                                     onChange={(e) => setData('description', e.target.value)}
                                     placeholder="Tell athletes and parents about your club..."
                                     rows={4}
-                                    className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all resize-none"
+                                    className={`${inputClass} resize-none`}
                                 />
                             </div>
 

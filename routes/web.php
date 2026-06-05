@@ -35,6 +35,7 @@ Route::middleware(['auth', 'verified', 'role:Manager|Super Admin'])->prefix('man
 
     Route::get('/club', [\App\Http\Controllers\ClubController::class, 'edit'])->name('club.edit');
     Route::patch('/club', [\App\Http\Controllers\ClubController::class, 'update'])->name('club.update');
+    Route::post('/club/logo', [\App\Http\Controllers\ClubController::class, 'uploadLogo'])->name('club.logo');
 
     Route::get('/members', [\App\Http\Controllers\MemberController::class, 'index'])->name('members.index');
     Route::post('/members', [\App\Http\Controllers\MemberController::class, 'store'])->name('members.store');
