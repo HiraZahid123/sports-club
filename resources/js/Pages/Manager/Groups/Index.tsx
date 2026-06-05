@@ -23,6 +23,7 @@ interface Group {
     age_range: string;
     athletes_count: number;
     coaches: any[];
+    athletes: any[];
     schedules: ScheduleSlot[];
 }
 
@@ -71,7 +72,7 @@ const blankSlot = (): ScheduleSlot => ({
 });
 
 // ── Component ──────────────────────────────────────────────────────────────
-export default function GroupsIndex({ groups, coaches }: { groups: Group[], coaches: Coach[], athletes: any[] }) {
+export default function GroupsIndex({ groups, coaches, athletes }: { groups: Group[], coaches: Coach[], athletes: any[] }) {
     const [isCreating, setIsCreating]     = useState(false);
     const [editingGroup, setEditingGroup] = useState<Group | null>(null);
 
@@ -152,6 +153,57 @@ export default function GroupsIndex({ groups, coaches }: { groups: Group[], coac
                 onSuccess: (page) => {
                     const updated = (page.props.groups as Group[]).find(g => g.id === groupId);
                     if (updated) setEditingGroup(updated);
+                },
+            }
+        );
+    };
+
+    // ── Athlete actions ────────────────────────────────────────────────────
+    const handleAssignAthlete = (groupId: number, athleteId: string) => {
+        if (!athleteId) return;
+        router.post(route('manager.groups.assign', groupId),
+            { user_id: athleteId, role_in_group: 'Athlete' },
+            {
+                preserveScroll: true,
+                onSuccess: (page) => {
+                    const updated = (page.props.groups as Group[]).find(g => g.id === groupId);
+                    if (updated) setEditingGroup(updated);
+                },
+            }
+        );
+    };
+
+    const handleRemoveAthlete = (groupId: number, athleteId: number, athleteName: string) => {
+        if (!confirm(`Remove ${athleteName} from this group?`)) return;
+        router.post(route('manager.groups.remove', groupId),
+            { user_id: athleteId },
+            {
+                preserveScroll: true,
+                onSuccess: (page) => {
+                    const updated = (page.props.groups as Group[]).find(g => g.id === groupId);
+                    if (updated) setEditingGroup(updated);
+                },
+            }
+        );
+    };
+
+    const handleMoveAthlete = (fromGroupId: number, toGroupId: string, athleteId: number) => {
+        if (!toGroupId) return;
+        router.post(route('manager.groups.remove', fromGroupId),
+            { user_id: athleteId },
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    router.post(route('manager.groups.assign', toGroupId),
+                        { user_id: athleteId, role_in_group: 'Athlete' },
+                        {
+                            preserveScroll: true,
+                            onSuccess: (page) => {
+                                const updated = (page.props.groups as Group[]).find(g => g.id === fromGroupId);
+                                if (updated) setEditingGroup(updated);
+                            },
+                        }
+                    );
                 },
             }
         );
@@ -377,6 +429,79 @@ export default function GroupsIndex({ groups, coaches }: { groups: Group[], coac
                                                 <option key={c.id} value={c.id}>{c.name}</option>
                                             ))}
                                         </select>
+                                    )}
+                                </div>
+
+                                {/* ── Athlete Management ─────────────────── */}
+                                <div className="border-t border-gray-100 pt-6">
+                                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3 flex items-center gap-2">
+                                        <svg className="w-3.5 h-3.5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                        Athletes
+                                        <span className="ml-1 px-1.5 py-0.5 bg-blue-100 text-blue-600 text-[10px] font-bold rounded-md">{editingGroup.athletes.length}</span>
+                                    </p>
+
+                                    {/* Current athletes list */}
+                                    <div className="space-y-2 mb-3">
+                                        {editingGroup.athletes.length === 0 ? (
+                                            <p className="text-xs text-gray-400 italic py-2 px-3 bg-gray-50 rounded-xl">No athletes assigned yet.</p>
+                                        ) : (
+                                            editingGroup.athletes.map((athlete) => (
+                                                <div key={athlete.id} className="flex items-center justify-between bg-blue-50 border border-blue-100 rounded-xl px-3 py-2">
+                                                    <div className="flex items-center gap-2.5 min-w-0">
+                                                        <div className="w-7 h-7 rounded-full bg-blue-500 flex items-center justify-center text-white text-[11px] font-bold shadow-sm shrink-0">
+                                                            {athlete.name.charAt(0).toUpperCase()}
+                                                        </div>
+                                                        <span className="text-sm font-medium text-blue-900 truncate">{athlete.name}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-2 shrink-0 ml-3">
+                                                        {/* Move to another group */}
+                                                        {groups.filter(g => g.id !== editingGroup.id).length > 0 && (
+                                                            <select
+                                                                defaultValue=""
+                                                                onChange={(e) => {
+                                                                    if (e.target.value) {
+                                                                        handleMoveAthlete(editingGroup.id, e.target.value, athlete.id);
+                                                                        e.target.value = '';
+                                                                    }
+                                                                }}
+                                                                className="text-xs rounded-lg border border-blue-200 bg-white text-blue-700 px-2 py-1 focus:outline-none focus:border-blue-400 transition-all"
+                                                            >
+                                                                <option value="" disabled>Move to…</option>
+                                                                {groups.filter(g => g.id !== editingGroup.id).map(g => (
+                                                                    <option key={g.id} value={g.id}>{g.name}</option>
+                                                                ))}
+                                                            </select>
+                                                        )}
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleRemoveAthlete(editingGroup.id, athlete.id, athlete.name)}
+                                                            className="flex items-center gap-1 text-xs text-red-400 hover:text-red-600 hover:bg-red-50 px-2 py-1 rounded-lg transition-all font-medium"
+                                                        >
+                                                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                                                            Remove
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+
+                                    {/* Add athlete dropdown */}
+                                    {athletes.filter(a => !editingGroup.athletes.some(ga => ga.id === a.id)).length > 0 && (
+                                        <select
+                                            defaultValue=""
+                                            onChange={(e) => { if (e.target.value) { handleAssignAthlete(editingGroup.id, e.target.value); e.target.value = ''; } }}
+                                            className="w-full rounded-xl border border-dashed border-blue-300 bg-blue-50/50 px-3 py-2 text-sm text-blue-700 focus:border-blue-500 focus:bg-white focus:outline-none transition-all"
+                                        >
+                                            <option value="" disabled>＋ Assign an athlete to this group…</option>
+                                            {athletes.filter(a => !editingGroup.athletes.some(ga => ga.id === a.id)).map(a => (
+                                                <option key={a.id} value={a.id}>{a.name}</option>
+                                            ))}
+                                        </select>
+                                    )}
+
+                                    {athletes.length === 0 && (
+                                        <p className="text-xs text-gray-400 italic">No athletes in your club yet. Add members first.</p>
                                     )}
                                 </div>
 
