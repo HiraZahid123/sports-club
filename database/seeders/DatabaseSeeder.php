@@ -74,6 +74,29 @@ class DatabaseSeeder extends Seeder
         // Assign Coach to groups
         $coach->trainingGroups()->attach([$groupA->id, $groupB->id], ['role_in_group' => 'Coach']);
 
+        // Create Group Schedules for testing
+        \App\Models\GroupSchedule::create([
+            'training_group_id' => $groupA->id,
+            'day_of_week' => 'Monday',
+            'start_time' => '17:00:00',
+            'end_time' => '18:30:00', // 1.5 hours
+            'location' => 'Main Dojang',
+        ]);
+        \App\Models\GroupSchedule::create([
+            'training_group_id' => $groupA->id,
+            'day_of_week' => 'Wednesday',
+            'start_time' => '17:00:00',
+            'end_time' => '18:30:00', // 1.5 hours
+            'location' => 'Main Dojang',
+        ]);
+        \App\Models\GroupSchedule::create([
+            'training_group_id' => $groupB->id,
+            'day_of_week' => 'Friday',
+            'start_time' => '18:00:00',
+            'end_time' => '20:00:00', // 2 hours
+            'location' => 'Sparring Area',
+        ]);
+
         // Create some Athletes and Subscriptions
         for ($i = 1; $i <= 10; $i++) {
             $athlete = User::factory()->create([

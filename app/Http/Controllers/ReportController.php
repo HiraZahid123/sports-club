@@ -31,7 +31,11 @@ class ReportController extends Controller
         // Coach List with compensation data
         $coaches = User::role('Coach')
             ->where('club_id', $clubId)
-            ->with(['coachProfile', 'trainingGroups'])
+            ->with([
+                'coachProfile',
+                'trainingGroups.athletes',
+                'trainingGroups.schedules'
+            ])
             ->get();
 
         // Recent Payouts
@@ -57,7 +61,7 @@ class ReportController extends Controller
             'user_id' => 'required|exists:users,id',
             'amount' => 'required|numeric|min:1',
             'payout_date' => 'required|date',
-            'payment_type' => 'required|string|in:Monthly Salary,Hourly Rate,Per Session,Commission,Bonus',
+            'payment_type' => 'required|string|in:Monthly Salary,Hourly Rate,Per Session,Commission,Bonus,Per Athlete,Fixed Amount',
             'notes' => 'nullable|string',
         ]);
 
