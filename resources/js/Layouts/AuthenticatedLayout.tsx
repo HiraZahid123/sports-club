@@ -77,8 +77,14 @@ export default function Authenticated({
                         {/* Right: User Menu */}
                         <div className="hidden sm:flex items-center gap-3">
                             <div className="flex items-center gap-2">
-                                <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-sm border border-indigo-200">
-                                    {user.name.charAt(0).toUpperCase()}
+                                <div className="w-8 h-8 rounded-full overflow-hidden border border-indigo-200 shrink-0">
+                                    {(user as any).profile_photo ? (
+                                        <img src={`/${(user as any).profile_photo}`} alt={user.name} className="w-full h-full object-cover" />
+                                    ) : (
+                                        <div className="w-full h-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-sm">
+                                            {user.name.charAt(0).toUpperCase()}
+                                        </div>
+                                    )}
                                 </div>
                                 <Dropdown>
                                     <Dropdown.Trigger>
@@ -161,8 +167,14 @@ export default function Authenticated({
 
                     <div className="border-t border-gray-200 pb-3 pt-4 px-4">
                         <div className="flex items-center gap-3 mb-3">
-                            <div className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold">
-                                {user.name.charAt(0).toUpperCase()}
+                            <div className="w-9 h-9 rounded-full overflow-hidden border border-indigo-200 shrink-0">
+                                {(user as any).profile_photo ? (
+                                    <img src={`/${(user as any).profile_photo}`} alt={user.name} className="w-full h-full object-cover" />
+                                ) : (
+                                    <div className="w-full h-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold">
+                                        {user.name.charAt(0).toUpperCase()}
+                                    </div>
+                                )}
                             </div>
                             <div>
                                 <p className="text-sm font-semibold text-gray-900">{user.name}</p>

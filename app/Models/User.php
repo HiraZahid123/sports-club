@@ -37,6 +37,7 @@ class User extends Authenticatable
         'city',
         'emergency_contact_name',
         'emergency_contact_phone',
+        'profile_photo',
     ];
 
     /**
