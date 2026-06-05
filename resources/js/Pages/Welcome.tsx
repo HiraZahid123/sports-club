@@ -10,10 +10,9 @@ export default function Welcome({ auth }: PageProps<{ laravelVersion: string, ph
             {/* Navigation */}
             <nav className="fixed w-full z-50 bg-white/90 backdrop-blur-md border-b border-gray-100 shadow-sm">
                 <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                        <div className="w-9 h-9 bg-indigo-600 rounded-lg flex items-center justify-center font-black text-xl italic text-white shadow-sm">S</div>
-                        <span className="text-lg font-black tracking-tight text-gray-900">Sport<span className="text-indigo-600">Club</span></span>
-                    </div>
+                    <Link href="/">
+                        <img src={mlSportsLogo} alt="ML Sports" className="h-10 w-auto object-contain" />
+                    </Link>
                     <div className="hidden md:flex items-center gap-8 text-sm font-semibold text-gray-500">
                         <a href="#features" className="hover:text-indigo-600 transition-colors">Features</a>
                         <a href="#how-it-works" className="hover:text-indigo-600 transition-colors">How It Works</a>

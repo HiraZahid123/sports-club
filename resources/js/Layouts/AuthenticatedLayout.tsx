@@ -3,6 +3,7 @@ import NavLink from '@/Components/NavLink';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
 import { Link, usePage } from '@inertiajs/react';
 import { PropsWithChildren, ReactNode, useState } from 'react';
+import mlSportsLogo from '../ml-sports.png';
 
 export default function Authenticated({
     header,
@@ -21,11 +22,8 @@ export default function Authenticated({
                     <div className="flex h-16 items-center justify-between">
                         {/* Left: Logo + Nav */}
                         <div className="flex items-center gap-6">
-                            <Link href="/" className="flex items-center gap-2.5 shrink-0">
-                                <div className="w-9 h-9 bg-indigo-600 rounded-lg flex items-center justify-center font-black text-lg italic text-white shadow-sm">S</div>
-                                <span className="font-black text-gray-900 tracking-tight text-lg hidden sm:block">
-                                    Sport<span className="text-indigo-600">Club</span>
-                                </span>
+                            <Link href="/" className="flex items-center shrink-0">
+                                <img src={mlSportsLogo} alt="ML Sports" className="h-10 w-auto object-contain" />
                             </Link>
 
                             {(user as any).club && (

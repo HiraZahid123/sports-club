@@ -1,5 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { PropsWithChildren } from 'react';
+import mlSportsLogo from '../ml-sports.png';
 
 export default function Guest({ children }: PropsWithChildren) {
     return (
@@ -10,9 +11,8 @@ export default function Guest({ children }: PropsWithChildren) {
                 <div className="absolute -bottom-32 -right-16 w-96 h-96 bg-white/5 rounded-full"></div>
                 <div className="absolute top-1/3 right-8 w-32 h-32 bg-white/5 rounded-full"></div>
 
-                <Link href="/" className="relative flex items-center gap-3">
-                    <div className="w-11 h-11 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center font-black text-xl text-white border border-white/25 shadow-lg">S</div>
-                    <span className="text-xl font-black text-white tracking-tight">Sport<span className="text-indigo-200">Club</span></span>
+                <Link href="/" className="relative flex items-center">
+                    <img src={mlSportsLogo} alt="ML Sports" className="h-11 w-auto object-contain brightness-0 invert" />
                 </Link>
 
                 <div className="relative">
@@ -46,10 +46,9 @@ export default function Guest({ children }: PropsWithChildren) {
 
             {/* Form Panel */}
             <div className="flex-1 flex flex-col items-center justify-center px-6 py-12 bg-white">
-                <div className="lg:hidden flex items-center gap-2 mb-10">
-                    <Link href="/" className="flex items-center gap-2">
-                        <div className="w-9 h-9 bg-indigo-600 rounded-lg flex items-center justify-center font-black text-white text-sm shadow-sm">S</div>
-                        <span className="font-black text-gray-900 text-lg">Sport<span className="text-indigo-600">Club</span></span>
+                <div className="lg:hidden flex items-center mb-10">
+                    <Link href="/">
+                        <img src={mlSportsLogo} alt="ML Sports" className="h-10 w-auto object-contain" />
                     </Link>
                 </div>
                 <div className="w-full max-w-md">
