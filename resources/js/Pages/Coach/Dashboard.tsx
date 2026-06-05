@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { useState } from 'react';
-import { getBeltBadgeStyle, getBeltBarClass } from '@/beltHelpers';
+import { getBeltBadgeStyle, getBeltStyle } from '@/beltHelpers';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -576,7 +576,7 @@ export default function CoachDashboard({
                                                                         <p className="font-semibold text-gray-900 text-sm">{athlete.name}</p>
                                                                         {belt && (
                                                                             <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold border ${getBeltBadgeStyle(belt)}`}>
-                                                                                <span className={`inline-block h-1.5 w-3 rounded-sm border ${getBeltBarClass(belt)} shrink-0`} />
+                                                                                <span className="inline-block h-1.5 w-3 rounded-sm border shrink-0" style={getBeltStyle(belt)} />
                                                                                 {belt}
                                                                             </span>
                                                                         )}

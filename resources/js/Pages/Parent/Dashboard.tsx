@@ -1,6 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
-import { getBeltBadgeStyle, getBeltBarClass } from '@/beltHelpers';
+import { getBeltBadgeStyle, getBeltStyle } from '@/beltHelpers';
 
 export default function ParentDashboard() {
     const children = [
@@ -65,7 +65,7 @@ export default function ParentDashboard() {
 
                                                 <div className="flex items-center gap-3 mb-4">
                                                     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border ${getBeltBadgeStyle(child.belt)}`}>
-                                                        <span className={`inline-block h-2 w-4 rounded-sm border ${getBeltBarClass(child.belt)} shrink-0`} />
+                                                        <span className="inline-block h-2 w-4 rounded-sm border shrink-0" style={getBeltStyle(child.belt)} />
                                                         {child.belt}
                                                     </span>
                                                     <span className="text-xs text-gray-400">{child.classes} classes attended</span>

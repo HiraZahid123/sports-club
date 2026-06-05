@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm, Link } from '@inertiajs/react';
 import { FormEventHandler, useState, useRef, useEffect } from 'react';
-import { BELT_OPTIONS, getBeltBadgeStyle, getBeltBarClass } from '@/beltHelpers';
+import { BELT_OPTIONS, getBeltBadgeStyle, getBeltStyle } from '@/beltHelpers';
 
 interface AthleteProfile {
     belt_rank?: string | null;
@@ -34,7 +34,7 @@ function beltBadge(belt: string | null | undefined) {
     const cls = getBeltBadgeStyle(belt);
     return (
         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border ${cls}`}>
-            <span className={`inline-block h-2 w-4 rounded-sm border ${getBeltBarClass(belt)} shrink-0`} />
+            <span className="inline-block h-2 w-4 rounded-sm border shrink-0" style={getBeltStyle(belt)} />
             {belt}
         </span>
     );
@@ -331,7 +331,7 @@ export default function MembersIndex({ members }: { members: Member[] }) {
                                                     <span className="flex items-center gap-2">
                                                         {data.belt_rank ? (
                                                             <>
-                                                                <span className={`inline-block h-3.5 w-7 rounded border shadow-sm ${getBeltBarClass(data.belt_rank)} shrink-0`} />
+                                                                <span className="inline-block h-3.5 w-7 rounded border shadow-sm shrink-0" style={getBeltStyle(data.belt_rank)} />
                                                                 <span className="font-semibold text-gray-800">{data.belt_rank}</span>
                                                             </>
                                                         ) : (
@@ -359,7 +359,7 @@ export default function MembersIndex({ members }: { members: Member[] }) {
                                                                         : 'text-gray-700 hover:bg-slate-50'
                                                                 }`}
                                                             >
-                                                                <span className={`inline-block h-3.5 w-7 rounded border shadow-sm ${getBeltBarClass(opt.value)} shrink-0`} />
+                                                                <span className="inline-block h-3.5 w-7 rounded border shadow-sm shrink-0" style={getBeltStyle(opt.value)} />
                                                                 <span>{opt.label}</span>
                                                             </button>
                                                         ))}

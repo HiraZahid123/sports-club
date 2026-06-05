@@ -1,6 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
-import { getBeltBadgeStyle, getBeltBarClass } from '@/beltHelpers';
+import { getBeltBadgeStyle, getBeltStyle, getBeltCardGradient, getNextBelt } from '@/beltHelpers';
 
 interface AthleteProfile {
     belt_rank?: string | null;
@@ -11,6 +11,7 @@ interface AthleteProfile {
 
 export default function AthleteDashboard({ athleteProfile }: { athleteProfile?: AthleteProfile | null }) {
     const belt = athleteProfile?.belt_rank || '10. WHITE';
+    const cardStyle = getBeltCardGradient(belt);
     const progressStats = [
         { label: 'Classes', val: '24', icon: '📚', color: 'bg-blue-50 border-blue-100 text-blue-600' },
         { label: 'Sparring', val: '15', icon: '🥊', color: 'bg-rose-50 border-rose-100 text-rose-600' },
@@ -35,28 +36,28 @@ export default function AthleteDashboard({ athleteProfile }: { athleteProfile?: 
                     {/* Hero Row */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         {/* Belt Rank Card */}
-                        <div className="relative bg-gradient-to-br from-indigo-600 via-indigo-700 to-blue-800 rounded-2xl p-8 text-white shadow-lg shadow-indigo-200 overflow-hidden">
+                        <div className={`relative bg-gradient-to-br ${cardStyle.bg} rounded-2xl p-8 overflow-hidden`}>
                             <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2"></div>
                             <div className="absolute bottom-0 left-0 w-20 h-20 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2"></div>
 
                             <div className="relative">
-                                <div className="w-16 h-16 bg-white/15 backdrop-blur-sm rounded-2xl flex items-center justify-center text-3xl mb-4 border border-white/20 shadow-inner">
+                                <div className={`w-16 h-16 ${cardStyle.text.includes('text-white') ? 'bg-white/15 border-white/20' : 'bg-slate-900/10 border-slate-900/20'} backdrop-blur-sm rounded-2xl flex items-center justify-center text-3xl mb-4 border shadow-inner`}>
                                     🥋
                                 </div>
-                                <p className="text-indigo-200 text-xs font-bold uppercase tracking-widest mb-1">Current Rank</p>
-                                <h3 className="text-2xl font-black mb-2 flex items-center gap-2">
-                                    <span className={`inline-block h-3.5 w-7 rounded border shadow-sm ${getBeltBarClass(belt)} shrink-0`} />
+                                <p className={`${cardStyle.subtext} text-xs font-bold uppercase tracking-widest mb-1`}>Current Rank</p>
+                                <h3 className={`text-2xl font-black mb-2 flex items-center gap-2 ${cardStyle.text}`}>
+                                    <span className="inline-block h-3.5 w-7 rounded border shadow-sm shrink-0" style={getBeltStyle(belt)} />
                                     {belt}
                                 </h3>
-                                <p className="text-indigo-200 text-xs">Next: Red Belt (Est. 3 months)</p>
+                                <p className={`${cardStyle.subtext} text-xs`}>Next: {getNextBelt(belt)} (Est. 3 months)</p>
 
                                 <div className="mt-5">
                                     <div className="flex justify-between text-xs mb-1.5">
-                                        <span className="text-indigo-200 font-medium">Progress to Grading</span>
-                                        <span className="text-white font-bold">45%</span>
+                                        <span className={`${cardStyle.subtext} font-medium`}>Progress to Grading</span>
+                                        <span className={`${cardStyle.text} font-bold`}>45%</span>
                                     </div>
-                                    <div className="w-full bg-white/15 rounded-full h-2.5">
-                                        <div className="bg-white h-2.5 rounded-full shadow-[0_0_8px_rgba(255,255,255,0.6)]" style={{ width: '45%' }}></div>
+                                    <div className={`w-full ${cardStyle.text.includes('text-white') ? 'bg-white/15' : 'bg-slate-200'} rounded-full h-2.5`}>
+                                        <div className={`${cardStyle.text.includes('text-white') ? 'bg-white shadow-[0_0_8px_rgba(255,255,255,0.6)]' : 'bg-indigo-600'} h-2.5 rounded-full`} style={{ width: '45%' }}></div>
                                     </div>
                                 </div>
                             </div>
