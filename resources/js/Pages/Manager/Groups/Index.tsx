@@ -109,7 +109,11 @@ export default function GroupsIndex({ groups, coaches }: { groups: Group[], coac
         });
         setScheduleSlots(
             group.schedules.length > 0
-                ? group.schedules.map(s => ({ ...s }))
+                ? group.schedules.map(s => ({
+                    ...s,
+                    start_time: s.start_time ? s.start_time.substring(0, 5) : '',
+                    end_time: s.end_time ? s.end_time.substring(0, 5) : '',
+                  }))
                 : []
         );
         setEditingGroup(group);
@@ -172,10 +176,23 @@ export default function GroupsIndex({ groups, coaches }: { groups: Group[], coac
                 preserveScroll: true,
                 onSuccess: (page) => {
                     const updated = (page.props.groups as Group[]).find(g => g.id === editingGroup.id);
-                    if (updated) { setEditingGroup(updated); setScheduleSlots(updated.schedules.map(s => ({ ...s }))); }
+                    if (updated) {
+                        setEditingGroup(updated);
+                        setScheduleSlots(updated.schedules.map(s => ({
+                            ...s,
+                            start_time: s.start_time ? s.start_time.substring(0, 5) : '',
+                            end_time: s.end_time ? s.end_time.substring(0, 5) : '',
+                        })));
+                    }
                     setScheduleSaving(false);
                 },
-                onError: () => setScheduleSaving(false),
+                onError: (errors) => {
+                    setScheduleSaving(false);
+                    const firstError = Object.values(errors)[0];
+                    if (firstError) {
+                        alert(firstError);
+                    }
+                },
             }
         );
     };

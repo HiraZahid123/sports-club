@@ -115,6 +115,19 @@ class TrainingGroupController extends Controller
      */
     public function updateSchedule(Request $request, TrainingGroup $group)
     {
+        if ($request->has('schedules') && is_array($request->schedules)) {
+            $schedules = $request->schedules;
+            foreach ($schedules as $key => $slot) {
+                if (isset($slot['start_time'])) {
+                    $schedules[$key]['start_time'] = substr($slot['start_time'], 0, 5);
+                }
+                if (isset($slot['end_time'])) {
+                    $schedules[$key]['end_time'] = substr($slot['end_time'], 0, 5);
+                }
+            }
+            $request->merge(['schedules' => $schedules]);
+        }
+
         $request->validate([
             'schedules'                 => 'present|array',
             'schedules.*.day_of_week'   => 'required|string|in:Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday',

@@ -32,6 +32,11 @@ class User extends Authenticatable
         'email',
         'password',
         'club_id',
+        'id_code',
+        'phone',
+        'city',
+        'emergency_contact_name',
+        'emergency_contact_phone',
     ];
 
     /**

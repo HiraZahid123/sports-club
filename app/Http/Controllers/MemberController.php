@@ -12,13 +12,10 @@ use Spatie\Permission\Models\Role;
 
 class MemberController extends Controller
 {
-    /**
-     * Display a listing of members for the manager's club.
-     */
     public function index(Request $request)
     {
         $clubId = $request->user()->club_id;
-        
+
         $members = User::where('club_id', $clubId)
             ->with(['roles', 'athleteProfile', 'parentProfile'])
             ->get();
@@ -28,30 +25,42 @@ class MemberController extends Controller
         ]);
     }
 
-    /**
-     * Store a newly created member in storage.
-     */
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'role' => 'required|string|in:Athlete,Parent,Coach',
-            'password' => 'required|string|min:8',
+            'name'                    => 'required|string|max:255',
+            'email'                   => 'required|string|email|max:255|unique:users',
+            'role'                    => 'required|string|in:Athlete,Parent,Coach',
+            'password'                => 'required|string|min:8',
+            'id_code'                 => 'nullable|string|max:100',
+            'phone'                   => 'nullable|string|max:50',
+            'city'                    => 'nullable|string|max:100',
+            'emergency_contact_name'  => 'nullable|string|max:255',
+            'emergency_contact_phone' => 'nullable|string|max:50',
+            'date_of_birth'           => 'nullable|date',
+            'belt_rank'               => 'nullable|string|max:100',
         ]);
 
         $user = User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
-            'club_id' => $request->user()->club_id,
+            'name'                    => $validated['name'],
+            'email'                   => $validated['email'],
+            'password'                => Hash::make($validated['password']),
+            'club_id'                 => $request->user()->club_id,
+            'id_code'                 => $validated['id_code'] ?? null,
+            'phone'                   => $validated['phone'] ?? null,
+            'city'                    => $validated['city'] ?? null,
+            'emergency_contact_name'  => $validated['emergency_contact_name'] ?? null,
+            'emergency_contact_phone' => $validated['emergency_contact_phone'] ?? null,
         ]);
 
         $user->assignRole($validated['role']);
 
-        // Initialize profile based on role
         if ($validated['role'] === 'Athlete') {
-            AthleteProfile::create(['user_id' => $user->id]);
+            AthleteProfile::create([
+                'user_id'       => $user->id,
+                'date_of_birth' => $validated['date_of_birth'] ?? null,
+                'belt_rank'     => $validated['belt_rank'] ?? null,
+            ]);
         } elseif ($validated['role'] === 'Parent') {
             ParentProfile::create(['user_id' => $user->id]);
         } elseif ($validated['role'] === 'Coach') {
@@ -61,31 +70,38 @@ class MemberController extends Controller
         return redirect()->route('manager.members.index')->with('status', 'member-created');
     }
 
-    /**
-     * Update the specified member in storage.
-     */
     public function update(Request $request, User $user)
     {
-        // Ensure the manager can only update members of their own club
         if ($user->club_id !== $request->user()->club_id) {
             abort(403, 'Unauthorized action.');
         }
 
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
-            'role' => 'required|string|in:Athlete,Parent,Coach',
+            'name'                    => 'required|string|max:255',
+            'email'                   => 'required|string|email|max:255|unique:users,email,' . $user->id,
+            'role'                    => 'required|string|in:Athlete,Parent,Coach',
+            'id_code'                 => 'nullable|string|max:100',
+            'phone'                   => 'nullable|string|max:50',
+            'city'                    => 'nullable|string|max:100',
+            'emergency_contact_name'  => 'nullable|string|max:255',
+            'emergency_contact_phone' => 'nullable|string|max:50',
+            'date_of_birth'           => 'nullable|date',
+            'belt_rank'               => 'nullable|string|max:100',
         ]);
 
         $user->update([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
+            'name'                    => $validated['name'],
+            'email'                   => $validated['email'],
+            'id_code'                 => $validated['id_code'] ?? null,
+            'phone'                   => $validated['phone'] ?? null,
+            'city'                    => $validated['city'] ?? null,
+            'emergency_contact_name'  => $validated['emergency_contact_name'] ?? null,
+            'emergency_contact_phone' => $validated['emergency_contact_phone'] ?? null,
         ]);
 
         $currentRole = $user->roles->first()?->name;
-        
+
         if ($currentRole !== $validated['role']) {
-            // Remove old profile and create new one if role changes
             if ($currentRole === 'Athlete') {
                 AthleteProfile::where('user_id', $user->id)->delete();
             } elseif ($currentRole === 'Parent') {
@@ -97,23 +113,31 @@ class MemberController extends Controller
             $user->syncRoles([$validated['role']]);
 
             if ($validated['role'] === 'Athlete') {
-                AthleteProfile::create(['user_id' => $user->id]);
+                AthleteProfile::create([
+                    'user_id'       => $user->id,
+                    'date_of_birth' => $validated['date_of_birth'] ?? null,
+                    'belt_rank'     => $validated['belt_rank'] ?? null,
+                ]);
             } elseif ($validated['role'] === 'Parent') {
                 ParentProfile::create(['user_id' => $user->id]);
             } elseif ($validated['role'] === 'Coach') {
                 \App\Models\CoachProfile::create(['user_id' => $user->id]);
             }
+        } elseif ($currentRole === 'Athlete') {
+            AthleteProfile::updateOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'date_of_birth' => $validated['date_of_birth'] ?? null,
+                    'belt_rank'     => $validated['belt_rank'] ?? null,
+                ]
+            );
         }
 
         return redirect()->back()->with('status', 'member-updated');
     }
 
-    /**
-     * Remove the specified member from storage.
-     */
     public function destroy(Request $request, User $user)
     {
-        // Ensure the manager can only delete members of their own club
         if ($user->club_id !== $request->user()->club_id) {
             abort(403, 'Unauthorized action.');
         }
