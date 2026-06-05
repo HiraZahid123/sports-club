@@ -1,6 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm, Link } from '@inertiajs/react';
-import { FormEventHandler, useState } from 'react';
+import { FormEventHandler, useState, useRef, useEffect } from 'react';
+import { BELT_OPTIONS, getBeltBadgeStyle, getBeltBarClass } from '@/beltHelpers';
 
 interface AthleteProfile {
     belt_rank?: string | null;
@@ -28,24 +29,12 @@ const roleConfig: Record<string, { bg: string; text: string; dot: string }> = {
     Manager: { bg: 'bg-indigo-50',  text: 'text-indigo-700',  dot: 'bg-indigo-500'  },
 };
 
-const beltColors: Record<string, string> = {
-    white:  'bg-gray-100 text-gray-700 border border-gray-300',
-    yellow: 'bg-yellow-100 text-yellow-800',
-    orange: 'bg-orange-100 text-orange-800',
-    green:  'bg-green-100 text-green-800',
-    blue:   'bg-blue-100 text-blue-800',
-    purple: 'bg-purple-100 text-purple-800',
-    red:    'bg-red-100 text-red-800',
-    brown:  'bg-amber-100 text-amber-800',
-    black:  'bg-gray-900 text-white',
-};
-
 function beltBadge(belt: string | null | undefined) {
     if (!belt) return null;
-    const key = belt.toLowerCase().split(' ')[0];
-    const cls = beltColors[key] ?? 'bg-gray-100 text-gray-700';
+    const cls = getBeltBadgeStyle(belt);
     return (
-        <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold ${cls}`}>
+        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border ${cls}`}>
+            <span className={`inline-block h-2 w-4 rounded-sm border ${getBeltBarClass(belt)} shrink-0`} />
             {belt}
         </span>
     );
@@ -54,6 +43,19 @@ function beltBadge(belt: string | null | undefined) {
 export default function MembersIndex({ members }: { members: Member[] }) {
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [editingMember, setEditingMember] = useState<Member | null>(null);
+
+    const beltDropdownRef = useRef<HTMLDivElement>(null);
+    const [showBeltDropdown, setShowBeltDropdown] = useState(false);
+
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (beltDropdownRef.current && !beltDropdownRef.current.contains(event.target as Node)) {
+                setShowBeltDropdown(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
 
     const { data, setData, post, put, processing, errors, reset, clearErrors } = useForm({
         name: '',
@@ -98,6 +100,7 @@ export default function MembersIndex({ members }: { members: Member[] }) {
     const closeForm = () => {
         setIsFormOpen(false);
         setEditingMember(null);
+        setShowBeltDropdown(false);
         reset();
         clearErrors();
     };
@@ -318,15 +321,50 @@ export default function MembersIndex({ members }: { members: Member[] }) {
                                                     <p className="mt-1 text-xs text-red-600">{errors.date_of_birth}</p>
                                                 )}
                                             </div>
-                                            <div>
+                                            <div className="relative" ref={beltDropdownRef}>
                                                 <label className={labelClass}>Belt</label>
-                                                <input
-                                                    type="text"
-                                                    value={data.belt_rank}
-                                                    onChange={(e) => setData('belt_rank', e.target.value)}
-                                                    placeholder="e.g. Blue Belt"
-                                                    className={inputClass}
-                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowBeltDropdown(!showBeltDropdown)}
+                                                    className="w-full flex items-center justify-between rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-900 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all text-left shadow-sm"
+                                                >
+                                                    <span className="flex items-center gap-2">
+                                                        {data.belt_rank ? (
+                                                            <>
+                                                                <span className={`inline-block h-3.5 w-7 rounded border shadow-sm ${getBeltBarClass(data.belt_rank)} shrink-0`} />
+                                                                <span className="font-semibold text-gray-800">{data.belt_rank}</span>
+                                                            </>
+                                                        ) : (
+                                                            <span className="text-gray-400">Select Belt</span>
+                                                        )}
+                                                    </span>
+                                                    <svg className={`w-4 h-4 text-gray-400 transition-transform ${showBeltDropdown ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                                    </svg>
+                                                </button>
+
+                                                {showBeltDropdown && (
+                                                    <div className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-xl border border-gray-100 bg-white p-1 shadow-lg focus:outline-none">
+                                                        {BELT_OPTIONS.map((opt) => (
+                                                            <button
+                                                                key={opt.value}
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setData('belt_rank', opt.value);
+                                                                    setShowBeltDropdown(false);
+                                                                }}
+                                                                className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition-colors ${
+                                                                    data.belt_rank === opt.value
+                                                                        ? 'bg-indigo-50 text-indigo-700 font-bold'
+                                                                        : 'text-gray-700 hover:bg-slate-50'
+                                                                }`}
+                                                            >
+                                                                <span className={`inline-block h-3.5 w-7 rounded border shadow-sm ${getBeltBarClass(opt.value)} shrink-0`} />
+                                                                <span>{opt.label}</span>
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                )}
                                                 {errors.belt_rank && (
                                                     <p className="mt-1 text-xs text-red-600">{errors.belt_rank}</p>
                                                 )}

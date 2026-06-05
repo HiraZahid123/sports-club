@@ -1,41 +1,45 @@
 {
-  "_AuthenticatedLayout-DvHilUG9.js": {
-    "file": "assets/AuthenticatedLayout-DvHilUG9.js",
+  "_AuthenticatedLayout-wPhn1ieu.js": {
+    "file": "assets/AuthenticatedLayout-wPhn1ieu.js",
     "name": "AuthenticatedLayout",
     "imports": [
       "resources/js/app.tsx",
-      "_transition-BiwLUhDT.js",
+      "_transition-BMjYEMRq.js",
       "_ml-sports-BNRsVJa7.js"
     ]
   },
-  "_GuestLayout-mkAWaRjg.js": {
-    "file": "assets/GuestLayout-mkAWaRjg.js",
+  "_GuestLayout-CnPSDNPy.js": {
+    "file": "assets/GuestLayout-CnPSDNPy.js",
     "name": "GuestLayout",
     "imports": [
       "resources/js/app.tsx",
       "_ml-sports-BNRsVJa7.js"
     ]
   },
-  "_InputError-D6OLpHVa.js": {
-    "file": "assets/InputError-D6OLpHVa.js",
+  "_InputError-BXgXhqbY.js": {
+    "file": "assets/InputError-BXgXhqbY.js",
     "name": "InputError",
     "imports": [
       "resources/js/app.tsx"
     ]
   },
-  "_PrimaryButton-BJY_pO-x.js": {
-    "file": "assets/PrimaryButton-BJY_pO-x.js",
+  "_PrimaryButton-BKuI9Jsk.js": {
+    "file": "assets/PrimaryButton-BKuI9Jsk.js",
     "name": "PrimaryButton",
     "imports": [
       "resources/js/app.tsx"
     ]
   },
-  "_TextInput-DOBTD0qU.js": {
-    "file": "assets/TextInput-DOBTD0qU.js",
+  "_TextInput-BJw9bUKL.js": {
+    "file": "assets/TextInput-BJw9bUKL.js",
     "name": "TextInput",
     "imports": [
       "resources/js/app.tsx"
     ]
+  },
+  "_beltHelpers-BF5UQ5dk.js": {
+    "file": "assets/beltHelpers-BF5UQ5dk.js",
+    "name": "beltHelpers"
   },
   "_ml-sports-BNRsVJa7.js": {
     "file": "assets/ml-sports-BNRsVJa7.js",
@@ -44,310 +48,314 @@
       "assets/ml-sports-Duj__58q.png"
     ]
   },
-  "_transition-BiwLUhDT.js": {
-    "file": "assets/transition-BiwLUhDT.js",
+  "_transition-BMjYEMRq.js": {
+    "file": "assets/transition-BMjYEMRq.js",
     "name": "transition",
     "imports": [
       "resources/js/app.tsx"
     ]
   },
   "resources/js/Pages/Athlete/Dashboard.tsx": {
-    "file": "assets/Dashboard-hXE4pkp6.js",
+    "file": "assets/Dashboard-DjT1_VZK.js",
     "name": "Dashboard",
     "src": "resources/js/Pages/Athlete/Dashboard.tsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.tsx",
-      "_AuthenticatedLayout-DvHilUG9.js",
-      "_transition-BiwLUhDT.js",
+      "_AuthenticatedLayout-wPhn1ieu.js",
+      "_beltHelpers-BF5UQ5dk.js",
+      "_transition-BMjYEMRq.js",
       "_ml-sports-BNRsVJa7.js"
     ]
   },
   "resources/js/Pages/Athlete/Schedule.tsx": {
-    "file": "assets/Schedule-CxlLi-Qe.js",
+    "file": "assets/Schedule-Bj60KuEO.js",
     "name": "Schedule",
     "src": "resources/js/Pages/Athlete/Schedule.tsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.tsx",
-      "_AuthenticatedLayout-DvHilUG9.js",
-      "_transition-BiwLUhDT.js",
+      "_AuthenticatedLayout-wPhn1ieu.js",
+      "_transition-BMjYEMRq.js",
       "_ml-sports-BNRsVJa7.js"
     ]
   },
   "resources/js/Pages/Auth/ConfirmPassword.tsx": {
-    "file": "assets/ConfirmPassword-D5vVJGMz.js",
+    "file": "assets/ConfirmPassword-CRhl8zil.js",
     "name": "ConfirmPassword",
     "src": "resources/js/Pages/Auth/ConfirmPassword.tsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.tsx",
-      "_InputError-D6OLpHVa.js",
-      "_GuestLayout-mkAWaRjg.js",
+      "_InputError-BXgXhqbY.js",
+      "_GuestLayout-CnPSDNPy.js",
       "_ml-sports-BNRsVJa7.js"
     ]
   },
   "resources/js/Pages/Auth/ForgotPassword.tsx": {
-    "file": "assets/ForgotPassword-SshItvil.js",
+    "file": "assets/ForgotPassword-sfeQqyO-.js",
     "name": "ForgotPassword",
     "src": "resources/js/Pages/Auth/ForgotPassword.tsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.tsx",
-      "_InputError-D6OLpHVa.js",
-      "_GuestLayout-mkAWaRjg.js",
+      "_InputError-BXgXhqbY.js",
+      "_GuestLayout-CnPSDNPy.js",
       "_ml-sports-BNRsVJa7.js"
     ]
   },
   "resources/js/Pages/Auth/Login.tsx": {
-    "file": "assets/Login-3f9IftOJ.js",
+    "file": "assets/Login-DwxRsAWa.js",
     "name": "Login",
     "src": "resources/js/Pages/Auth/Login.tsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.tsx",
-      "_InputError-D6OLpHVa.js",
-      "_GuestLayout-mkAWaRjg.js",
+      "_InputError-BXgXhqbY.js",
+      "_GuestLayout-CnPSDNPy.js",
       "_ml-sports-BNRsVJa7.js"
     ]
   },
   "resources/js/Pages/Auth/Register.tsx": {
-    "file": "assets/Register-Cqj1PemF.js",
+    "file": "assets/Register-CLe_fkwl.js",
     "name": "Register",
     "src": "resources/js/Pages/Auth/Register.tsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.tsx",
-      "_InputError-D6OLpHVa.js",
-      "_GuestLayout-mkAWaRjg.js",
+      "_InputError-BXgXhqbY.js",
+      "_GuestLayout-CnPSDNPy.js",
       "_ml-sports-BNRsVJa7.js"
     ]
   },
   "resources/js/Pages/Auth/ResetPassword.tsx": {
-    "file": "assets/ResetPassword-BcrmdqG-.js",
+    "file": "assets/ResetPassword-6jnf0sk2.js",
     "name": "ResetPassword",
     "src": "resources/js/Pages/Auth/ResetPassword.tsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.tsx",
-      "_InputError-D6OLpHVa.js",
-      "_GuestLayout-mkAWaRjg.js",
+      "_InputError-BXgXhqbY.js",
+      "_GuestLayout-CnPSDNPy.js",
       "_ml-sports-BNRsVJa7.js"
     ]
   },
   "resources/js/Pages/Auth/VerifyEmail.tsx": {
-    "file": "assets/VerifyEmail-bRc2jif4.js",
+    "file": "assets/VerifyEmail-zlgKiPwL.js",
     "name": "VerifyEmail",
     "src": "resources/js/Pages/Auth/VerifyEmail.tsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.tsx",
-      "_GuestLayout-mkAWaRjg.js",
+      "_GuestLayout-CnPSDNPy.js",
       "_ml-sports-BNRsVJa7.js"
     ]
   },
   "resources/js/Pages/Coach/Dashboard.tsx": {
-    "file": "assets/Dashboard-De5j0A9g.js",
+    "file": "assets/Dashboard-BSSu7NI-.js",
     "name": "Dashboard",
     "src": "resources/js/Pages/Coach/Dashboard.tsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.tsx",
-      "_AuthenticatedLayout-DvHilUG9.js",
-      "_transition-BiwLUhDT.js",
+      "_AuthenticatedLayout-wPhn1ieu.js",
+      "_beltHelpers-BF5UQ5dk.js",
+      "_transition-BMjYEMRq.js",
       "_ml-sports-BNRsVJa7.js"
     ]
   },
   "resources/js/Pages/Coach/Schedule.tsx": {
-    "file": "assets/Schedule-BVeMWV8k.js",
+    "file": "assets/Schedule-Y9w3WGnM.js",
     "name": "Schedule",
     "src": "resources/js/Pages/Coach/Schedule.tsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.tsx",
-      "_AuthenticatedLayout-DvHilUG9.js",
-      "_transition-BiwLUhDT.js",
+      "_AuthenticatedLayout-wPhn1ieu.js",
+      "_transition-BMjYEMRq.js",
       "_ml-sports-BNRsVJa7.js"
     ]
   },
   "resources/js/Pages/Dashboard.tsx": {
-    "file": "assets/Dashboard-dlTV_8FE.js",
+    "file": "assets/Dashboard-DVz43hit.js",
     "name": "Dashboard",
     "src": "resources/js/Pages/Dashboard.tsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.tsx",
-      "_AuthenticatedLayout-DvHilUG9.js",
-      "_transition-BiwLUhDT.js",
+      "_AuthenticatedLayout-wPhn1ieu.js",
+      "_transition-BMjYEMRq.js",
       "_ml-sports-BNRsVJa7.js"
     ]
   },
   "resources/js/Pages/Manager/Billing/Index.tsx": {
-    "file": "assets/Index-Bm1s3LqP.js",
+    "file": "assets/Index-D3PUsFrz.js",
     "name": "Index",
     "src": "resources/js/Pages/Manager/Billing/Index.tsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.tsx",
-      "_AuthenticatedLayout-DvHilUG9.js",
-      "_transition-BiwLUhDT.js",
+      "_AuthenticatedLayout-wPhn1ieu.js",
+      "_transition-BMjYEMRq.js",
       "_ml-sports-BNRsVJa7.js"
     ]
   },
   "resources/js/Pages/Manager/Club/Edit.tsx": {
-    "file": "assets/Edit-CNBa4uAO.js",
+    "file": "assets/Edit-YROnFLYv.js",
     "name": "Edit",
     "src": "resources/js/Pages/Manager/Club/Edit.tsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.tsx",
-      "_AuthenticatedLayout-DvHilUG9.js",
-      "_transition-BiwLUhDT.js",
+      "_AuthenticatedLayout-wPhn1ieu.js",
+      "_transition-BMjYEMRq.js",
       "_ml-sports-BNRsVJa7.js"
     ]
   },
   "resources/js/Pages/Manager/Club/Setup.tsx": {
-    "file": "assets/Setup-CgaffM4F.js",
+    "file": "assets/Setup-DD0FZXeB.js",
     "name": "Setup",
     "src": "resources/js/Pages/Manager/Club/Setup.tsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.tsx",
-      "_AuthenticatedLayout-DvHilUG9.js",
-      "_transition-BiwLUhDT.js",
+      "_AuthenticatedLayout-wPhn1ieu.js",
+      "_transition-BMjYEMRq.js",
       "_ml-sports-BNRsVJa7.js"
     ]
   },
   "resources/js/Pages/Manager/Dashboard.tsx": {
-    "file": "assets/Dashboard-eu6xq8iL.js",
+    "file": "assets/Dashboard-Bdd6S0ik.js",
     "name": "Dashboard",
     "src": "resources/js/Pages/Manager/Dashboard.tsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.tsx",
-      "_AuthenticatedLayout-DvHilUG9.js",
-      "_transition-BiwLUhDT.js",
+      "_AuthenticatedLayout-wPhn1ieu.js",
+      "_transition-BMjYEMRq.js",
       "_ml-sports-BNRsVJa7.js"
     ]
   },
   "resources/js/Pages/Manager/Groups/Index.tsx": {
-    "file": "assets/Index-BCI2pYVA.js",
+    "file": "assets/Index-Bt8xSMDZ.js",
     "name": "Index",
     "src": "resources/js/Pages/Manager/Groups/Index.tsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.tsx",
-      "_AuthenticatedLayout-DvHilUG9.js",
-      "_transition-BiwLUhDT.js",
+      "_AuthenticatedLayout-wPhn1ieu.js",
+      "_transition-BMjYEMRq.js",
       "_ml-sports-BNRsVJa7.js"
     ]
   },
   "resources/js/Pages/Manager/Members/Index.tsx": {
-    "file": "assets/Index-B8WSTDiR.js",
+    "file": "assets/Index-DwTGbjPk.js",
     "name": "Index",
     "src": "resources/js/Pages/Manager/Members/Index.tsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.tsx",
-      "_AuthenticatedLayout-DvHilUG9.js",
-      "_transition-BiwLUhDT.js",
+      "_AuthenticatedLayout-wPhn1ieu.js",
+      "_beltHelpers-BF5UQ5dk.js",
+      "_transition-BMjYEMRq.js",
       "_ml-sports-BNRsVJa7.js"
     ]
   },
   "resources/js/Pages/Manager/Reports/Index.tsx": {
-    "file": "assets/Index-CLjF48QS.js",
+    "file": "assets/Index-DaZAjVQv.js",
     "name": "Index",
     "src": "resources/js/Pages/Manager/Reports/Index.tsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.tsx",
-      "_AuthenticatedLayout-DvHilUG9.js",
-      "_transition-BiwLUhDT.js",
+      "_AuthenticatedLayout-wPhn1ieu.js",
+      "_transition-BMjYEMRq.js",
       "_ml-sports-BNRsVJa7.js"
     ]
   },
   "resources/js/Pages/Parent/Billing/Index.tsx": {
-    "file": "assets/Index-CjJRzzbO.js",
+    "file": "assets/Index-BSUwmRQB.js",
     "name": "Index",
     "src": "resources/js/Pages/Parent/Billing/Index.tsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.tsx",
-      "_AuthenticatedLayout-DvHilUG9.js",
-      "_transition-BiwLUhDT.js",
+      "_AuthenticatedLayout-wPhn1ieu.js",
+      "_transition-BMjYEMRq.js",
       "_ml-sports-BNRsVJa7.js"
     ]
   },
   "resources/js/Pages/Parent/Dashboard.tsx": {
-    "file": "assets/Dashboard-CQFTqlY1.js",
+    "file": "assets/Dashboard-d-8t15LU.js",
     "name": "Dashboard",
     "src": "resources/js/Pages/Parent/Dashboard.tsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.tsx",
-      "_AuthenticatedLayout-DvHilUG9.js",
-      "_transition-BiwLUhDT.js",
+      "_AuthenticatedLayout-wPhn1ieu.js",
+      "_beltHelpers-BF5UQ5dk.js",
+      "_transition-BMjYEMRq.js",
       "_ml-sports-BNRsVJa7.js"
     ]
   },
   "resources/js/Pages/Profile/Edit.tsx": {
-    "file": "assets/Edit-BsBoneua.js",
+    "file": "assets/Edit-DaunOcRu.js",
     "name": "Edit",
     "src": "resources/js/Pages/Profile/Edit.tsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.tsx",
-      "_AuthenticatedLayout-DvHilUG9.js",
+      "_AuthenticatedLayout-wPhn1ieu.js",
       "resources/js/Pages/Profile/Partials/DeleteUserForm.tsx",
       "resources/js/Pages/Profile/Partials/UpdatePasswordForm.tsx",
       "resources/js/Pages/Profile/Partials/UpdateProfileInformationForm.tsx",
-      "_transition-BiwLUhDT.js",
+      "_transition-BMjYEMRq.js",
       "_ml-sports-BNRsVJa7.js",
-      "_InputError-D6OLpHVa.js",
-      "_TextInput-DOBTD0qU.js",
-      "_PrimaryButton-BJY_pO-x.js"
+      "_InputError-BXgXhqbY.js",
+      "_TextInput-BJw9bUKL.js",
+      "_PrimaryButton-BKuI9Jsk.js"
     ]
   },
   "resources/js/Pages/Profile/Partials/DeleteUserForm.tsx": {
-    "file": "assets/DeleteUserForm-B2CJVh5a.js",
+    "file": "assets/DeleteUserForm-B3GJ1Tfh.js",
     "name": "DeleteUserForm",
     "src": "resources/js/Pages/Profile/Partials/DeleteUserForm.tsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.tsx",
-      "_InputError-D6OLpHVa.js",
-      "_TextInput-DOBTD0qU.js",
-      "_transition-BiwLUhDT.js"
+      "_InputError-BXgXhqbY.js",
+      "_TextInput-BJw9bUKL.js",
+      "_transition-BMjYEMRq.js"
     ]
   },
   "resources/js/Pages/Profile/Partials/UpdatePasswordForm.tsx": {
-    "file": "assets/UpdatePasswordForm-H8bLYOEG.js",
+    "file": "assets/UpdatePasswordForm-DanqGHV0.js",
     "name": "UpdatePasswordForm",
     "src": "resources/js/Pages/Profile/Partials/UpdatePasswordForm.tsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.tsx",
-      "_InputError-D6OLpHVa.js",
-      "_TextInput-DOBTD0qU.js",
-      "_PrimaryButton-BJY_pO-x.js",
-      "_transition-BiwLUhDT.js"
+      "_InputError-BXgXhqbY.js",
+      "_TextInput-BJw9bUKL.js",
+      "_PrimaryButton-BKuI9Jsk.js",
+      "_transition-BMjYEMRq.js"
     ]
   },
   "resources/js/Pages/Profile/Partials/UpdateProfileInformationForm.tsx": {
-    "file": "assets/UpdateProfileInformationForm-DokZh58-.js",
+    "file": "assets/UpdateProfileInformationForm-_LobJEnW.js",
     "name": "UpdateProfileInformationForm",
     "src": "resources/js/Pages/Profile/Partials/UpdateProfileInformationForm.tsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.tsx",
-      "_InputError-D6OLpHVa.js",
-      "_TextInput-DOBTD0qU.js",
-      "_PrimaryButton-BJY_pO-x.js",
-      "_transition-BiwLUhDT.js"
+      "_InputError-BXgXhqbY.js",
+      "_TextInput-BJw9bUKL.js",
+      "_PrimaryButton-BKuI9Jsk.js",
+      "_transition-BMjYEMRq.js"
     ]
   },
   "resources/js/Pages/Welcome.tsx": {
-    "file": "assets/Welcome-Bra1QUIU.js",
+    "file": "assets/Welcome-DyxG3-wE.js",
     "name": "Welcome",
     "src": "resources/js/Pages/Welcome.tsx",
     "isDynamicEntry": true,
@@ -357,7 +365,7 @@
     ]
   },
   "resources/js/app.tsx": {
-    "file": "assets/app-DKR5qyrX.js",
+    "file": "assets/app-BkqjiV7X.js",
     "name": "app",
     "src": "resources/js/app.tsx",
     "isEntry": true,
@@ -389,7 +397,7 @@
       "resources/js/Pages/Welcome.tsx"
     ],
     "css": [
-      "assets/app-tobWgW0T.css"
+      "assets/app--t1uo73H.css"
     ]
   },
   "resources/js/ml-sports.png": {

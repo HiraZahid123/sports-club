@@ -98,7 +98,11 @@ Route::middleware(['auth', 'verified', 'role:Coach', \App\Http\Middleware\CheckS
 // Athlete Routes
 Route::middleware(['auth', 'verified', 'role:Athlete', \App\Http\Middleware\CheckSubscription::class])->prefix('athlete')->name('athlete.')->group(function () {
     Route::get('/dashboard', function () {
-        return Inertia::render('Athlete/Dashboard');
+        $user = auth()->user();
+        $profile = $user->athleteProfile;
+        return Inertia::render('Athlete/Dashboard', [
+            'athleteProfile' => $profile,
+        ]);
     })->name('dashboard');
 
     Route::get('/schedule', function () {

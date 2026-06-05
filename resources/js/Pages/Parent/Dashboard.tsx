@@ -1,18 +1,12 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
+import { getBeltBadgeStyle, getBeltBarClass } from '@/beltHelpers';
 
 export default function ParentDashboard() {
     const children = [
-        { name: 'Alex Smith', group: 'Juniors Taekwondo', status: 'Active', belt: 'Yellow', progress: 60, classes: 18 },
-        { name: 'Sarah Smith', group: 'Elite Sparring', status: 'Active', belt: 'Blue', progress: 45, classes: 24 },
+        { name: 'Alex Smith', group: 'Juniors Taekwondo', status: 'Active', belt: '8. YELLOW', progress: 60, classes: 18 },
+        { name: 'Sarah Smith', group: 'Elite Sparring', status: 'Active', belt: '4. BLUE', progress: 45, classes: 24 },
     ];
-
-    const beltColors: Record<string, { bg: string; text: string; dot: string }> = {
-        'Yellow': { bg: 'bg-yellow-50', text: 'text-yellow-700', dot: 'bg-yellow-400' },
-        'Blue': { bg: 'bg-blue-50', text: 'text-blue-700', dot: 'bg-blue-500' },
-        'Red': { bg: 'bg-red-50', text: 'text-red-700', dot: 'bg-red-500' },
-        'Black': { bg: 'bg-gray-900', text: 'text-white', dot: 'bg-gray-400' },
-    };
 
     return (
         <AuthenticatedLayout
@@ -50,7 +44,6 @@ export default function ParentDashboard() {
                             <h3 className="text-base font-bold text-gray-900">My Children</h3>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                 {children.map((child, idx) => {
-                                    const belt = beltColors[child.belt] || { bg: 'bg-gray-50', text: 'text-gray-700', dot: 'bg-gray-400' };
                                     return (
                                         <div key={idx} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow">
                                             <div className="p-5">
@@ -71,8 +64,9 @@ export default function ParentDashboard() {
                                                 </div>
 
                                                 <div className="flex items-center gap-3 mb-4">
-                                                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold ${belt.bg} ${belt.text}`}>
-                                                        🥋 {child.belt} Belt
+                                                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border ${getBeltBadgeStyle(child.belt)}`}>
+                                                        <span className={`inline-block h-2 w-4 rounded-sm border ${getBeltBarClass(child.belt)} shrink-0`} />
+                                                        {child.belt}
                                                     </span>
                                                     <span className="text-xs text-gray-400">{child.classes} classes attended</span>
                                                 </div>

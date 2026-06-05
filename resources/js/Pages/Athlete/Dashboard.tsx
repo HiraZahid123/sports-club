@@ -1,7 +1,16 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
+import { getBeltBadgeStyle, getBeltBarClass } from '@/beltHelpers';
 
-export default function AthleteDashboard() {
+interface AthleteProfile {
+    belt_rank?: string | null;
+    date_of_birth?: string | null;
+    medical_info?: string | null;
+    weight_class?: string | null;
+}
+
+export default function AthleteDashboard({ athleteProfile }: { athleteProfile?: AthleteProfile | null }) {
+    const belt = athleteProfile?.belt_rank || '10. WHITE';
     const progressStats = [
         { label: 'Classes', val: '24', icon: '📚', color: 'bg-blue-50 border-blue-100 text-blue-600' },
         { label: 'Sparring', val: '15', icon: '🥊', color: 'bg-rose-50 border-rose-100 text-rose-600' },
@@ -35,7 +44,10 @@ export default function AthleteDashboard() {
                                     🥋
                                 </div>
                                 <p className="text-indigo-200 text-xs font-bold uppercase tracking-widest mb-1">Current Rank</p>
-                                <h3 className="text-2xl font-black mb-1">Blue Belt</h3>
+                                <h3 className="text-2xl font-black mb-2 flex items-center gap-2">
+                                    <span className={`inline-block h-3.5 w-7 rounded border shadow-sm ${getBeltBarClass(belt)} shrink-0`} />
+                                    {belt}
+                                </h3>
                                 <p className="text-indigo-200 text-xs">Next: Red Belt (Est. 3 months)</p>
 
                                 <div className="mt-5">

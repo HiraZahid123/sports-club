@@ -1,6 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { useState } from 'react';
+import { getBeltBadgeStyle, getBeltBarClass } from '@/beltHelpers';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -554,7 +555,6 @@ export default function CoachDashboard({
                                             selectedGroup.athletes.map(athlete => {
                                                 const profile    = athlete.athlete_profile;
                                                 const belt       = profile?.belt_rank ?? null;
-                                                const beltStyle  = belt ? (beltColors[belt] ?? 'bg-gray-100 text-gray-700') : null;
                                                 const age        = getAge(profile?.date_of_birth ?? null);
                                                 const isExpanded = expandedAthleteId === athlete.id;
                                                 const goalCount  = athlete.training_goals.length;
@@ -574,7 +574,12 @@ export default function CoachDashboard({
                                                                 <div className="flex-1 min-w-0">
                                                                     <div className="flex items-center gap-2 flex-wrap">
                                                                         <p className="font-semibold text-gray-900 text-sm">{athlete.name}</p>
-                                                                        {belt && <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${beltStyle}`}>{belt} Belt</span>}
+                                                                        {belt && (
+                                                                            <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold border ${getBeltBadgeStyle(belt)}`}>
+                                                                                <span className={`inline-block h-1.5 w-3 rounded-sm border ${getBeltBarClass(belt)} shrink-0`} />
+                                                                                {belt}
+                                                                            </span>
+                                                                        )}
                                                                     </div>
                                                                     <p className="text-xs text-gray-400 mt-0.5 truncate">{athlete.email}</p>
                                                                     <div className="flex items-center gap-4 mt-1.5 flex-wrap">
