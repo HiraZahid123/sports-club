@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Club;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 
@@ -19,7 +19,7 @@ class ClubController extends Controller
         }
 
         return Inertia::render('Manager/Club/Edit', [
-            'club' => $club,
+            'club'   => $club,
             'status' => session('status'),
         ]);
     }
@@ -72,12 +72,23 @@ class ClubController extends Controller
             'logo' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:3072',
         ]);
 
+        // Delete old file from public/uploads/club-logos/
         if ($club->logo_path) {
-            Storage::disk('public')->delete($club->logo_path);
+            $oldFile = public_path($club->logo_path);
+            if (File::exists($oldFile)) {
+                File::delete($oldFile);
+            }
         }
 
-        $path = $request->file('logo')->store('club-logos', 'public');
-        $club->update(['logo_path' => $path]);
+        $file      = $request->file('logo');
+        $filename  = Str::uuid() . '.' . $file->getClientOriginalExtension();
+        $directory = public_path('uploads/club-logos');
+
+        File::ensureDirectoryExists($directory);
+        $file->move($directory, $filename);
+
+        // Store as a relative public path: uploads/club-logos/filename.ext
+        $club->update(['logo_path' => 'uploads/club-logos/' . $filename]);
 
         return redirect()->route('manager.club.edit')->with('status', 'logo-updated');
     }
