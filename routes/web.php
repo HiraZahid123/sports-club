@@ -59,9 +59,30 @@ Route::middleware(['auth', 'verified', 'role:Manager|Super Admin'])->prefix('man
 // Coach Routes
 Route::middleware(['auth', 'verified', 'role:Coach', \App\Http\Middleware\CheckSubscription::class])->prefix('coach')->name('coach.')->group(function () {
     Route::get('/dashboard', function () {
-        $groups = auth()->user()->trainingGroups()->with(['athletes.athleteProfile'])->get();
+        $coach  = auth()->user();
+        $groups = $coach->trainingGroups()->with(['athletes.athleteProfile'])->get();
+
+        $nextPayout = \App\Models\CoachPayout::where('user_id', $coach->id)
+            ->where('status', 'pending')
+            ->orderBy('payout_date')
+            ->first();
+
+        $payoutHistory = \App\Models\CoachPayout::where('user_id', $coach->id)
+            ->where('status', 'paid')
+            ->orderBy('payout_date', 'desc')
+            ->limit(5)
+            ->get();
+
+        $totalEarned = \App\Models\CoachPayout::where('user_id', $coach->id)
+            ->where('status', 'paid')
+            ->sum('amount');
+
         return Inertia::render('Coach/Dashboard', [
-            'groups' => $groups
+            'groups'        => $groups,
+            'nextPayout'    => $nextPayout,
+            'payoutHistory' => $payoutHistory,
+            'totalEarned'   => $totalEarned,
+            'coachProfile'  => $coach->coachProfile,
         ]);
     })->name('dashboard');
 
