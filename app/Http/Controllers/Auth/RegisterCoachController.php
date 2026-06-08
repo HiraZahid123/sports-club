@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Inertia\Inertia;
 use Inertia\Response;
+use Spatie\Permission\Models\Role;
 
 class RegisterCoachController extends Controller
 {
@@ -57,6 +58,8 @@ class RegisterCoachController extends Controller
             'club_id'  => $invitation->club_id,
         ]);
 
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        Role::firstOrCreate(['name' => 'Coach', 'guard_name' => 'web']);
         $user->assignRole('Coach');
         CoachProfile::create(['user_id' => $user->id]);
 

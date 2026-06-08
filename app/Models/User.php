@@ -142,6 +142,12 @@ class User extends Authenticatable
                 ->exists();
         }
 
+        // If the manager has never created a subscription for this athlete yet, let them through.
+        // Only block when a subscription exists but is overdue/inactive.
+        if (!$this->subscriptions()->exists()) {
+            return true;
+        }
+
         return $this->subscriptions()
             ->where('status', 'active')
             ->exists();

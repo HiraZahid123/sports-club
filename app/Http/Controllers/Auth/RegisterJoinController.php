@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Inertia\Inertia;
 use Inertia\Response;
+use Spatie\Permission\Models\Role;
 
 class RegisterJoinController extends Controller
 {
@@ -55,6 +56,8 @@ class RegisterJoinController extends Controller
             'club_id'  => $club->id,
         ]);
 
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        Role::firstOrCreate(['name' => $request->role, 'guard_name' => 'web']);
         $user->assignRole($request->role);
 
         if ($request->role === 'Athlete') {

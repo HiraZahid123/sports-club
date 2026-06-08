@@ -14,6 +14,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rules;
 use Inertia\Inertia;
 use Inertia\Response;
+use Spatie\Permission\Models\Role;
 
 class RegisterClubController extends Controller
 {
@@ -63,6 +64,8 @@ class RegisterClubController extends Controller
             'club_id'  => $club->id,
         ]);
 
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        Role::firstOrCreate(['name' => 'Manager', 'guard_name' => 'web']);
         $user->assignRole('Manager');
 
         event(new Registered($user));
