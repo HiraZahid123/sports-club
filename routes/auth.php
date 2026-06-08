@@ -8,14 +8,30 @@ use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\Auth\RegisterClubController;
+use App\Http\Controllers\Auth\RegisterJoinController;
+use App\Http\Controllers\Auth\RegisterCoachController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
+    // Choice landing page replaces old /register
     Route::get('register', [RegisteredUserController::class, 'create'])
         ->name('register');
 
     Route::post('register', [RegisteredUserController::class, 'store']);
+
+    // Club manager registration
+    Route::get('register/club', [RegisterClubController::class, 'create'])->name('register.club');
+    Route::post('register/club', [RegisterClubController::class, 'store']);
+
+    // Athlete / Parent join flow
+    Route::get('register/join', [RegisterJoinController::class, 'create'])->name('register.join');
+    Route::post('register/join', [RegisterJoinController::class, 'store']);
+
+    // Coach activation via invite token
+    Route::get('register/coach/{token}', [RegisterCoachController::class, 'create'])->name('register.coach');
+    Route::post('register/coach/{token}', [RegisterCoachController::class, 'store']);
 
     Route::get('login', [AuthenticatedSessionController::class, 'create'])
         ->name('login');

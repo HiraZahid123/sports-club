@@ -5,6 +5,19 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
+// Public API: validate a club joining code
+Route::get('/api/clubs/validate-code', function (\Illuminate\Http\Request $request) {
+    $club = \App\Models\Club::where('join_code', strtoupper($request->input('code', '')))
+        ->where('is_active', true)
+        ->first();
+
+    if (!$club) {
+        return response()->json(['error' => 'Not found'], 404);
+    }
+
+    return response()->json(['club' => ['id' => $club->id, 'name' => $club->name, 'join_code' => $club->join_code]]);
+});
+
 Route::get('/', function () {
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
@@ -54,6 +67,10 @@ Route::middleware(['auth', 'verified', 'role:Manager|Super Admin'])->prefix('man
 
     Route::get('/reports', [\App\Http\Controllers\ReportController::class, 'index'])->name('reports.index');
     Route::post('/payouts', [\App\Http\Controllers\ReportController::class, 'storePayout'])->name('payouts.store');
+
+    Route::get('/invitations', [\App\Http\Controllers\InvitationController::class, 'index'])->name('invitations.index');
+    Route::post('/invitations/coach', [\App\Http\Controllers\InvitationController::class, 'storeCoach'])->name('invitations.coach');
+    Route::delete('/invitations/{invitation}', [\App\Http\Controllers\InvitationController::class, 'destroy'])->name('invitations.destroy');
 });
 
 // Coach Routes

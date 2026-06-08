@@ -43,6 +43,19 @@ function beltBadge(belt: string | null | undefined) {
 export default function MembersIndex({ members }: { members: Member[] }) {
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [editingMember, setEditingMember] = useState<Member | null>(null);
+    const [showInviteCoach, setShowInviteCoach] = useState(false);
+
+    const inviteForm = useForm({ email: '' });
+
+    const submitInvite: FormEventHandler = (e) => {
+        e.preventDefault();
+        inviteForm.post(route('manager.invitations.coach'), {
+            onSuccess: () => {
+                setShowInviteCoach(false);
+                inviteForm.reset();
+            },
+        });
+    };
 
     const beltDropdownRef = useRef<HTMLDivElement>(null);
     const [showBeltDropdown, setShowBeltDropdown] = useState(false);
@@ -130,30 +143,41 @@ export default function MembersIndex({ members }: { members: Member[] }) {
                         <h2 className="text-xl font-bold text-gray-900">Member Management</h2>
                         <p className="text-sm text-gray-500 mt-0.5">{members.length} total members in your club</p>
                     </div>
-                    <button
-                        onClick={isFormOpen ? closeForm : openAddForm}
-                        className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${
-                            isFormOpen
-                                ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm shadow-indigo-200'
-                        }`}
-                    >
-                        {isFormOpen ? (
-                            <>
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                                Cancel
-                            </>
-                        ) : (
-                            <>
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                </svg>
-                                Add Member
-                            </>
-                        )}
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => setShowInviteCoach(true)}
+                            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 transition-all"
+                        >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                            Invite Coach
+                        </button>
+                        <button
+                            onClick={isFormOpen ? closeForm : openAddForm}
+                            className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+                                isFormOpen
+                                    ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                    : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm shadow-indigo-200'
+                            }`}
+                        >
+                            {isFormOpen ? (
+                                <>
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                    Cancel
+                                </>
+                            ) : (
+                                <>
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                    </svg>
+                                    Add Member
+                                </>
+                            )}
+                        </button>
+                    </div>
                 </div>
             }
         >
@@ -487,6 +511,61 @@ export default function MembersIndex({ members }: { members: Member[] }) {
 
                 </div>
             </div>
+
+            {/* Invite Coach Modal */}
+            {showInviteCoach && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4">
+                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+                        <div className="bg-gradient-to-r from-amber-50 to-orange-50 px-6 py-4 border-b border-amber-100 flex items-center justify-between">
+                            <div>
+                                <h3 className="text-sm font-bold text-amber-900">Invite a Coach</h3>
+                                <p className="text-xs text-amber-600 mt-0.5">They'll receive an email with an activation link</p>
+                            </div>
+                            <button
+                                onClick={() => { setShowInviteCoach(false); inviteForm.reset(); }}
+                                className="text-gray-400 hover:text-gray-600 transition-colors"
+                            >
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                        <form onSubmit={submitInvite} className="p-6 space-y-4">
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">Coach Email Address</label>
+                                <input
+                                    type="email"
+                                    value={inviteForm.data.email}
+                                    onChange={(e) => inviteForm.setData('email', e.target.value)}
+                                    className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:border-amber-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 transition-all"
+                                    placeholder="coach@example.com"
+                                    required
+                                />
+                                {inviteForm.errors.email && <p className="mt-2 text-xs text-red-600">{inviteForm.errors.email}</p>}
+                            </div>
+                            <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 text-xs text-amber-800">
+                                The coach will receive an email with a secure activation link valid for 7 days. They cannot self-register — this is the only way to create a coach account.
+                            </div>
+                            <div className="flex gap-3 pt-1">
+                                <button
+                                    type="button"
+                                    onClick={() => { setShowInviteCoach(false); inviteForm.reset(); }}
+                                    className="flex-1 py-2.5 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-semibold transition-all"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={inviteForm.processing}
+                                    className="flex-1 py-2.5 px-4 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-sm font-bold transition-all shadow-sm shadow-amber-200 disabled:opacity-60"
+                                >
+                                    {inviteForm.processing ? 'Sending...' : 'Send Invitation'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </AuthenticatedLayout>
     );
 }

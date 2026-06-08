@@ -16,6 +16,7 @@ class Club extends Model
         'description',
         'settings',
         'is_active',
+        'join_code',
     ];
 
     protected $casts = [
@@ -29,5 +30,10 @@ class Club extends Model
     public function users()
     {
         return $this->hasMany(User::class);
+    }
+
+    public function invitations()
+    {
+        return $this->hasMany(\App\Models\ClubInvitation::class);
     }
 }

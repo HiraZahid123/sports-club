@@ -10,9 +10,19 @@ interface Club {
     address: string;
     description: string;
     logo_path?: string | null;
+    join_code?: string | null;
 }
 
 export default function ClubEdit({ club, status }: { club: Club; status?: string }) {
+    const [codeCopied, setCodeCopied] = useState(false);
+
+    const copyJoinCode = () => {
+        if (!club.join_code) return;
+        navigator.clipboard.writeText(club.join_code).then(() => {
+            setCodeCopied(true);
+            setTimeout(() => setCodeCopied(false), 2000);
+        });
+    };
     const { data, setData, patch, processing, errors, recentlySuccessful } = useForm({
         name: club.name || '',
         email: club.email || '',
@@ -88,6 +98,52 @@ export default function ClubEdit({ club, status }: { club: Club; status?: string
                                 <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                             </svg>
                             Club photo updated successfully.
+                        </div>
+                    )}
+
+                    {/* Club Joining Code */}
+                    {club.join_code && (
+                        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                            <div className="bg-gradient-to-r from-emerald-50 to-teal-50 px-6 py-5 border-b border-emerald-100">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-600 text-lg">🔑</div>
+                                    <div>
+                                        <h3 className="text-sm font-bold text-gray-900">Club Joining Code</h3>
+                                        <p className="text-xs text-gray-500 mt-0.5">Share this code with athletes and parents so they can join your club</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="p-6 flex flex-col sm:flex-row items-center gap-4">
+                                <div className="flex-1">
+                                    <p className="text-4xl font-black tracking-[0.35em] text-gray-900 font-mono">{club.join_code}</p>
+                                    <p className="text-xs text-gray-400 mt-2">Athletes and parents enter this code at <strong>registration → Join a Club</strong></p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={copyJoinCode}
+                                    className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                                        codeCopied
+                                            ? 'bg-emerald-500 text-white'
+                                            : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200'
+                                    }`}
+                                >
+                                    {codeCopied ? (
+                                        <>
+                                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                            </svg>
+                                            Copied!
+                                        </>
+                                    ) : (
+                                        <>
+                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                            </svg>
+                                            Copy Code
+                                        </>
+                                    )}
+                                </button>
+                            </div>
                         </div>
                     )}
 

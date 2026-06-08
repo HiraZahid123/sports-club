@@ -58,12 +58,12 @@ export default function Welcome({ auth }: PageProps<{ laravelVersion: string, ph
                         </p>
 
                         <div className="flex flex-wrap gap-4">
-                            <Link href={route('register')} className="inline-flex items-center gap-2 px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-base transition-all shadow-lg shadow-indigo-200">
-                                Start For Free
+                            <a href="#join" className="inline-flex items-center gap-2 px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-base transition-all shadow-lg shadow-indigo-200">
+                                Get Started Free
                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                 </svg>
-                            </Link>
+                            </a>
                             <a href="#features" className="inline-flex items-center gap-2 px-8 py-4 bg-white hover:bg-gray-50 text-gray-700 rounded-xl font-bold text-base transition-all border border-gray-200 shadow-sm">
                                 See How It Works
                             </a>
@@ -204,6 +204,64 @@ export default function Welcome({ auth }: PageProps<{ laravelVersion: string, ph
                 </div>
             </div>
 
+            {/* Join Options Section */}
+            <div id="join" className="bg-slate-50 py-24">
+                <div className="max-w-5xl mx-auto px-6">
+                    <div className="text-center mb-12">
+                        <span className="inline-block px-4 py-1.5 bg-indigo-50 text-indigo-600 text-xs font-bold uppercase tracking-widest rounded-full border border-indigo-100 mb-4">Get Started</span>
+                        <h2 className="text-4xl font-black text-gray-900 mb-4">How Would You Like to Join?</h2>
+                        <p className="text-lg text-gray-500 max-w-2xl mx-auto">Every account is tied to the correct club with role-based access. Choose your path below.</p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {[
+                            {
+                                href: route('register.club'),
+                                color: 'bg-indigo-600',
+                                badgeColor: 'bg-indigo-50 text-indigo-600 border-indigo-100',
+                                badge: 'Club Managers',
+                                title: 'Register a Club',
+                                desc: 'Create your club profile and manager account. Get a unique joining code for your members.',
+                                btn: 'Register Your Club',
+                                btnClass: 'bg-indigo-600 hover:bg-indigo-700 text-white',
+                            },
+                            {
+                                href: route('register.join'),
+                                color: 'bg-emerald-500',
+                                badgeColor: 'bg-emerald-50 text-emerald-600 border-emerald-100',
+                                badge: 'Athletes & Parents',
+                                title: 'Join as Athlete or Parent',
+                                desc: 'Use your club\'s joining code or invitation link. Parents can manage multiple children under one account.',
+                                btn: 'Join a Club',
+                                btnClass: 'bg-emerald-500 hover:bg-emerald-600 text-white',
+                            },
+                            {
+                                href: '#',
+                                color: 'bg-amber-500',
+                                badgeColor: 'bg-amber-50 text-amber-600 border-amber-100',
+                                badge: 'Coaches',
+                                title: 'Activate Coach Account',
+                                desc: 'Coach accounts are invite-only. Your club manager sends you a personalised activation link via email.',
+                                btn: 'Check Your Invite Email',
+                                btnClass: 'bg-amber-500 hover:bg-amber-600 text-white opacity-75',
+                                disabled: true,
+                            },
+                        ].map((card) => (
+                            <div key={card.title} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-7 flex flex-col">
+                                <span className={`inline-block self-start px-3 py-1 text-xs font-bold rounded-full border ${card.badgeColor} mb-4`}>{card.badge}</span>
+                                <h3 className="text-lg font-black text-gray-900 mb-3">{card.title}</h3>
+                                <p className="text-sm text-gray-500 leading-relaxed flex-1 mb-6">{card.desc}</p>
+                                {card.disabled ? (
+                                    <span className={`w-full py-3 px-4 rounded-xl text-sm font-bold text-center cursor-default ${card.btnClass}`}>{card.btn}</span>
+                                ) : (
+                                    <Link href={card.href} className={`w-full py-3 px-4 rounded-xl text-sm font-bold text-center transition-all ${card.btnClass}`}>{card.btn}</Link>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+
             {/* CTA Section */}
             <div className="relative overflow-hidden bg-gradient-to-br from-indigo-600 to-blue-700 py-24">
                 <div className="absolute inset-0 opacity-10">
@@ -219,7 +277,7 @@ export default function Welcome({ auth }: PageProps<{ laravelVersion: string, ph
                     </p>
                     <div className="flex flex-wrap justify-center gap-4">
                         <Link href={route('register')} className="px-8 py-4 bg-white text-indigo-700 hover:bg-indigo-50 rounded-xl font-bold text-base transition-all shadow-lg">
-                            Start Free Trial
+                            Get Started
                         </Link>
                         <Link href={route('login')} className="px-8 py-4 bg-white/10 hover:bg-white/20 text-white rounded-xl font-bold text-base transition-all border border-white/20">
                             Sign In
