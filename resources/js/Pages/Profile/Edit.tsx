@@ -36,7 +36,7 @@ function ProfilePhotoCard({ status }: { status?: string }) {
         });
     };
 
-    const currentPhoto = preview ?? (user.profile_photo ? `/${user.profile_photo}` : null);
+    const currentPhoto = preview ?? (user.profile_photo ? user.profile_photo : null);
 
     return (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">

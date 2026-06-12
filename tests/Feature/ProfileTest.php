@@ -96,4 +96,30 @@ class ProfileTest extends TestCase
 
         $this->assertNotNull($user->fresh());
     }
+
+    public function test_user_can_upload_profile_photo(): void
+    {
+        $user = User::factory()->create();
+
+        \Illuminate\Support\Facades\Storage::fake('public');
+        $file = \Illuminate\Http\UploadedFile::fake()->image('avatar.jpg');
+
+        $response = $this
+            ->actingAs($user)
+            ->post('/profile/photo', [
+                'photo' => $file,
+            ]);
+
+        $response->assertRedirect('/profile');
+        $user->refresh();
+
+        $this->assertNotNull($user->profile_photo);
+        $this->assertTrue(\Illuminate\Support\Facades\File::exists(public_path($user->profile_photo)));
+
+        // Clean up
+        if (\Illuminate\Support\Facades\File::exists(public_path($user->profile_photo))) {
+            \Illuminate\Support\Facades\File::delete(public_path($user->profile_photo));
+        }
+    }
 }
+

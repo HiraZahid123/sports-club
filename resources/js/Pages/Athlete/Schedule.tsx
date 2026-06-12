@@ -34,7 +34,7 @@ export default function AthleteSchedule() {
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200 text-left">
                                     <tr>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">May 16 • 06:00 PM</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">May 16 • 18:00</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                             <span className="px-2 py-1 bg-indigo-50 text-indigo-700 rounded-md text-xs font-bold border border-indigo-100">Elite Sparring</span>
                                         </td>
@@ -42,7 +42,7 @@ export default function AthleteSchedule() {
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Main Hall</td>
                                     </tr>
                                     <tr>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">May 18 • 04:00 PM</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">May 18 • 16:00</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                             <span className="px-2 py-1 bg-emerald-50 text-emerald-700 rounded-md text-xs font-bold border border-emerald-100">Belt Grading Prep</span>
                                         </td>
@@ -50,7 +50,7 @@ export default function AthleteSchedule() {
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Training Room B</td>
                                     </tr>
                                     <tr>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">May 22 • 05:30 PM</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">May 22 • 17:30</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                             <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded-md text-xs font-bold border border-blue-100">Pattern Practice</span>
                                         </td>

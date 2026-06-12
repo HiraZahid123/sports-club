@@ -153,9 +153,9 @@ export default function AthleteDashboard({ athleteProfile }: { athleteProfile?: 
                             </div>
                             <div className="divide-y divide-gray-50">
                                 {[
-                                    { day: '16', month: 'May', title: 'Elite Sparring Session', coach: 'Master Kim', time: '06:00 PM', color: 'border-indigo-400 bg-indigo-50' },
-                                    { day: '18', month: 'May', title: 'Belt Grading Prep', coach: 'Coach Lee', time: '04:00 PM', color: 'border-emerald-400 bg-emerald-50' },
-                                    { day: '22', month: 'May', title: 'Pattern Practice', coach: 'Master Kim', time: '05:30 PM', color: 'border-blue-400 bg-blue-50' },
+                                    { day: '16', month: 'May', title: 'Elite Sparring Session', coach: 'Master Kim', time: '18:00', color: 'border-indigo-400 bg-indigo-50' },
+                                    { day: '18', month: 'May', title: 'Belt Grading Prep', coach: 'Coach Lee', time: '16:00', color: 'border-emerald-400 bg-emerald-50' },
+                                    { day: '22', month: 'May', title: 'Pattern Practice', coach: 'Master Kim', time: '17:30', color: 'border-blue-400 bg-blue-50' },
                                 ].map((event, i) => (
                                     <div key={i} className={`flex items-center gap-4 px-6 py-4 hover:bg-slate-50 transition-colors border-l-4 ${event.color}`}>
                                         <div className="text-center w-10 shrink-0">

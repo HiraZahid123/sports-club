@@ -35,9 +35,13 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user() ? [
                     ...$request->user()->toArray(),
+                    'profile_photo' => $request->user()->profile_photo ? asset($request->user()->profile_photo) : null,
                     'roles' => $request->user()->getRoleNames(),
                     'permissions' => $request->user()->getAllPermissions()->pluck('name'),
-                    'club' => $request->user()->club,
+                    'club' => $request->user()->club ? [
+                        ...$request->user()->club->toArray(),
+                        'logo_path' => $request->user()->club->logo_path ? asset($request->user()->club->logo_path) : null,
+                    ] : null,
                 ] : null,
             ],
             'ziggy' => fn () => [

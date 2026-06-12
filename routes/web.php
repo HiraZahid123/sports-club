@@ -67,6 +67,7 @@ Route::middleware(['auth', 'verified', 'role:Manager|Super Admin'])->prefix('man
 
     Route::get('/reports', [\App\Http\Controllers\ReportController::class, 'index'])->name('reports.index');
     Route::post('/payouts', [\App\Http\Controllers\ReportController::class, 'storePayout'])->name('payouts.store');
+    Route::post('/coaches/{user}/payment-settings', [\App\Http\Controllers\ReportController::class, 'updatePaymentSettings'])->name('coaches.payment-settings');
 
     Route::get('/invitations', [\App\Http\Controllers\InvitationController::class, 'index'])->name('invitations.index');
     Route::post('/invitations/coach', [\App\Http\Controllers\InvitationController::class, 'storeCoach'])->name('invitations.coach');

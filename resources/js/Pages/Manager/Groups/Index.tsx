@@ -62,9 +62,8 @@ const smallInput = "w-full rounded-lg border border-gray-200 bg-gray-50 px-2 py-
 
 const fmt12 = (t: string) => {
     if (!t) return '';
-    const [h, m] = t.split(':').map(Number);
-    const ampm = h >= 12 ? 'PM' : 'AM';
-    return `${((h % 12) || 12)}:${String(m).padStart(2, '0')} ${ampm}`;
+    const parts = t.split(':');
+    return `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}`;
 };
 
 const blankSlot = (): ScheduleSlot => ({

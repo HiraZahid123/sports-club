@@ -27,18 +27,58 @@ export default function ReportsIndex({ revenueData, coaches, recentPayouts }: an
     const [pricePerHour, setPricePerHour] = useState('');
     const [numberOfWeeks, setNumberOfWeeks] = useState('4');
 
+    // Coach Payout Settings States
+    const [selectedCoachSettings, setSelectedCoachSettings] = useState<any>(null);
+    const settingsForm = useForm({
+        payment_option: 'manual',
+        payment_rate: '0',
+    });
+
+    const selectCoachSettings = (coach: any) => {
+        setSelectedCoachSettings(coach);
+        const profile = coach.coach_profile || coach.coachProfile;
+        settingsForm.setData({
+            payment_option: profile?.payment_option || 'manual',
+            payment_rate: (profile?.payment_rate || 0).toString(),
+        });
+        settingsForm.clearErrors();
+    };
+
+    const submitSettings = (e: React.FormEvent) => {
+        e.preventDefault();
+        settingsForm.post(route('manager.coaches.payment-settings', selectedCoachSettings.id), {
+            onSuccess: () => {
+                setSelectedCoachSettings(null);
+                settingsForm.reset();
+            },
+        });
+    };
+
     const selectCoachForPayment = (coach: any) => {
         setSelectedCoach(coach);
+        const profile = coach.coach_profile || coach.coachProfile;
+        const defaultOpt = profile?.payment_option || 'manual';
+        const defaultRate = profile?.payment_rate || '0';
+
+        setCalcOption(defaultOpt);
+
+        if (defaultOpt === 'athlete') {
+            setPricePerAthlete(defaultRate.toString() || '10');
+        } else if (defaultOpt === 'hourly') {
+            setPricePerHour(defaultRate.toString() || '25');
+        } else {
+            setPricePerAthlete('10');
+            setPricePerHour((profile?.hourly_rate || '25').toString());
+        }
+
         setData({
             user_id: coach.id,
             amount: '',
             payout_date: new Date().toISOString().split('T')[0],
-            payment_type: 'Fixed Amount',
+            payment_type: defaultOpt === 'athlete' ? 'Per Athlete' : (defaultOpt === 'hourly' ? 'Hourly Rate' : 'Fixed Amount'),
             notes: '',
         });
-        setCalcOption('manual');
-        const rate = (coach.coach_profile || coach.coachProfile)?.hourly_rate || '25';
-        setPricePerHour(rate.toString());
+        setNumberOfWeeks('4');
     };
 
     const groups = selectedCoach?.training_groups || [];
@@ -86,8 +126,8 @@ export default function ReportsIndex({ revenueData, coaches, recentPayouts }: an
         });
     };
 
-    const maxRevenue = revenueData.length > 0 ? Math.max(...revenueData.map((d: any) => d.total)) : 1;
-    const totalRevenue = revenueData.reduce((sum: number, d: any) => sum + d.total, 0);
+    const maxRevenue = revenueData.length > 0 ? Math.max(...revenueData.map((d: any) => parseFloat(d.total))) : 1;
+    const totalRevenue = revenueData.reduce((sum: number, d: any) => sum + parseFloat(d.total), 0);
 
     return (
         <AuthenticatedLayout
@@ -124,12 +164,12 @@ export default function ReportsIndex({ revenueData, coaches, recentPayouts }: an
                             ) : (
                                 <div className="flex items-end gap-3 h-52">
                                     {revenueData.map((d: any, idx: number) => {
-                                        const pct = maxRevenue > 0 ? (d.total / maxRevenue) * 100 : 0;
+                                        const pct = maxRevenue > 0 ? (parseFloat(d.total) / maxRevenue) * 100 : 0;
                                         return (
                                             <div key={idx} className="flex-1 flex flex-col items-center group">
                                                 <div className="relative w-full flex flex-col items-center">
                                                     <span className="mb-1 text-xs font-bold text-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        ${d.total.toLocaleString()}
+                                                        ${Number(d.total).toLocaleString()}
                                                     </span>
                                                     <div
                                                         className="w-full bg-indigo-100 group-hover:bg-indigo-600 rounded-t-xl transition-all duration-300 cursor-pointer"
@@ -162,15 +202,38 @@ export default function ReportsIndex({ revenueData, coaches, recentPayouts }: an
                                             </div>
                                             <div>
                                                 <p className="font-semibold text-gray-900 text-sm">{coach.name}</p>
-                                                <p className="text-xs text-gray-400">{coach.training_groups.length} group{coach.training_groups.length !== 1 ? 's' : ''} assigned</p>
+                                                <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-gray-400">
+                                                    <span>{coach.training_groups.length} group{coach.training_groups.length !== 1 ? 's' : ''} assigned</span>
+                                                    <span>•</span>
+                                                    <span className="font-medium text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded">
+                                                        {(() => {
+                                                            const p = coach.coach_profile || coach.coachProfile;
+                                                            if (!p) return 'Manual';
+                                                            if (p.payment_option === 'athlete') return `Per Athlete (€${Number(p.payment_rate || 0).toFixed(2)})`;
+                                                            if (p.payment_option === 'hourly') return `Hourly (€${Number(p.payment_rate || 0).toFixed(2)}/hr)`;
+                                                            return p.payment_rate > 0 ? `Fixed Amount (€${Number(p.payment_rate).toFixed(2)})` : 'Manual';
+                                                        })()}
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
-                                        <button
-                                            onClick={() => selectCoachForPayment(coach)}
-                                            className="px-4 py-2 bg-indigo-600 text-white text-xs font-bold rounded-xl hover:bg-indigo-700 transition-all shadow-sm"
-                                        >
-                                            Pay Coach
-                                        </button>
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => selectCoachSettings(coach)}
+                                                className="px-3 py-2 bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl hover:bg-slate-200 transition-all flex items-center gap-1"
+                                            >
+                                                <span>⚙️</span>
+                                                <span>Settings</span>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => selectCoachForPayment(coach)}
+                                                className="px-4 py-2 bg-indigo-600 text-white text-xs font-bold rounded-xl hover:bg-indigo-700 transition-all shadow-sm"
+                                            >
+                                                Pay Coach
+                                            </button>
+                                        </div>
                                     </div>
                                 ))}
                                 {coaches.length === 0 && (
@@ -389,6 +452,121 @@ export default function ReportsIndex({ revenueData, coaches, recentPayouts }: an
                                     className="flex-1 py-2.5 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 transition-all disabled:opacity-50 shadow-sm"
                                 >
                                     {processing ? 'Recording...' : 'Record Payout'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Payment Settings Modal */}
+            {selectedCoachSettings && (
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
+                        <div className="bg-gradient-to-r from-slate-700 to-slate-900 px-6 py-5">
+                            <h3 className="text-lg font-bold text-white">Coach Payout Settings</h3>
+                            <p className="text-slate-300 text-sm mt-0.5">Configure default payment option for {selectedCoachSettings.name}</p>
+                        </div>
+
+                        <form onSubmit={submitSettings} className="p-6 space-y-4">
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">Default Payment Option</label>
+                                <div className="space-y-2">
+                                    <label className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
+                                        settingsForm.data.payment_option === 'athlete'
+                                            ? 'border-indigo-600 bg-indigo-50/20 text-indigo-900'
+                                            : 'border-gray-200 hover:bg-slate-50 text-gray-700'
+                                    }`}>
+                                        <input
+                                            type="radio"
+                                            name="payment_option"
+                                            value="athlete"
+                                            checked={settingsForm.data.payment_option === 'athlete'}
+                                            onChange={(e) => settingsForm.setData('payment_option', e.target.value)}
+                                            className="mt-1 text-indigo-600 focus:ring-indigo-500"
+                                        />
+                                        <div>
+                                            <p className="text-xs font-bold">Option 1: Per Athlete</p>
+                                            <p className="text-[11px] text-gray-500 mt-0.5">Pay per athlete in the coach's training groups.</p>
+                                        </div>
+                                    </label>
+
+                                    <label className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
+                                        settingsForm.data.payment_option === 'hourly'
+                                            ? 'border-indigo-600 bg-indigo-50/20 text-indigo-900'
+                                            : 'border-gray-200 hover:bg-slate-50 text-gray-700'
+                                    }`}>
+                                        <input
+                                            type="radio"
+                                            name="payment_option"
+                                            value="hourly"
+                                            checked={settingsForm.data.payment_option === 'hourly'}
+                                            onChange={(e) => settingsForm.setData('payment_option', e.target.value)}
+                                            className="mt-1 text-indigo-600 focus:ring-indigo-500"
+                                        />
+                                        <div>
+                                            <p className="text-xs font-bold">Option 2: Hourly Rate</p>
+                                            <p className="text-[11px] text-gray-500 mt-0.5">Pay per scheduled training hour dynamically.</p>
+                                        </div>
+                                    </label>
+
+                                    <label className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
+                                        settingsForm.data.payment_option === 'manual'
+                                            ? 'border-indigo-600 bg-indigo-50/20 text-indigo-900'
+                                            : 'border-gray-200 hover:bg-slate-50 text-gray-700'
+                                    }`}>
+                                        <input
+                                            type="radio"
+                                            name="payment_option"
+                                            value="manual"
+                                            checked={settingsForm.data.payment_option === 'manual'}
+                                            onChange={(e) => settingsForm.setData('payment_option', e.target.value)}
+                                            className="mt-1 text-indigo-600 focus:ring-indigo-500"
+                                        />
+                                        <div>
+                                            <p className="text-xs font-bold">Option 3: Fixed / Manual Amount</p>
+                                            <p className="text-[11px] text-gray-500 mt-0.5">Manager manually inputs the amount on payout.</p>
+                                        </div>
+                                    </label>
+                                </div>
+                                {settingsForm.errors.payment_option && (
+                                    <p className="text-xs text-rose-500 mt-1">{settingsForm.errors.payment_option}</p>
+                                )}
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">
+                                    {settingsForm.data.payment_option === 'athlete' && 'Price per Athlete (€)'}
+                                    {settingsForm.data.payment_option === 'hourly' && 'Price per Hour (€)'}
+                                    {settingsForm.data.payment_option === 'manual' && 'Default Amount (€) (Optional)'}
+                                </label>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    value={settingsForm.data.payment_rate}
+                                    onChange={(e) => settingsForm.setData('payment_rate', e.target.value)}
+                                    placeholder="0.00"
+                                    className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                                />
+                                {settingsForm.errors.payment_rate && (
+                                    <p className="text-xs text-rose-500 mt-1">{settingsForm.errors.payment_rate}</p>
+                                )}
+                            </div>
+
+                            <div className="flex gap-3 pt-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setSelectedCoachSettings(null)}
+                                    className="flex-1 py-2.5 bg-gray-100 text-gray-700 text-sm font-semibold rounded-xl hover:bg-gray-200 transition-all"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={settingsForm.processing}
+                                    className="flex-1 py-2.5 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 transition-all disabled:opacity-50 shadow-sm"
+                                >
+                                    {settingsForm.processing ? 'Saving...' : 'Save Settings'}
                                 </button>
                             </div>
                         </form>

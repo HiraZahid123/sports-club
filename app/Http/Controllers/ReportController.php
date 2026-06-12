@@ -73,4 +73,30 @@ class ReportController extends Controller
 
         return back()->with('status', 'payout-recorded');
     }
+
+    /**
+     * Update the coach's payment settings.
+     */
+    public function updatePaymentSettings(Request $request, User $user)
+    {
+        if ($user->club_id !== $request->user()->club_id) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $validated = $request->validate([
+            'payment_option' => 'required|string|in:athlete,hourly,manual',
+            'payment_rate'   => 'required|numeric|min:0',
+        ]);
+
+        $user->coachProfile()->updateOrCreate(
+            ['user_id' => $user->id],
+            [
+                'payment_option' => $validated['payment_option'],
+                'payment_rate'   => $validated['payment_rate'],
+                'hourly_rate'    => $validated['payment_option'] === 'hourly' ? $validated['payment_rate'] : ($user->coachProfile->hourly_rate ?? 0.00),
+            ]
+        );
+
+        return back()->with('status', 'payment-settings-updated');
+    }
 }

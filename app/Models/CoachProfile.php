@@ -10,6 +10,8 @@ class CoachProfile extends Model
         'user_id',
         'specialization',
         'hourly_rate',
+        'payment_option',
+        'payment_rate',
         'bio',
     ];
 
