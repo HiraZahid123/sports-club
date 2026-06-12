@@ -4,6 +4,15 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Artisan;
+
+Route::get('/clear-cache', function () {
+    Artisan::call('view:clear');
+    Artisan::call('config:clear');
+    Artisan::call('route:clear');
+    Artisan::call('cache:clear');
+    return 'All Laravel caches cleared successfully!';
+});
 
 // Public API: validate a club joining code
 Route::get('/api/clubs/validate-code', function (\Illuminate\Http\Request $request) {
