@@ -11,6 +11,21 @@ interface ScheduleSlot {
     end_time: string;
     location: string;
     notes: string;
+    facility_id: string;
+    facility?: Facility | null;
+}
+
+interface AgeCategory {
+    id: number;
+    name: string;
+    min_age: number | null;
+    max_age: number | null;
+}
+
+interface Facility {
+    id: number;
+    name: string;
+    type: string | null;
 }
 
 interface Group {
@@ -21,6 +36,8 @@ interface Group {
     capacity: number;
     skill_level: string;
     age_range: string;
+    age_category_id: number | null;
+    age_category: AgeCategory | null;
     athletes_count: number;
     coaches: any[];
     athletes: any[];
@@ -67,11 +84,11 @@ const fmt12 = (t: string) => {
 };
 
 const blankSlot = (): ScheduleSlot => ({
-    day_of_week: 'Monday', start_time: '09:00', end_time: '10:00', location: '', notes: '',
+    day_of_week: 'Monday', start_time: '09:00', end_time: '10:00', location: '', notes: '', facility_id: '',
 });
 
 // ── Component ──────────────────────────────────────────────────────────────
-export default function GroupsIndex({ groups, coaches, athletes }: { groups: Group[], coaches: Coach[], athletes: any[] }) {
+export default function GroupsIndex({ groups, coaches, athletes, ageCategories, facilities }: { groups: Group[], coaches: Coach[], athletes: any[], ageCategories: AgeCategory[], facilities: Facility[] }) {
     const [isCreating, setIsCreating]     = useState(false);
     const [editingGroup, setEditingGroup] = useState<Group | null>(null);
 
@@ -82,7 +99,7 @@ export default function GroupsIndex({ groups, coaches, athletes }: { groups: Gro
     // ── Create form ────────────────────────────────────────────────────────
     const createForm = useForm({
         name: '', description: '', monthly_price: '',
-        capacity: '', skill_level: 'Beginner', age_range: '',
+        capacity: '', skill_level: 'Beginner', age_category_id: '',
     });
 
     const submitCreate: FormEventHandler = (e) => {
@@ -95,7 +112,7 @@ export default function GroupsIndex({ groups, coaches, athletes }: { groups: Gro
     // ── Edit form ──────────────────────────────────────────────────────────
     const editForm = useForm({
         name: '', description: '', monthly_price: '',
-        capacity: '', skill_level: 'Beginner', age_range: '',
+        capacity: '', skill_level: 'Beginner', age_category_id: '',
     });
 
     const openEdit = (group: Group) => {
@@ -105,7 +122,7 @@ export default function GroupsIndex({ groups, coaches, athletes }: { groups: Gro
             monthly_price: group.monthly_price,
             capacity:      group.capacity ? String(group.capacity) : '',
             skill_level:   group.skill_level ?? 'Beginner',
-            age_range:     group.age_range ?? '',
+            age_category_id: group.age_category_id ? String(group.age_category_id) : '',
         });
         setScheduleSlots(
             group.schedules.length > 0
@@ -113,6 +130,7 @@ export default function GroupsIndex({ groups, coaches, athletes }: { groups: Gro
                     ...s,
                     start_time: s.start_time ? s.start_time.substring(0, 5) : '',
                     end_time: s.end_time ? s.end_time.substring(0, 5) : '',
+                    facility_id: s.facility_id ? String(s.facility_id) : '',
                   }))
                 : []
         );
@@ -306,8 +324,16 @@ export default function GroupsIndex({ groups, coaches, athletes }: { groups: Gro
                                         </select>
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Age Range</label>
-                                        <input type="text" value={createForm.data.age_range} onChange={e => createForm.setData('age_range', e.target.value)} placeholder="e.g. 6–12 Years" className={inputClass} />
+                                        <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Age Category</label>
+                                        <select value={createForm.data.age_category_id} onChange={e => createForm.setData('age_category_id', e.target.value)} className={inputClass}>
+                                            <option value="">— None —</option>
+                                            {ageCategories.map(c => (
+                                                <option key={c.id} value={c.id}>{c.name}{c.min_age != null || c.max_age != null ? ` (${c.min_age ?? '0'}–${c.max_age ?? '∞'})` : ''}</option>
+                                            ))}
+                                        </select>
+                                        {ageCategories.length === 0 && (
+                                            <p className="mt-1 text-xs text-gray-400">No age categories yet — add some in Club Setup.</p>
+                                        )}
                                     </div>
                                     <div>
                                         <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Max Capacity</label>
@@ -370,8 +396,13 @@ export default function GroupsIndex({ groups, coaches, athletes }: { groups: Gro
                                             </select>
                                         </div>
                                         <div>
-                                            <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Age Range</label>
-                                            <input type="text" value={editForm.data.age_range} onChange={e => editForm.setData('age_range', e.target.value)} placeholder="e.g. 6–12 Years" className={inputClass} />
+                                            <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Age Category</label>
+                                            <select value={editForm.data.age_category_id} onChange={e => editForm.setData('age_category_id', e.target.value)} className={inputClass}>
+                                                <option value="">— None —</option>
+                                                {ageCategories.map(c => (
+                                                    <option key={c.id} value={c.id}>{c.name}{c.min_age != null || c.max_age != null ? ` (${c.min_age ?? '0'}–${c.max_age ?? '∞'})` : ''}</option>
+                                                ))}
+                                            </select>
                                         </div>
                                         <div>
                                             <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Max Capacity</label>
@@ -558,7 +589,14 @@ export default function GroupsIndex({ groups, coaches, athletes }: { groups: Gro
                                                     </div>
                                                     {/* Location */}
                                                     <div className="col-span-3">
-                                                        <input type="text" value={slot.location} onChange={e => updateSlot(idx, 'location', e.target.value)} placeholder="e.g. Hall A" className={smallInput} />
+                                                        {facilities.length > 0 ? (
+                                                            <select value={slot.facility_id} onChange={e => updateSlot(idx, 'facility_id', e.target.value)} className={smallInput}>
+                                                                <option value="">— No facility —</option>
+                                                                {facilities.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+                                                            </select>
+                                                        ) : (
+                                                            <input type="text" value={slot.location} onChange={e => updateSlot(idx, 'location', e.target.value)} placeholder="e.g. Hall A" className={smallInput} />
+                                                        )}
                                                     </div>
                                                     {/* Notes */}
                                                     <div className="col-span-2">
@@ -628,7 +666,7 @@ export default function GroupsIndex({ groups, coaches, athletes }: { groups: Gro
                                                 </span>
                                             </div>
 
-                                            {group.age_range && <p className="text-xs text-gray-400 font-medium mb-3">Ages: {group.age_range}</p>}
+                                            {(group.age_category?.name || group.age_range) && <p className="text-xs text-gray-400 font-medium mb-3">Ages: {group.age_category?.name ?? group.age_range}</p>}
                                             <p className="text-sm text-gray-500 mb-5 line-clamp-2 leading-relaxed">{group.description || 'No description provided.'}</p>
 
                                             {/* Stats */}
@@ -678,7 +716,7 @@ export default function GroupsIndex({ groups, coaches, athletes }: { groups: Gro
                                                             <span key={i} className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-lg ${DAY_COLOR[s.day_of_week] ?? 'bg-gray-100 text-gray-600'}`}>
                                                                 <span>{DAY_SHORT[s.day_of_week]}</span>
                                                                 <span className="opacity-70">{fmt12(s.start_time)}–{fmt12(s.end_time)}</span>
-                                                                {s.location && <span className="opacity-60">· {s.location}</span>}
+                                                                {(s.facility?.name || s.location) && <span className="opacity-60">· {s.facility?.name ?? s.location}</span>}
                                                             </span>
                                                         ))}
                                                     </div>

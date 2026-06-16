@@ -30,11 +30,15 @@ class ClubController extends Controller
 
         if (!$club) {
             $validated = $request->validate([
-                'name'        => 'required|string|max:255',
-                'email'       => 'required|email|max:255',
-                'phone'       => 'nullable|string|max:20',
-                'address'     => 'nullable|string|max:500',
-                'description' => 'nullable|string|max:1000',
+                'name'          => 'required|string|max:255',
+                'email'         => 'required|email|max:255',
+                'phone'         => 'nullable|string|max:20',
+                'address'       => 'nullable|string|max:500',
+                'description'   => 'nullable|string|max:1000',
+                'sport_type'    => 'nullable|string|max:255',
+                'founding_date' => 'nullable|date',
+                'opening_time'  => 'nullable|date_format:H:i',
+                'closing_time'  => 'nullable|date_format:H:i',
             ]);
 
             $club = Club::create([
@@ -48,16 +52,31 @@ class ClubController extends Controller
         }
 
         $validated = $request->validate([
-            'name'        => 'required|string|max:255',
-            'email'       => 'required|email|max:255',
-            'phone'       => 'nullable|string|max:20',
-            'address'     => 'nullable|string|max:500',
-            'description' => 'nullable|string|max:1000',
+            'name'          => 'required|string|max:255',
+            'email'         => 'required|email|max:255',
+            'phone'         => 'nullable|string|max:20',
+            'address'       => 'nullable|string|max:500',
+            'description'   => 'nullable|string|max:1000',
+            'sport_type'    => 'nullable|string|max:255',
+            'founding_date' => 'nullable|date',
+            'opening_time'  => 'nullable|date_format:H:i',
+            'closing_time'  => 'nullable|date_format:H:i',
         ]);
 
         $club->update($validated);
 
         return redirect()->route('manager.club.edit')->with('status', 'club-updated');
+    }
+
+    public function setupIndex(Request $request)
+    {
+        $clubId = $request->user()->club_id;
+
+        return Inertia::render('Manager/Setup/Index', [
+            'ageCategories' => \App\Models\AgeCategory::where('club_id', $clubId)->orderBy('min_age')->get(),
+            'facilities'    => \App\Models\Facility::where('club_id', $clubId)->orderBy('name')->get(),
+            'status'        => session('status'),
+        ]);
     }
 
     public function uploadLogo(Request $request)

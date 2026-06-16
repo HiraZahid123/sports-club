@@ -14,6 +14,7 @@ class TrainingGroup extends Model
         'capacity',
         'skill_level',
         'age_range',
+        'age_category_id',
     ];
 
     /**
@@ -22,6 +23,11 @@ class TrainingGroup extends Model
     public function club()
     {
         return $this->belongsTo(Club::class);
+    }
+
+    public function ageCategory()
+    {
+        return $this->belongsTo(AgeCategory::class);
     }
 
     /**

@@ -13,10 +13,16 @@ class GroupSchedule extends Model
         'end_time',
         'location',
         'notes',
+        'facility_id',
     ];
 
     public function group()
     {
         return $this->belongsTo(TrainingGroup::class, 'training_group_id');
+    }
+
+    public function facility()
+    {
+        return $this->belongsTo(Facility::class);
     }
 }

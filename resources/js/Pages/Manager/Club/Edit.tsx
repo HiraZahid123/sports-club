@@ -11,6 +11,10 @@ interface Club {
     description: string;
     logo_path?: string | null;
     join_code?: string | null;
+    sport_type?: string | null;
+    founding_date?: string | null;
+    opening_time?: string | null;
+    closing_time?: string | null;
 }
 
 export default function ClubEdit({ club, status }: { club: Club; status?: string }) {
@@ -29,6 +33,10 @@ export default function ClubEdit({ club, status }: { club: Club; status?: string
         phone: club.phone || '',
         address: club.address || '',
         description: club.description || '',
+        sport_type: club.sport_type || '',
+        founding_date: club.founding_date ? club.founding_date.substring(0, 10) : '',
+        opening_time: club.opening_time ? club.opening_time.substring(0, 5) : '',
+        closing_time: club.closing_time ? club.closing_time.substring(0, 5) : '',
     });
 
     const submit: FormEventHandler = (e) => {
@@ -291,6 +299,53 @@ export default function ClubEdit({ club, status }: { club: Club; status?: string
                                     rows={3}
                                     className={`${inputClass} resize-none`}
                                 />
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div>
+                                    <label className={labelClass}>Sport Type</label>
+                                    <input
+                                        type="text"
+                                        value={data.sport_type}
+                                        onChange={(e) => setData('sport_type', e.target.value)}
+                                        placeholder="e.g. Taekwondo, Soccer, Swimming"
+                                        className={inputClass}
+                                    />
+                                    {errors.sport_type && <p className="mt-1.5 text-xs text-red-600">{errors.sport_type}</p>}
+                                </div>
+                                <div>
+                                    <label className={labelClass}>Founding Date</label>
+                                    <input
+                                        type="date"
+                                        value={data.founding_date}
+                                        onChange={(e) => setData('founding_date', e.target.value)}
+                                        className={inputClass}
+                                    />
+                                    {errors.founding_date && <p className="mt-1.5 text-xs text-red-600">{errors.founding_date}</p>}
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div>
+                                    <label className={labelClass}>Opening Time</label>
+                                    <input
+                                        type="time"
+                                        value={data.opening_time}
+                                        onChange={(e) => setData('opening_time', e.target.value)}
+                                        className={inputClass}
+                                    />
+                                    {errors.opening_time && <p className="mt-1.5 text-xs text-red-600">{errors.opening_time}</p>}
+                                </div>
+                                <div>
+                                    <label className={labelClass}>Closing Time</label>
+                                    <input
+                                        type="time"
+                                        value={data.closing_time}
+                                        onChange={(e) => setData('closing_time', e.target.value)}
+                                        className={inputClass}
+                                    />
+                                    {errors.closing_time && <p className="mt-1.5 text-xs text-red-600">{errors.closing_time}</p>}
+                                </div>
                             </div>
 
                             <div>

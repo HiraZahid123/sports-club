@@ -18,7 +18,7 @@ class TrainingGroupController extends Controller
         $clubId = $request->user()->club_id;
 
         $groups = TrainingGroup::where('club_id', $clubId)
-            ->with(['coaches', 'athletes', 'schedules'])
+            ->with(['coaches', 'athletes', 'schedules.facility', 'ageCategory'])
             ->withCount('athletes')
             ->get();
 
@@ -30,10 +30,15 @@ class TrainingGroupController extends Controller
             ->where('club_id', $clubId)
             ->get();
 
+        $ageCategories = \App\Models\AgeCategory::where('club_id', $clubId)->orderBy('min_age')->get();
+        $facilities    = \App\Models\Facility::where('club_id', $clubId)->orderBy('name')->get();
+
         return Inertia::render('Manager/Groups/Index', [
-            'groups'   => $groups,
-            'coaches'  => $coaches,
-            'athletes' => $athletes,
+            'groups'        => $groups,
+            'coaches'       => $coaches,
+            'athletes'      => $athletes,
+            'ageCategories' => $ageCategories,
+            'facilities'    => $facilities,
         ]);
     }
 
@@ -42,18 +47,21 @@ class TrainingGroupController extends Controller
      */
     public function store(Request $request)
     {
+        $clubId = $request->user()->club_id;
+
         $validated = $request->validate([
-            'name'          => 'required|string|max:255',
-            'description'   => 'nullable|string',
-            'monthly_price' => 'required|numeric|min:0',
-            'capacity'      => 'nullable|integer|min:1',
-            'skill_level'   => 'nullable|string',
-            'age_range'     => 'nullable|string',
+            'name'             => 'required|string|max:255',
+            'description'      => 'nullable|string',
+            'monthly_price'    => 'required|numeric|min:0',
+            'capacity'         => 'nullable|integer|min:1',
+            'skill_level'      => 'nullable|string',
+            'age_range'        => 'nullable|string',
+            'age_category_id'  => 'nullable|exists:age_categories,id,club_id,' . $clubId,
         ]);
 
         TrainingGroup::create([
             ...$validated,
-            'club_id' => $request->user()->club_id,
+            'club_id' => $clubId,
         ]);
 
         return redirect()->route('manager.groups.index')->with('status', 'group-created');
@@ -64,13 +72,16 @@ class TrainingGroupController extends Controller
      */
     public function update(Request $request, TrainingGroup $group)
     {
+        $clubId = $request->user()->club_id;
+
         $validated = $request->validate([
-            'name'          => 'required|string|max:255',
-            'description'   => 'nullable|string',
-            'monthly_price' => 'required|numeric|min:0',
-            'capacity'      => 'nullable|integer|min:1',
-            'skill_level'   => 'nullable|string',
-            'age_range'     => 'nullable|string',
+            'name'             => 'required|string|max:255',
+            'description'      => 'nullable|string',
+            'monthly_price'    => 'required|numeric|min:0',
+            'capacity'         => 'nullable|integer|min:1',
+            'skill_level'      => 'nullable|string',
+            'age_range'        => 'nullable|string',
+            'age_category_id'  => 'nullable|exists:age_categories,id,club_id,' . $clubId,
         ]);
 
         $group->update($validated);
@@ -128,6 +139,8 @@ class TrainingGroupController extends Controller
             $request->merge(['schedules' => $schedules]);
         }
 
+        $clubId = $request->user()->club_id;
+
         $request->validate([
             'schedules'                 => 'present|array',
             'schedules.*.day_of_week'   => 'required|string|in:Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday',
@@ -135,6 +148,7 @@ class TrainingGroupController extends Controller
             'schedules.*.end_time'      => 'required|date_format:H:i|after:schedules.*.start_time',
             'schedules.*.location'      => 'nullable|string|max:255',
             'schedules.*.notes'         => 'nullable|string|max:500',
+            'schedules.*.facility_id'   => 'nullable|exists:facilities,id,club_id,' . $clubId,
         ]);
 
         // Delete old slots and insert fresh ones atomically

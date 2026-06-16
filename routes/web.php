@@ -59,6 +59,16 @@ Route::middleware(['auth', 'verified', 'role:Manager|Super Admin'])->prefix('man
     Route::patch('/club', [\App\Http\Controllers\ClubController::class, 'update'])->name('club.update');
     Route::post('/club/logo', [\App\Http\Controllers\ClubController::class, 'uploadLogo'])->name('club.logo');
 
+    Route::get('/setup', [\App\Http\Controllers\ClubController::class, 'setupIndex'])->name('setup.index');
+
+    Route::post('/age-categories', [\App\Http\Controllers\AgeCategoryController::class, 'store'])->name('age-categories.store');
+    Route::put('/age-categories/{ageCategory}', [\App\Http\Controllers\AgeCategoryController::class, 'update'])->name('age-categories.update');
+    Route::delete('/age-categories/{ageCategory}', [\App\Http\Controllers\AgeCategoryController::class, 'destroy'])->name('age-categories.destroy');
+
+    Route::post('/facilities', [\App\Http\Controllers\FacilityController::class, 'store'])->name('facilities.store');
+    Route::put('/facilities/{facility}', [\App\Http\Controllers\FacilityController::class, 'update'])->name('facilities.update');
+    Route::delete('/facilities/{facility}', [\App\Http\Controllers\FacilityController::class, 'destroy'])->name('facilities.destroy');
+
     Route::get('/members', [\App\Http\Controllers\MemberController::class, 'index'])->name('members.index');
     Route::post('/members', [\App\Http\Controllers\MemberController::class, 'store'])->name('members.store');
     Route::put('/members/{user}', [\App\Http\Controllers\MemberController::class, 'update'])->name('members.update');
