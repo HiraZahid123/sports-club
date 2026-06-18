@@ -29,9 +29,11 @@ class RegisterCoachController extends Controller
         }
 
         return Inertia::render('Auth/RegisterCoach', [
-            'token'      => $token,
-            'club'       => ['id' => $invitation->club->id, 'name' => $invitation->club->name],
-            'email'      => $invitation->email,
+            'token'          => $token,
+            'club'           => ['id' => $invitation->club->id, 'name' => $invitation->club->name],
+            'email'          => $invitation->email,
+            'payment_option' => $invitation->payment_option ?? 'manual',
+            'payment_rate'   => $invitation->payment_rate ?? 0,
         ]);
     }
 
@@ -61,7 +63,12 @@ class RegisterCoachController extends Controller
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
         Role::firstOrCreate(['name' => 'Coach', 'guard_name' => 'web']);
         $user->assignRole('Coach');
-        CoachProfile::create(['user_id' => $user->id]);
+        CoachProfile::create([
+            'user_id'        => $user->id,
+            'payment_option' => $invitation->payment_option ?? 'manual',
+            'payment_rate'   => $invitation->payment_rate ?? 0,
+            'hourly_rate'    => $invitation->payment_option === 'hourly' ? ($invitation->payment_rate ?? 0) : 0,
+        ]);
 
         $invitation->update(['status' => 'accepted']);
 

@@ -69,6 +69,9 @@ Route::middleware(['auth', 'verified', 'role:Manager|Super Admin'])->prefix('man
     Route::put('/facilities/{facility}', [\App\Http\Controllers\FacilityController::class, 'update'])->name('facilities.update');
     Route::delete('/facilities/{facility}', [\App\Http\Controllers\FacilityController::class, 'destroy'])->name('facilities.destroy');
 
+    Route::get('/coaches', [\App\Http\Controllers\CoachController::class, 'index'])->name('coaches.index');
+    Route::put('/coaches/{user}', [\App\Http\Controllers\CoachController::class, 'update'])->name('coaches.update');
+
     Route::get('/members', [\App\Http\Controllers\MemberController::class, 'index'])->name('members.index');
     Route::post('/members', [\App\Http\Controllers\MemberController::class, 'store'])->name('members.store');
     Route::put('/members/{user}', [\App\Http\Controllers\MemberController::class, 'update'])->name('members.update');

@@ -28,7 +28,9 @@ class InvitationController extends Controller
     public function storeCoach(Request $request): RedirectResponse
     {
         $request->validate([
-            'email' => 'required|email|max:255',
+            'email'          => 'required|email|max:255',
+            'payment_option' => 'required|string|in:athlete,hourly,manual',
+            'payment_rate'   => 'required|numeric|min:0',
         ]);
 
         $club = Club::findOrFail($request->user()->club_id);
@@ -43,12 +45,14 @@ class InvitationController extends Controller
         }
 
         $invitation = ClubInvitation::create([
-            'club_id'    => $club->id,
-            'email'      => $request->email,
-            'role'       => 'Coach',
-            'token'      => ClubInvitation::generateToken(),
-            'status'     => 'pending',
-            'expires_at' => now()->addDays(7),
+            'club_id'        => $club->id,
+            'email'          => $request->email,
+            'role'           => 'Coach',
+            'payment_option' => $request->payment_option,
+            'payment_rate'   => $request->payment_rate,
+            'token'          => ClubInvitation::generateToken(),
+            'status'         => 'pending',
+            'expires_at'     => now()->addDays(7),
         ]);
 
         $inviteUrl = route('register.coach', $invitation->token);

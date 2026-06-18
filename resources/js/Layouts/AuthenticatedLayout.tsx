@@ -57,6 +57,9 @@ export default function Authenticated({
                                         <NavLink href={route('manager.members.index')} active={route().current('manager.members.index')}>
                                             Members
                                         </NavLink>
+                                        <NavLink href={route('manager.coaches.index')} active={route().current('manager.coaches.index')}>
+                                            Coaches
+                                        </NavLink>
                                         <NavLink href={route('manager.groups.index')} active={route().current('manager.groups.index')}>
                                             Groups
                                         </NavLink>
@@ -158,6 +161,7 @@ export default function Authenticated({
                                 <ResponsiveNavLink href={route('manager.club.edit')} active={route().current('manager.club.edit')}>Club Settings</ResponsiveNavLink>
                                 <ResponsiveNavLink href={route('manager.setup.index')} active={route().current('manager.setup.index')}>Club Setup</ResponsiveNavLink>
                                 <ResponsiveNavLink href={route('manager.members.index')} active={route().current('manager.members.index')}>Manage Members</ResponsiveNavLink>
+                                <ResponsiveNavLink href={route('manager.coaches.index')} active={route().current('manager.coaches.index')}>Coaches</ResponsiveNavLink>
                                 <ResponsiveNavLink href={route('manager.groups.index')} active={route().current('manager.groups.index')}>Training Groups</ResponsiveNavLink>
                                 <ResponsiveNavLink href={route('manager.billing.index')} active={route().current('manager.billing.index')}>Billing & Revenue</ResponsiveNavLink>
                                 <ResponsiveNavLink href={route('manager.reports.index')} active={route().current('manager.reports.index')}>Financial Reports</ResponsiveNavLink>

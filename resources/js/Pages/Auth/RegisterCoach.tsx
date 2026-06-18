@@ -7,9 +7,18 @@ interface Props {
     token: string;
     club: { id: number; name: string };
     email: string;
+    payment_option: 'athlete' | 'hourly' | 'manual';
+    payment_rate: number;
 }
 
-export default function RegisterCoach({ token, club, email }: Props) {
+const paymentOptionLabels: Record<string, { label: string; icon: string; desc: string }> = {
+    athlete: { label: 'Per Athlete', icon: '👤', desc: 'Calculated based on how many athletes are in your training groups.' },
+    hourly:  { label: 'Per Hour (Schedule)', icon: '⏱️', desc: 'Calculated from your weekly scheduled training hours.' },
+    manual:  { label: 'Fixed / Manual Amount', icon: '💰', desc: 'Manager sets the payout amount manually each time.' },
+};
+
+export default function RegisterCoach({ token, club, email, payment_option, payment_rate }: Props) {
+    const paymentInfo = paymentOptionLabels[payment_option] ?? paymentOptionLabels['manual'];
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
         email: email,
@@ -157,6 +166,23 @@ export default function RegisterCoach({ token, club, email }: Props) {
                                     required
                                 />
                                 <InputError message={errors.password_confirmation} className="mt-2" />
+                            </div>
+                        </div>
+
+                        {/* Salary / Revenue Option */}
+                        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
+                            <p className="text-xs font-bold text-amber-700 uppercase tracking-wide mb-2">Your Salary Model</p>
+                            <div className="flex items-start gap-3">
+                                <span className="text-xl">{paymentInfo.icon}</span>
+                                <div>
+                                    <p className="text-sm font-bold text-gray-900">{paymentInfo.label}
+                                        {payment_option !== 'manual' && payment_rate > 0 && (
+                                            <span className="ml-2 text-amber-600">— €{Number(payment_rate).toFixed(2)}{payment_option === 'athlete' ? ' / athlete' : ' / hr'}</span>
+                                        )}
+                                    </p>
+                                    <p className="text-xs text-gray-500 mt-0.5">{paymentInfo.desc}</p>
+                                    <p className="text-[10px] text-amber-600 mt-1.5">Configured by your club manager. Can be adjusted after you join.</p>
+                                </div>
                             </div>
                         </div>
 

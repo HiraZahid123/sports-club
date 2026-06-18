@@ -45,7 +45,7 @@ export default function MembersIndex({ members }: { members: Member[] }) {
     const [editingMember, setEditingMember] = useState<Member | null>(null);
     const [showInviteCoach, setShowInviteCoach] = useState(false);
 
-    const inviteForm = useForm({ email: '' });
+    const inviteForm = useForm({ email: '', payment_option: 'manual', payment_rate: '0' });
 
     const submitInvite: FormEventHandler = (e) => {
         e.preventDefault();
@@ -543,6 +543,59 @@ export default function MembersIndex({ members }: { members: Member[] }) {
                                 />
                                 {inviteForm.errors.email && <p className="mt-2 text-xs text-red-600">{inviteForm.errors.email}</p>}
                             </div>
+
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">Salary / Revenue Option</label>
+                                <div className="space-y-2">
+                                    {[
+                                        { value: 'athlete', icon: '👤', label: 'Option 1 — Per Athlete × EUR', desc: 'Paid per athlete in their training groups.' },
+                                        { value: 'hourly',  icon: '⏱️', label: 'Option 2 — EUR Per Hour (Schedule)', desc: 'Paid based on scheduled training hours.' },
+                                        { value: 'manual',  icon: '💰', label: 'Option 3 — Fixed / Manual Amount', desc: 'Manager sets the amount manually each payout.' },
+                                    ].map((opt) => (
+                                        <label
+                                            key={opt.value}
+                                            className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
+                                                inviteForm.data.payment_option === opt.value
+                                                    ? 'border-amber-500 bg-amber-50/60'
+                                                    : 'border-gray-200 hover:bg-gray-50'
+                                            }`}
+                                        >
+                                            <input
+                                                type="radio"
+                                                name="invite_payment_option"
+                                                value={opt.value}
+                                                checked={inviteForm.data.payment_option === opt.value}
+                                                onChange={() => inviteForm.setData('payment_option', opt.value)}
+                                                className="mt-0.5 text-amber-500 focus:ring-amber-400"
+                                            />
+                                            <span className="text-base leading-none mt-0.5">{opt.icon}</span>
+                                            <div>
+                                                <p className="text-xs font-bold text-gray-800">{opt.label}</p>
+                                                <p className="text-[11px] text-gray-500 mt-0.5">{opt.desc}</p>
+                                            </div>
+                                        </label>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {inviteForm.data.payment_option !== 'manual' && (
+                                <div>
+                                    <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">
+                                        {inviteForm.data.payment_option === 'athlete' ? 'Price per Athlete (€)' : 'Price per Hour (€)'}
+                                    </label>
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        min="0"
+                                        value={inviteForm.data.payment_rate}
+                                        onChange={(e) => inviteForm.setData('payment_rate', e.target.value)}
+                                        placeholder="0.00"
+                                        className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 focus:border-amber-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 transition-all"
+                                    />
+                                    {inviteForm.errors.payment_rate && <p className="mt-1 text-xs text-red-600">{inviteForm.errors.payment_rate}</p>}
+                                </div>
+                            )}
+
                             <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 text-xs text-amber-800">
                                 The coach will receive an email with a secure activation link valid for 7 days. They cannot self-register — this is the only way to create a coach account.
                             </div>

@@ -11,6 +11,8 @@ class ClubInvitation extends Model
         'club_id',
         'email',
         'role',
+        'payment_option',
+        'payment_rate',
         'token',
         'status',
         'expires_at',
