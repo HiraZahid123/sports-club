@@ -13,7 +13,7 @@ interface Props {
 
 const paymentOptionLabels: Record<string, { label: string; icon: string; desc: string }> = {
     athlete: { label: 'Per Athlete', icon: '👤', desc: 'Calculated based on how many athletes are in your training groups.' },
-    hourly:  { label: 'Per Hour (Schedule)', icon: '⏱️', desc: 'Calculated from your weekly scheduled training hours.' },
+    hourly:  { label: 'Per Hour (Schedule)', icon: '⏱️', desc: 'Calculated from weekly scheduled training hours × 4 weeks (monthly).' },
     manual:  { label: 'Fixed / Manual Amount', icon: '💰', desc: 'Manager sets the payout amount manually each time.' },
 };
 

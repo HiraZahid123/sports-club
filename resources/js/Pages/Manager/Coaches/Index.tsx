@@ -65,7 +65,7 @@ function calcEarning(coach: Coach) {
     const { athleteCount, weeklyHours } = getCoachStats(coach);
     const rate = Number(profile.payment_rate);
     if (profile.payment_option === 'athlete') return athleteCount * rate;
-    if (profile.payment_option === 'hourly') return weeklyHours * rate;
+    if (profile.payment_option === 'hourly') return weeklyHours * rate * 4;
     return null;
 }
 
@@ -138,7 +138,7 @@ export default function CoachesIndex({ coaches }: { coaches: Coach[] }) {
                         <div className="text-sm text-indigo-800">
                             <span className="font-bold">Three salary options available:</span>{' '}
                             <span className="font-semibold">Option 1</span> — Per Athlete × EUR (counts athletes in coach's groups) ·{' '}
-                            <span className="font-semibold">Option 2</span> — EUR Per Hour based on weekly schedule ·{' '}
+                            <span className="font-semibold">Option 2</span> — EUR Per Hour × monthly hours (weekly schedule × 4 weeks) ·{' '}
                             <span className="font-semibold">Option 3</span> — Manager writes the amount manually each payout. Changes take effect immediately.
                         </div>
                     </div>
@@ -154,7 +154,7 @@ export default function CoachesIndex({ coaches }: { coaches: Coach[] }) {
                                         <th className="px-6 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wide">Groups / Athletes</th>
                                         <th className="px-6 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wide">Weekly Hours</th>
                                         <th className="px-6 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wide">Salary Option</th>
-                                        <th className="px-6 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wide">Est. Earning / Week</th>
+                                        <th className="px-6 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wide">Est. Earning / Month</th>
                                         <th className="px-6 py-3.5 text-right text-xs font-bold text-gray-500 uppercase tracking-wide">Actions</th>
                                     </tr>
                                 </thead>
@@ -356,7 +356,7 @@ export default function CoachesIndex({ coaches }: { coaches: Coach[] }) {
                                                         value: 'hourly' as const,
                                                         icon: '⏱️',
                                                         title: 'Option 2 — EUR Per Hour (Training Schedule)',
-                                                        desc: 'System counts how many scheduled class hours the coach has per week. Manager sets the hourly price.',
+                                                        desc: 'System counts weekly class hours × 4 weeks. Manager sets the hourly price. Result is monthly salary.',
                                                     },
                                                     {
                                                         value: 'manual' as const,
@@ -439,7 +439,7 @@ export default function CoachesIndex({ coaches }: { coaches: Coach[] }) {
                                                 })()}
                                                 {data.payment_option === 'hourly' && (() => {
                                                     const stats = getCoachStats(editing);
-                                                    const totalPerWeek = stats.weeklyHours * Number(data.payment_rate);
+                                                    const totalPerMonth = stats.weeklyHours * Number(data.payment_rate) * 4;
                                                     return (
                                                         <div className="text-sm text-emerald-900 space-y-1">
                                                             <div className="flex justify-between">
@@ -450,13 +450,13 @@ export default function CoachesIndex({ coaches }: { coaches: Coach[] }) {
                                                                 <span>× Rate per hour:</span>
                                                                 <span className="font-bold">€{Number(data.payment_rate).toFixed(2)}</span>
                                                             </div>
-                                                            <div className="flex justify-between border-t border-emerald-200 pt-1 font-black text-base">
-                                                                <span>Per week:</span>
-                                                                <span className="text-emerald-700">€{totalPerWeek.toFixed(2)}</span>
+                                                            <div className="flex justify-between">
+                                                                <span>× 4 weeks / month:</span>
+                                                                <span className="font-bold">4</span>
                                                             </div>
-                                                            <div className="flex justify-between text-xs text-emerald-600">
-                                                                <span>Per month (4 wks):</span>
-                                                                <span className="font-bold">€{(totalPerWeek * 4).toFixed(2)}</span>
+                                                            <div className="flex justify-between border-t border-emerald-200 pt-1 font-black text-base">
+                                                                <span>Monthly total:</span>
+                                                                <span className="text-emerald-700">€{totalPerMonth.toFixed(2)}</span>
                                                             </div>
                                                         </div>
                                                     );
