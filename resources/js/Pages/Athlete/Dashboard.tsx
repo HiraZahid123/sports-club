@@ -12,6 +12,7 @@ interface AthleteProfile {
     flexibility?: number | null;
     kyorugi?: number | null;
     poomsae?: number | null;
+    coach_tip?: string | null;
 }
 
 // ── Metrics Card ─────────────────────────────────────────────────────────────
@@ -103,23 +104,40 @@ export default function AthleteDashboard({ athleteProfile }: { athleteProfile?: 
                             <div className="absolute bottom-0 left-0 w-20 h-20 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2"></div>
 
                             <div className="relative">
-                                <div className={`w-16 h-16 ${cardStyle.text.includes('text-white') ? 'bg-white/15 border-white/20' : 'bg-slate-900/10 border-slate-900/20'} backdrop-blur-sm rounded-2xl flex items-center justify-center text-3xl mb-4 border shadow-inner`}>
+                                <div className={`w-16 h-16 ${cardStyle.text.includes('text-white') ? 'bg-white/20 border-white/30' : 'bg-black/10 border-black/15'} backdrop-blur-sm rounded-2xl flex items-center justify-center text-3xl mb-4 border shadow-inner`}>
                                     🥋
                                 </div>
-                                <p className={`${cardStyle.subtext} text-xs font-bold uppercase tracking-widest mb-1`}>Current Rank</p>
-                                <h3 className={`text-2xl font-black mb-2 flex items-center gap-2 ${cardStyle.text}`}>
-                                    <span className="inline-block h-3.5 w-7 rounded border shadow-sm shrink-0" style={getBeltStyle(belt)} />
-                                    {belt}
-                                </h3>
-                                <p className={`${cardStyle.subtext} text-xs`}>Next: {getNextBelt(belt)} (Est. 3 months)</p>
 
-                                <div className="mt-5">
+                                {/* Label */}
+                                <p className={`text-[11px] font-extrabold uppercase tracking-widest mb-2 ${cardStyle.text.includes('text-white') ? 'text-white/70' : 'text-gray-500'}`}>
+                                    Current Rank
+                                </p>
+
+                                {/* Belt stripe + name — always high contrast */}
+                                <div className="flex items-center gap-3 mb-1">
+                                    <span
+                                        className="inline-block h-5 w-9 rounded-md border-2 shadow-md shrink-0"
+                                        style={getBeltStyle(belt)}
+                                    />
+                                    <h3 className={`text-xl font-black leading-tight ${cardStyle.text.includes('text-white') ? 'text-white drop-shadow-sm' : 'text-gray-900'}`}>
+                                        {belt}
+                                    </h3>
+                                </div>
+
+                                <p className={`text-xs mb-5 ${cardStyle.text.includes('text-white') ? 'text-white/60' : 'text-gray-500'}`}>
+                                    Next: <span className={`font-bold ${cardStyle.text.includes('text-white') ? 'text-white/90' : 'text-gray-700'}`}>{getNextBelt(belt)}</span>
+                                </p>
+
+                                <div>
                                     <div className="flex justify-between text-xs mb-1.5">
-                                        <span className={`${cardStyle.subtext} font-medium`}>Progress to Grading</span>
-                                        <span className={`${cardStyle.text} font-bold`}>45%</span>
+                                        <span className={`font-semibold ${cardStyle.text.includes('text-white') ? 'text-white/70' : 'text-gray-500'}`}>Progress to Grading</span>
+                                        <span className={`font-black ${cardStyle.text.includes('text-white') ? 'text-white' : 'text-indigo-600'}`}>45%</span>
                                     </div>
-                                    <div className={`w-full ${cardStyle.text.includes('text-white') ? 'bg-white/15' : 'bg-slate-200'} rounded-full h-2.5`}>
-                                        <div className={`${cardStyle.text.includes('text-white') ? 'bg-white shadow-[0_0_8px_rgba(255,255,255,0.6)]' : 'bg-indigo-600'} h-2.5 rounded-full`} style={{ width: '45%' }}></div>
+                                    <div className={`w-full rounded-full h-2.5 ${cardStyle.text.includes('text-white') ? 'bg-white/20' : 'bg-gray-200'}`}>
+                                        <div
+                                            className={`h-2.5 rounded-full ${cardStyle.text.includes('text-white') ? 'bg-white shadow-[0_0_8px_rgba(255,255,255,0.5)]' : 'bg-indigo-600'}`}
+                                            style={{ width: '45%' }}
+                                        />
                                     </div>
                                 </div>
                             </div>
@@ -182,9 +200,11 @@ export default function AthleteDashboard({ athleteProfile }: { athleteProfile?: 
                                     <span className="text-lg">🎯</span>
                                     <p className="text-sm font-bold text-amber-900">Coach's Tip</p>
                                 </div>
-                                <p className="text-xs text-amber-700 leading-relaxed">
-                                    Focus on your spinning heel kick this week. It will significantly boost your grading score!
-                                </p>
+                                {athleteProfile?.coach_tip ? (
+                                    <p className="text-xs text-amber-700 leading-relaxed">{athleteProfile.coach_tip}</p>
+                                ) : (
+                                    <p className="text-xs text-amber-500 italic leading-relaxed">No tip yet — your coach will add one soon.</p>
+                                )}
                             </div>
                         </div>
                     </div>

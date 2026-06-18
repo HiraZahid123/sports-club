@@ -103,19 +103,19 @@ export function getBeltBadgeStyle(belt: string | null | undefined): string {
     if (!belt) return 'bg-gray-100 text-gray-700 border-gray-300';
     const b = belt.toUpperCase().trim();
     if (b.includes('WHITE/YELLOW')) {
-        return 'bg-gradient-to-r from-slate-50 via-yellow-100 to-slate-50 text-yellow-850 border-yellow-250 shadow-sm';
+        return 'bg-gradient-to-r from-slate-50 via-yellow-100 to-slate-50 text-yellow-800 border-yellow-200 shadow-sm';
     }
     if (b.includes('YELLOW/GREEN')) {
-        return 'bg-gradient-to-r from-yellow-50 via-emerald-100 to-yellow-50 text-emerald-850 border-emerald-200';
+        return 'bg-gradient-to-r from-yellow-50 via-emerald-100 to-yellow-50 text-emerald-800 border-emerald-200';
     }
     if (b.includes('GREEN/BLUE')) {
-        return 'bg-gradient-to-r from-emerald-50 via-blue-100 to-emerald-50 text-blue-805 border-blue-200';
+        return 'bg-gradient-to-r from-emerald-50 via-blue-100 to-emerald-50 text-blue-800 border-blue-200';
     }
     if (b.includes('BLUE/RED')) {
-        return 'bg-gradient-to-r from-blue-50 via-red-150 to-blue-50 text-red-850 border-red-200';
+        return 'bg-gradient-to-r from-blue-50 via-red-100 to-blue-50 text-red-800 border-red-200';
     }
     if (b.includes('RED/BLACK')) {
-        return 'bg-gradient-to-r from-red-650 via-gray-900 to-red-650 border-red-750 text-white font-semibold';
+        return 'bg-gradient-to-r from-red-600 via-gray-900 to-red-600 border-red-700 text-white font-semibold';
     }
     if (b.includes('POOM')) {
         return 'bg-gradient-to-r from-red-600 to-gray-900 border-red-700 text-white font-semibold';
@@ -127,7 +127,7 @@ export function getBeltBadgeStyle(belt: string | null | undefined): string {
         return 'bg-white text-gray-700 border-gray-300 shadow-sm';
     }
     if (b.includes('YELLOW')) {
-        return 'bg-yellow-50 text-yellow-850 border-yellow-200';
+        return 'bg-yellow-50 text-yellow-800 border-yellow-200';
     }
     if (b.includes('GREEN')) {
         return 'bg-emerald-50 text-emerald-700 border-emerald-100';
@@ -153,7 +153,7 @@ export function getBeltCardGradient(belt: string | null | undefined): { bg: stri
     }
     if (b.includes('YELLOW/GREEN')) {
         return {
-            bg: 'from-yellow-200 via-yellow-300 to-emerald-450 border border-yellow-300 shadow-md',
+            bg: 'from-yellow-200 via-yellow-300 to-emerald-500 border border-yellow-300 shadow-md',
             text: 'text-emerald-950',
             subtext: 'text-emerald-800'
         };
@@ -174,7 +174,7 @@ export function getBeltCardGradient(belt: string | null | undefined): { bg: stri
     }
     if (b.includes('RED/BLACK') || b.includes('POOM')) {
         return {
-            bg: 'from-red-650 via-red-750 to-gray-900 shadow-lg border border-red-750',
+            bg: 'from-red-600 via-red-700 to-gray-900 shadow-lg border border-red-700',
             text: 'text-white',
             subtext: 'text-red-200'
         };
@@ -195,7 +195,7 @@ export function getBeltCardGradient(belt: string | null | undefined): { bg: stri
     }
     if (b.includes('YELLOW')) {
         return {
-            bg: 'from-yellow-350 via-yellow-400 to-amber-500 shadow-md border border-yellow-300',
+            bg: 'from-yellow-300 via-yellow-400 to-amber-500 shadow-md border border-yellow-300',
             text: 'text-amber-950',
             subtext: 'text-amber-800'
         };
@@ -209,14 +209,14 @@ export function getBeltCardGradient(belt: string | null | undefined): { bg: stri
     }
     if (b.includes('BLUE')) {
         return {
-            bg: 'from-blue-500 via-blue-650 to-blue-800 shadow-lg',
+            bg: 'from-blue-500 via-blue-600 to-blue-800 shadow-lg',
             text: 'text-white',
             subtext: 'text-blue-200'
         };
     }
     if (b.includes('RED')) {
         return {
-            bg: 'from-red-500 via-red-600 to-red-850 shadow-lg border border-red-600',
+            bg: 'from-red-500 via-red-600 to-red-800 shadow-lg border border-red-600',
             text: 'text-white',
             subtext: 'text-red-100'
         };

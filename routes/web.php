@@ -131,6 +131,7 @@ Route::middleware(['auth', 'verified', 'role:Coach', \App\Http\Middleware\CheckS
     Route::put('/goals/{goal}', [\App\Http\Controllers\GoalController::class, 'update'])->name('goals.update');
     Route::delete('/goals/{goal}', [\App\Http\Controllers\GoalController::class, 'destroy'])->name('goals.destroy');
     Route::post('/athletes/{user}/skills', [\App\Http\Controllers\GoalController::class, 'updateSkills'])->name('athletes.skills');
+    Route::post('/athletes/{user}/tip', [\App\Http\Controllers\GoalController::class, 'saveTip'])->name('athletes.tip');
 });
 
 // Athlete Routes

@@ -16,6 +16,7 @@ interface AthleteProfile {
     flexibility: number | null;
     kyorugi: number | null;
     poomsae: number | null;
+    coach_tip: string | null;
 }
 
 interface Athlete {
@@ -89,7 +90,9 @@ function AthleteSkillsPanel({ athlete }: { athlete: Athlete }) {
         kyorugi:     profile?.kyorugi     ?? 0,
         poomsae:     profile?.poomsae     ?? 0,
     });
+    const tipForm = useForm({ coach_tip: profile?.coach_tip ?? '' });
     const [saved, setSaved] = useState(false);
+    const [tipSaved, setTipSaved] = useState(false);
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -99,59 +102,105 @@ function AthleteSkillsPanel({ athlete }: { athlete: Athlete }) {
         });
     };
 
+    const submitTip = (e: React.FormEvent) => {
+        e.preventDefault();
+        tipForm.post(route('coach.athletes.tip', athlete.id), {
+            preserveScroll: true,
+            onSuccess: () => { setTipSaved(true); setTimeout(() => setTipSaved(false), 2000); },
+        });
+    };
+
     return (
-        <div className="mt-4 border-t border-gray-100 pt-4">
-            <div className="flex items-center justify-between mb-3">
-                <p className="text-xs font-bold text-gray-500 uppercase tracking-wide flex items-center gap-1.5">
-                    <span className="text-sm">📊</span> Athlete Metrics
-                </p>
-                {saved && (
-                    <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg flex items-center gap-1">
-                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                        Saved!
-                    </span>
-                )}
-            </div>
-            <form onSubmit={submit} className="space-y-4">
-                {METRICS.map(m => (
-                    <div key={m.key}>
-                        <div className="flex items-center justify-between mb-1.5">
-                            <span className="text-xs font-semibold text-gray-600 flex items-center gap-1.5">
-                                <span>{m.icon}</span> {m.label}
-                            </span>
-                            <span className="text-xs font-black text-gray-800 w-8 text-right">
-                                {data[m.key]}
-                            </span>
-                        </div>
-                        <div className="relative flex items-center gap-2">
-                            <div className={`flex-1 ${m.track} rounded-full h-2 overflow-hidden`}>
-                                <div
-                                    className={`${m.fill} h-2 rounded-full transition-all duration-200`}
-                                    style={{ width: `${data[m.key]}%` }}
+        <div className="mt-4 border-t border-gray-100 pt-4 space-y-5">
+            {/* Metrics */}
+            <div>
+                <div className="flex items-center justify-between mb-3">
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wide flex items-center gap-1.5">
+                        <span className="text-sm">📊</span> Athlete Metrics
+                    </p>
+                    {saved && (
+                        <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg flex items-center gap-1">
+                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                            Saved!
+                        </span>
+                    )}
+                </div>
+                <form onSubmit={submit} className="space-y-4">
+                    {METRICS.map(m => (
+                        <div key={m.key}>
+                            <div className="flex items-center justify-between mb-1.5">
+                                <span className="text-xs font-semibold text-gray-600 flex items-center gap-1.5">
+                                    <span>{m.icon}</span> {m.label}
+                                </span>
+                                <span className="text-xs font-black text-gray-800 w-8 text-right">
+                                    {data[m.key]}
+                                </span>
+                            </div>
+                            <div className="relative flex items-center gap-2">
+                                <div className={`flex-1 ${m.track} rounded-full h-2 overflow-hidden`}>
+                                    <div
+                                        className={`${m.fill} h-2 rounded-full transition-all duration-200`}
+                                        style={{ width: `${data[m.key]}%` }}
+                                    />
+                                </div>
+                                <input
+                                    type="range"
+                                    min={0}
+                                    max={100}
+                                    value={data[m.key]}
+                                    onChange={e => setData(m.key, Number(e.target.value))}
+                                    className="absolute inset-0 w-full opacity-0 cursor-pointer h-2"
                                 />
                             </div>
-                            <input
-                                type="range"
-                                min={0}
-                                max={100}
-                                value={data[m.key]}
-                                onChange={e => setData(m.key, Number(e.target.value))}
-                                className="absolute inset-0 w-full opacity-0 cursor-pointer h-2"
-                            />
+                            <div className="flex justify-between text-[9px] text-gray-300 mt-0.5 font-medium">
+                                <span>0</span><span>50</span><span>100</span>
+                            </div>
                         </div>
-                        <div className="flex justify-between text-[9px] text-gray-300 mt-0.5 font-medium">
-                            <span>0</span><span>50</span><span>100</span>
-                        </div>
+                    ))}
+                    <button
+                        type="submit"
+                        disabled={processing}
+                        className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition-all disabled:opacity-50 shadow-sm"
+                    >
+                        {processing ? 'Saving…' : 'Save Metrics'}
+                    </button>
+                </form>
+            </div>
+
+            {/* Coach Tip */}
+            <div className="border-t border-gray-100 pt-4">
+                <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs font-bold text-amber-700 uppercase tracking-wide flex items-center gap-1.5">
+                        <span className="text-sm">🎯</span> Coach's Tip
+                    </p>
+                    {tipSaved && (
+                        <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg flex items-center gap-1">
+                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                            Saved!
+                        </span>
+                    )}
+                </div>
+                <form onSubmit={submitTip} className="space-y-2">
+                    <textarea
+                        value={tipForm.data.coach_tip}
+                        onChange={e => tipForm.setData('coach_tip', e.target.value)}
+                        maxLength={500}
+                        rows={3}
+                        placeholder="Write a personalised tip for this athlete…"
+                        className="w-full text-xs rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-amber-900 placeholder-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400/30 focus:border-amber-400 resize-none"
+                    />
+                    <div className="flex items-center justify-between">
+                        <span className="text-[10px] text-gray-400">{tipForm.data.coach_tip.length}/500</span>
+                        <button
+                            type="submit"
+                            disabled={tipForm.processing}
+                            className="px-4 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl transition-all disabled:opacity-50 shadow-sm"
+                        >
+                            {tipForm.processing ? 'Saving…' : 'Save Tip'}
+                        </button>
                     </div>
-                ))}
-                <button
-                    type="submit"
-                    disabled={processing}
-                    className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition-all disabled:opacity-50 shadow-sm"
-                >
-                    {processing ? 'Saving…' : 'Save Metrics'}
-                </button>
-            </form>
+                </form>
+            </div>
         </div>
     );
 }

@@ -92,4 +92,25 @@ class GoalController extends Controller
 
         return back()->with('status', 'skills-updated');
     }
+
+    public function saveTip(Request $request, User $user)
+    {
+        $validated = $request->validate([
+            'coach_tip' => 'nullable|string|max:500',
+        ]);
+
+        $coach = $request->user();
+        $athleteInCoachGroup = $coach->trainingGroups()
+            ->whereHas('athletes', fn($q) => $q->where('users.id', $user->id))
+            ->exists();
+
+        abort_if(!$athleteInCoachGroup, 403, 'Athlete is not in your group.');
+
+        $user->athleteProfile()->updateOrCreate(
+            ['user_id' => $user->id],
+            ['coach_tip' => $validated['coach_tip'] ?? null]
+        );
+
+        return back()->with('status', 'tip-saved');
+    }
 }

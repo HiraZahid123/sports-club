@@ -18,6 +18,7 @@ class AthleteProfile extends Model
         'flexibility',
         'kyorugi',
         'poomsae',
+        'coach_tip',
     ];
 
     /**
