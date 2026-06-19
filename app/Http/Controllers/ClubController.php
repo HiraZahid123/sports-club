@@ -18,8 +18,13 @@ class ClubController extends Controller
             return Inertia::render('Manager/Club/Setup');
         }
 
+        $clubData = $club->toArray();
+        if ($club->logo_path) {
+            $clubData['logo_path'] = asset($club->logo_path);
+        }
+
         return Inertia::render('Manager/Club/Edit', [
-            'club'   => $club,
+            'club'   => $clubData,
             'status' => session('status'),
         ]);
     }
@@ -93,7 +98,7 @@ class ClubController extends Controller
 
         // Delete old file from public/uploads/club-logos/
         if ($club->logo_path) {
-            $oldFile = public_path($club->logo_path);
+            $oldFile = public_path(ltrim($club->logo_path, '/'));
             if (File::exists($oldFile)) {
                 File::delete($oldFile);
             }
@@ -106,8 +111,8 @@ class ClubController extends Controller
         File::ensureDirectoryExists($directory);
         $file->move($directory, $filename);
 
-        // Store as a relative public path: uploads/club-logos/filename.ext
-        $club->update(['logo_path' => 'uploads/club-logos/' . $filename]);
+        // Store as a relative public path: /uploads/club-logos/filename.ext
+        $club->update(['logo_path' => '/uploads/club-logos/' . $filename]);
 
         return redirect()->route('manager.club.edit')->with('status', 'logo-updated');
     }

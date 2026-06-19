@@ -85,7 +85,7 @@ export default function Authenticated({
                             <div className="flex items-center gap-2">
                                 <div className="w-8 h-8 rounded-full overflow-hidden border border-indigo-200 shrink-0">
                                     {(user as any).profile_photo ? (
-                                        <img src={(user as any).profile_photo} alt={user.name} className="w-full h-full object-cover" />
+                                        <img src={(user as any).profile_photo.startsWith('http://') || (user as any).profile_photo.startsWith('https://') || (user as any).profile_photo.startsWith('blob:') || (user as any).profile_photo.startsWith('data:') ? (user as any).profile_photo : ((user as any).profile_photo.startsWith('/') ? (user as any).profile_photo : '/' + (user as any).profile_photo)} alt={user.name} className="w-full h-full object-cover" />
                                     ) : (
                                         <div className="w-full h-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-sm">
                                             {user.name.charAt(0).toUpperCase()}
@@ -177,7 +177,7 @@ export default function Authenticated({
                         <div className="flex items-center gap-3 mb-3">
                             <div className="w-9 h-9 rounded-full overflow-hidden border border-indigo-200 shrink-0">
                                 {(user as any).profile_photo ? (
-                                    <img src={(user as any).profile_photo} alt={user.name} className="w-full h-full object-cover" />
+                                    <img src={(user as any).profile_photo.startsWith('http://') || (user as any).profile_photo.startsWith('https://') || (user as any).profile_photo.startsWith('blob:') || (user as any).profile_photo.startsWith('data:') ? (user as any).profile_photo : ((user as any).profile_photo.startsWith('/') ? (user as any).profile_photo : '/' + (user as any).profile_photo)} alt={user.name} className="w-full h-full object-cover" />
                                 ) : (
                                     <div className="w-full h-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold">
                                         {user.name.charAt(0).toUpperCase()}

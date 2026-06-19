@@ -54,7 +54,7 @@ class ProfileController extends Controller
         $user = $request->user();
 
         if ($user->profile_photo) {
-            $old = public_path($user->profile_photo);
+            $old = public_path(ltrim($user->profile_photo, '/'));
             if (File::exists($old)) {
                 File::delete($old);
             }
@@ -67,7 +67,7 @@ class ProfileController extends Controller
         File::ensureDirectoryExists($directory);
         $file->move($directory, $filename);
 
-        $user->update(['profile_photo' => 'uploads/profile-photos/' . $filename]);
+        $user->update(['profile_photo' => '/uploads/profile-photos/' . $filename]);
 
         return Redirect::route('profile.edit')->with('status', 'photo-updated');
     }
