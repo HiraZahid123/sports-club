@@ -66,6 +66,7 @@ function calcEarning(coach: Coach) {
     const rate = Number(profile.payment_rate);
     if (profile.payment_option === 'athlete') return athleteCount * rate;
     if (profile.payment_option === 'hourly') return weeklyHours * rate * 4;
+    if (profile.payment_option === 'manual') return rate;
     return null;
 }
 
