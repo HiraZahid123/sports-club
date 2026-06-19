@@ -152,7 +152,7 @@ export default function ReportsIndex({ revenueData, coaches, recentPayouts }: an
                             </div>
                             <div className="text-right">
                                 <p className="text-xs text-gray-400 font-medium">6-Month Total</p>
-                                <p className="text-xl font-black text-indigo-600">${totalRevenue.toLocaleString()}</p>
+                                <p className="text-xl font-black text-indigo-600">€{totalRevenue.toLocaleString()}</p>
                             </div>
                         </div>
                         <div className="p-6">
@@ -169,7 +169,7 @@ export default function ReportsIndex({ revenueData, coaches, recentPayouts }: an
                                             <div key={idx} className="flex-1 flex flex-col items-center group">
                                                 <div className="relative w-full flex flex-col items-center">
                                                     <span className="mb-1 text-xs font-bold text-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        ${Number(d.total).toLocaleString()}
+                                                        €{Number(d.total).toLocaleString()}
                                                     </span>
                                                     <div
                                                         className="w-full bg-indigo-100 group-hover:bg-indigo-600 rounded-t-xl transition-all duration-300 cursor-pointer"
@@ -269,7 +269,7 @@ export default function ReportsIndex({ revenueData, coaches, recentPayouts }: an
                                                 <p className="text-xs text-gray-400">{payout.payout_date}</p>
                                             </div>
                                         </div>
-                                        <span className="font-bold text-rose-600">−${payout.amount}</span>
+                                        <span className="font-bold text-rose-600">−€{payout.amount}</span>
                                     </div>
                                 ))}
                                 {recentPayouts.length === 0 && (
@@ -411,7 +411,7 @@ export default function ReportsIndex({ revenueData, coaches, recentPayouts }: an
                             )}
 
                             <div>
-                                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Payout Amount ($)</label>
+                                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Payout Amount (€)</label>
                                 <input
                                     type="number"
                                     value={data.amount}

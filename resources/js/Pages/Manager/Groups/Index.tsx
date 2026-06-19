@@ -312,7 +312,7 @@ export default function GroupsIndex({ groups, coaches, athletes, ageCategories, 
                                         {createForm.errors.name && <p className="mt-1 text-xs text-red-600">{createForm.errors.name}</p>}
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Monthly Price ($)</label>
+                                        <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Monthly Price (€)</label>
                                         <input type="number" value={createForm.data.monthly_price} onChange={e => createForm.setData('monthly_price', e.target.value)} placeholder="0.00" className={inputClass} />
                                     </div>
                                 </div>
@@ -379,7 +379,7 @@ export default function GroupsIndex({ groups, coaches, athletes, ageCategories, 
                                             {editForm.errors.name && <p className="mt-1 text-xs text-red-600">{editForm.errors.name}</p>}
                                         </div>
                                         <div>
-                                            <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Monthly Price ($)</label>
+                                            <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Monthly Price (€)</label>
                                             <input type="number" value={editForm.data.monthly_price} onChange={e => editForm.setData('monthly_price', e.target.value)} className={inputClass} />
                                             {editForm.errors.monthly_price && <p className="mt-1 text-xs text-red-600">{editForm.errors.monthly_price}</p>}
                                         </div>
@@ -682,7 +682,7 @@ export default function GroupsIndex({ groups, coaches, athletes, ageCategories, 
                                                 </div>
                                                 <div className="bg-emerald-50 rounded-xl p-3">
                                                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Monthly Fee</p>
-                                                    <p className="text-xl font-black text-emerald-700">${group.monthly_price}</p>
+                                                    <p className="text-xl font-black text-emerald-700">€{group.monthly_price}</p>
                                                 </div>
                                             </div>
 

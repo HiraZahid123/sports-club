@@ -53,7 +53,7 @@ export default function BillingIndex({ subscriptions, totalRevenue }: { subscrip
                             <div className="flex items-start justify-between">
                                 <div>
                                     <p className="text-indigo-200 text-xs font-bold uppercase tracking-wide mb-2">Total Lifetime Revenue</p>
-                                    <p className="text-4xl font-black">${totalRevenue.toLocaleString()}</p>
+                                    <p className="text-4xl font-black">€{totalRevenue.toLocaleString()}</p>
                                 </div>
                                 <div className="w-11 h-11 bg-white/15 rounded-xl flex items-center justify-center text-xl">💰</div>
                             </div>
@@ -110,7 +110,7 @@ export default function BillingIndex({ subscriptions, totalRevenue }: { subscrip
                                             </td>
                                             <td className="px-6 py-4 text-sm text-gray-500">{sub.plan_name}</td>
                                             <td className="px-6 py-4">
-                                                <span className="font-bold text-indigo-600">${sub.amount}</span>
+                                                <span className="font-bold text-indigo-600">€{sub.amount}</span>
                                             </td>
                                             <td className="px-6 py-4">
                                                 <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold ${
@@ -164,7 +164,7 @@ export default function BillingIndex({ subscriptions, totalRevenue }: { subscrip
 
                         <form onSubmit={submit} className="p-6 space-y-4">
                             <div>
-                                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Amount Paid ($)</label>
+                                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Amount Paid (€)</label>
                                 <input
                                     type="number"
                                     value={data.amount}

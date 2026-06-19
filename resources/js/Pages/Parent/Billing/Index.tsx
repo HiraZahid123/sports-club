@@ -128,7 +128,7 @@ export default function ParentBilling({ mySubscriptions, childrenSubscriptions }
                                                 </div>
                                                 <div className="text-right">
                                                     <p className="text-xs text-gray-400 font-medium">Amount</p>
-                                                    <p className="text-3xl font-black text-indigo-600 leading-none mt-0.5">${sub.amount}</p>
+                                                    <p className="text-3xl font-black text-indigo-600 leading-none mt-0.5">€{sub.amount}</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -185,7 +185,7 @@ export default function ParentBilling({ mySubscriptions, childrenSubscriptions }
                                                         {payment.member_name} • {new Date(payment.payment_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                                                     </p>
                                                 </div>
-                                                <span className="font-black text-sm text-emerald-600">+${parseFloat(payment.amount).toFixed(2)}</span>
+                                                <span className="font-black text-sm text-emerald-600">+€{parseFloat(payment.amount).toFixed(2)}</span>
                                             </div>
                                         ))
                                     )}

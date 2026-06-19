@@ -64,7 +64,7 @@ function fmt(dateStr: string) {
 }
 
 function fmtCurrency(amount: string | number) {
-    return '$' + Number(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return '€' + Number(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function daysUntil(dateStr: string) {

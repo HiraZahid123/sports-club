@@ -90,7 +90,7 @@ export default function Welcome({ auth }: PageProps<{ laravelVersion: string, ph
                         {[
                             { val: '500+', label: 'Active Athletes' },
                             { val: '50+', label: 'Sports Clubs' },
-                            { val: '$2M+', label: 'Revenue Managed' },
+                            { val: '€2M+', label: 'Revenue Managed' },
                             { val: '99.9%', label: 'Platform Uptime' },
                         ].map((stat) => (
                             <div key={stat.label}>

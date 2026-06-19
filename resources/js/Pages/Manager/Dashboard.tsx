@@ -33,7 +33,7 @@ export default function ManagerDashboard({ stats }: { stats: any }) {
         },
         {
             name: 'Monthly Revenue',
-            value: `$${stats.monthlyRevenue}`,
+            value: `€${stats.monthlyRevenue}`,
             icon: (
                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -113,7 +113,7 @@ export default function ManagerDashboard({ stats }: { stats: any }) {
                             <div className="divide-y divide-gray-50">
                                 {[
                                     { initial: 'A', name: 'Alex Johnson', action: 'joined Beginners Taekwondo group', time: '2h ago', color: 'bg-blue-100 text-blue-700' },
-                                    { initial: 'S', name: 'Sarah Lee', action: 'payment recorded — $85.00', time: '4h ago', color: 'bg-emerald-100 text-emerald-700' },
+                                    { initial: 'S', name: 'Sarah Lee', action: 'payment recorded — €85.00', time: '4h ago', color: 'bg-emerald-100 text-emerald-700' },
                                     { initial: 'M', name: 'Mike Chen', action: 'advanced to Intermediate group', time: '1d ago', color: 'bg-indigo-100 text-indigo-700' },
                                     { initial: 'J', name: 'Jamie Smith', action: 'upcoming belt grading scheduled', time: '1d ago', color: 'bg-amber-100 text-amber-700' },
                                     { initial: 'R', name: 'Rachel Park', action: 'new parent registration completed', time: '2d ago', color: 'bg-purple-100 text-purple-700' },

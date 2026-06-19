@@ -34,7 +34,7 @@ class StripeService
             'payment_method_types' => ['card'],
             'line_items' => [[
                 'price_data' => [
-                    'currency' => 'usd',
+                    'currency' => 'eur',
                     'product_data' => [
                         'name' => $subscription->plan_name,
                         'description' => 'Subscription payment for ' . ($subscription->user->name ?? 'member'),

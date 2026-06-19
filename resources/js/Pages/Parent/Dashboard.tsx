@@ -34,7 +34,7 @@ export default function ParentDashboard() {
                         </div>
                         <div className="bg-white rounded-2xl border border-amber-100 shadow-sm p-5">
                             <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">Amount Due</p>
-                            <p className="text-3xl font-black text-amber-600">$85</p>
+                            <p className="text-3xl font-black text-amber-600">€85</p>
                         </div>
                     </div>
 
@@ -113,7 +113,7 @@ export default function ParentDashboard() {
                                     </div>
                                     <div className="flex justify-between items-center pt-2 border-t border-gray-100">
                                         <span className="text-sm font-semibold text-gray-600">Total Amount:</span>
-                                        <span className="text-xl font-black text-indigo-600">$85.00</span>
+                                        <span className="text-xl font-black text-indigo-600">€85.00</span>
                                     </div>
                                     <Link
                                         href={route('parent.billing')}
