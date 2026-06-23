@@ -94,6 +94,11 @@ Route::middleware(['auth', 'verified', 'role:Manager|Super Admin'])->prefix('man
     Route::get('/invitations', [\App\Http\Controllers\InvitationController::class, 'index'])->name('invitations.index');
     Route::post('/invitations/coach', [\App\Http\Controllers\InvitationController::class, 'storeCoach'])->name('invitations.coach');
     Route::delete('/invitations/{invitation}', [\App\Http\Controllers\InvitationController::class, 'destroy'])->name('invitations.destroy');
+
+    Route::get('/events', [\App\Http\Controllers\EventController::class, 'index'])->name('events.index');
+    Route::post('/events', [\App\Http\Controllers\EventController::class, 'store'])->name('events.store');
+    Route::post('/events/{event}', [\App\Http\Controllers\EventController::class, 'update'])->name('events.update');
+    Route::delete('/events/{event}', [\App\Http\Controllers\EventController::class, 'destroy'])->name('events.destroy');
 });
 
 // Coach Routes
@@ -135,6 +140,10 @@ Route::middleware(['auth', 'verified', 'role:Coach', \App\Http\Middleware\CheckS
     Route::delete('/goals/{goal}', [\App\Http\Controllers\GoalController::class, 'destroy'])->name('goals.destroy');
     Route::post('/athletes/{user}/skills', [\App\Http\Controllers\GoalController::class, 'updateSkills'])->name('athletes.skills');
     Route::post('/athletes/{user}/tip', [\App\Http\Controllers\GoalController::class, 'saveTip'])->name('athletes.tip');
+
+    Route::get('/events', [\App\Http\Controllers\EventController::class, 'coachIndex'])->name('events.index');
+    Route::post('/events/{event}/registrations/{registration}/accept', [\App\Http\Controllers\EventController::class, 'acceptAttendance'])->name('events.attendance.accept');
+    Route::post('/events/{event}/registrations/{registration}/reject', [\App\Http\Controllers\EventController::class, 'rejectAttendance'])->name('events.attendance.reject');
 });
 
 // Athlete Routes
@@ -150,6 +159,9 @@ Route::middleware(['auth', 'verified', 'role:Athlete', \App\Http\Middleware\Chec
     Route::get('/schedule', function () {
         return Inertia::render('Athlete/Schedule');
     })->name('schedule');
+
+    Route::get('/events', [\App\Http\Controllers\EventController::class, 'athleteIndex'])->name('events.index');
+    Route::post('/events/{event}/join', [\App\Http\Controllers\EventController::class, 'join'])->name('events.join');
 });
 
 // Parent Routes

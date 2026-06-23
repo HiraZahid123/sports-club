@@ -69,7 +69,22 @@ export default function Authenticated({
                                         <NavLink href={route('manager.reports.index')} active={route().current('manager.reports.index')}>
                                             Reports
                                         </NavLink>
+                                        <NavLink href={route('manager.events.index')} active={route().current('manager.events.index')}>
+                                            Events
+                                        </NavLink>
                                     </>
+                                )}
+
+                                {!isManager && !isParent && (user as any).roles?.includes('Athlete') && (
+                                    <NavLink href={route('athlete.events.index')} active={route().current('athlete.events.index')}>
+                                        Events
+                                    </NavLink>
+                                )}
+
+                                {!isManager && !isParent && (user as any).roles?.includes('Coach') && (
+                                    <NavLink href={route('coach.events.index')} active={route().current('coach.events.index')}>
+                                        Events
+                                    </NavLink>
                                 )}
 
                                 {isParent && (
@@ -165,7 +180,16 @@ export default function Authenticated({
                                 <ResponsiveNavLink href={route('manager.groups.index')} active={route().current('manager.groups.index')}>Training Groups</ResponsiveNavLink>
                                 <ResponsiveNavLink href={route('manager.billing.index')} active={route().current('manager.billing.index')}>Billing & Revenue</ResponsiveNavLink>
                                 <ResponsiveNavLink href={route('manager.reports.index')} active={route().current('manager.reports.index')}>Financial Reports</ResponsiveNavLink>
+                                <ResponsiveNavLink href={route('manager.events.index')} active={route().current('manager.events.index')}>Events</ResponsiveNavLink>
                             </>
+                        )}
+
+                        {!isManager && !isParent && (user as any).roles?.includes('Athlete') && (
+                            <ResponsiveNavLink href={route('athlete.events.index')} active={route().current('athlete.events.index')}>Events</ResponsiveNavLink>
+                        )}
+
+                        {!isManager && !isParent && (user as any).roles?.includes('Coach') && (
+                            <ResponsiveNavLink href={route('coach.events.index')} active={route().current('coach.events.index')}>Events</ResponsiveNavLink>
                         )}
 
                         {isParent && (

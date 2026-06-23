@@ -19,6 +19,7 @@ class AthleteProfile extends Model
         'kyorugi',
         'poomsae',
         'coach_tip',
+        'event_points',
     ];
 
     /**
