@@ -58,6 +58,8 @@ class EventController extends Controller
             'group_ids.*'         => 'integer|exists:training_groups,id',
             'coach_ids'           => 'nullable|array',
             'coach_ids.*'         => 'integer|exists:users,id',
+            'coach_salary_type'   => 'nullable|string|in:per_athlete,fixed,per_hour,free',
+            'coach_salary_rate'   => 'nullable|numeric|min:0',
         ]);
 
         $pdfPath = null;
@@ -82,6 +84,8 @@ class EventController extends Controller
             'stripe_payment_link' => $validated['stripe_payment_link'] ?? null,
             'points'              => $validated['points'],
             'pdf_path'            => $pdfPath,
+            'coach_salary_type'   => $validated['coach_salary_type'] ?? null,
+            'coach_salary_rate'   => $validated['coach_salary_rate'] ?? null,
         ]);
 
         $event->groups()->sync($validated['group_ids']);
@@ -109,6 +113,8 @@ class EventController extends Controller
             'group_ids.*'         => 'integer|exists:training_groups,id',
             'coach_ids'           => 'nullable|array',
             'coach_ids.*'         => 'integer|exists:users,id',
+            'coach_salary_type'   => 'nullable|string|in:per_athlete,fixed,per_hour,free',
+            'coach_salary_rate'   => 'nullable|numeric|min:0',
         ]);
 
         $pdfPath = $event->pdf_path;
@@ -144,6 +150,8 @@ class EventController extends Controller
             'stripe_payment_link' => $validated['stripe_payment_link'] ?? null,
             'points'              => $validated['points'],
             'pdf_path'            => $pdfPath,
+            'coach_salary_type'   => $validated['coach_salary_type'] ?? null,
+            'coach_salary_rate'   => $validated['coach_salary_rate'] ?? null,
         ]);
 
         $event->groups()->sync($validated['group_ids']);

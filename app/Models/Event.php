@@ -18,13 +18,16 @@ class Event extends Model
         'stripe_payment_link',
         'points',
         'pdf_path',
+        'coach_salary_type',
+        'coach_salary_rate',
     ];
 
     protected $casts = [
-        'start_date' => 'date',
-        'end_date'   => 'date',
-        'price'      => 'decimal:2',
-        'points'     => 'integer',
+        'start_date'         => 'date',
+        'end_date'           => 'date',
+        'price'              => 'decimal:2',
+        'points'             => 'integer',
+        'coach_salary_rate'  => 'decimal:2',
     ];
 
     public function club()

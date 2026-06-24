@@ -22,12 +22,62 @@ interface Event {
     coaches: Coach[];
     registrations_count: number;
     attended_count: number;
+    coach_salary_type: string | null;
+    coach_salary_rate: string | null;
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 const inputClass = "w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all";
 const fmtDate   = (d: string | null) => d ? new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '';
 const isFree    = (e: Event) => !e.price || parseFloat(e.price) === 0;
+
+const SALARY_OPTIONS = [
+    {
+        value: 'free',
+        icon: '🆓',
+        label: 'FREE',
+        title: 'Free — No Coach Payment',
+        desc: 'Coach receives no payment from this event.',
+        color: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+        activeBg: 'border-emerald-500 bg-emerald-50/40',
+    },
+    {
+        value: 'per_athlete',
+        icon: '🏃',
+        label: 'Per Athlete',
+        title: 'Option 1 — Per Athlete × Rate',
+        desc: 'Coach earns a fixed rate for each athlete who attended the event.',
+        color: 'bg-blue-50 text-blue-700 border-blue-200',
+        activeBg: 'border-blue-500 bg-blue-50/40',
+    },
+    {
+        value: 'fixed',
+        icon: '💰',
+        label: 'Fixed Amount',
+        title: 'Option 2 — Fixed Amount',
+        desc: 'Coach receives a flat fee for participating in this event, regardless of attendance.',
+        color: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+        activeBg: 'border-indigo-500 bg-indigo-50/40',
+    },
+    {
+        value: 'per_hour',
+        icon: '⏱️',
+        label: 'Per Hour',
+        title: 'Option 3 — Per Hour × Event Duration',
+        desc: 'Coach earns an hourly rate multiplied by the event duration (start → end date hours).',
+        color: 'bg-amber-50 text-amber-700 border-amber-200',
+        activeBg: 'border-amber-500 bg-amber-50/40',
+    },
+] as const;
+
+type SalaryType = 'free' | 'per_athlete' | 'fixed' | 'per_hour';
+
+const SALARY_BADGE: Record<string, { label: string; cls: string }> = {
+    free:        { label: 'FREE',        cls: 'bg-emerald-50 text-emerald-700 border-emerald-100' },
+    per_athlete: { label: 'Per Athlete', cls: 'bg-blue-50 text-blue-700 border-blue-100' },
+    fixed:       { label: 'Fixed',       cls: 'bg-indigo-50 text-indigo-700 border-indigo-100' },
+    per_hour:    { label: 'Per Hour',    cls: 'bg-amber-50 text-amber-700 border-amber-100' },
+};
 
 // ── Component ──────────────────────────────────────────────────────────────
 export default function EventsIndex({ events, groups, coaches }: {
@@ -49,6 +99,8 @@ export default function EventsIndex({ events, groups, coaches }: {
         stripe_payment_link: '', points: '0',
         group_ids: [] as string[], coach_ids: [] as string[],
         pdf: null as File | null, remove_pdf: '0',
+        coach_salary_type: '' as string,
+        coach_salary_rate: '',
     });
 
     const submitCreate: FormEventHandler = (e) => {
@@ -80,6 +132,8 @@ export default function EventsIndex({ events, groups, coaches }: {
         stripe_payment_link: '', points: '0',
         group_ids: [] as string[], coach_ids: [] as string[],
         pdf: null as File | null, remove_pdf: '0',
+        coach_salary_type: '' as string,
+        coach_salary_rate: '',
     });
 
     const openEdit = (ev: Event) => {
@@ -96,6 +150,8 @@ export default function EventsIndex({ events, groups, coaches }: {
             coach_ids:           ev.coaches.map(c => String(c.id)),
             pdf:                 null,
             remove_pdf:          '0',
+            coach_salary_type:   ev.coach_salary_type ?? '',
+            coach_salary_rate:   ev.coach_salary_rate ?? '',
         });
         setEditingEvent(ev);
         setIsCreating(false);
@@ -161,6 +217,136 @@ export default function EventsIndex({ events, groups, coaches }: {
                 className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${active ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-emerald-300'}`}>
                 {c.name}
             </button>
+        );
+    };
+
+    // ── Coach salary section ───────────────────────────────────────────────
+    const CoachSalarySection = ({ form }: { form: typeof createForm | typeof editForm }) => {
+        const type = form.data.coach_salary_type as SalaryType | '';
+        const rate = Number(form.data.coach_salary_rate) || 0;
+        const hasCoaches = form.data.coach_ids.length > 0;
+
+        // Event duration for per_hour preview
+        const startDate = form.data.start_date ? new Date(form.data.start_date) : null;
+        const endDate   = form.data.end_date   ? new Date(form.data.end_date)   : null;
+        const eventDays = (startDate && endDate)
+            ? Math.max(1, Math.ceil((endDate.getTime() - startDate.getTime()) / 86400000) + 1)
+            : 1;
+
+        return (
+            <div className="border border-gray-100 rounded-2xl overflow-hidden">
+                {/* Header */}
+                <div className="bg-gradient-to-r from-slate-50 to-gray-50 px-5 py-3.5 border-b border-gray-100 flex items-center gap-2.5">
+                    <div className="w-7 h-7 bg-emerald-100 rounded-lg flex items-center justify-center text-sm">💼</div>
+                    <div>
+                        <p className="text-xs font-bold text-gray-700 uppercase tracking-wide">Coach Revenue / Salary</p>
+                        <p className="text-[10px] text-gray-400 mt-0.5">
+                            {hasCoaches ? `${form.data.coach_ids.length} coach${form.data.coach_ids.length !== 1 ? 'es' : ''} assigned — set their event pay` : 'Assign coaches above first'}
+                        </p>
+                    </div>
+                </div>
+
+                <div className="p-5 space-y-4">
+                    {/* Option cards */}
+                    <div className="grid grid-cols-2 gap-2.5">
+                        {SALARY_OPTIONS.map(opt => {
+                            const isActive = type === opt.value;
+                            return (
+                                <button
+                                    key={opt.value}
+                                    type="button"
+                                    onClick={() => form.setData({
+                                        ...form.data,
+                                        coach_salary_type: isActive ? '' : opt.value,
+                                        coach_salary_rate: isActive ? '' : form.data.coach_salary_rate,
+                                    })}
+                                    className={`flex items-start gap-2.5 p-3.5 rounded-xl border-2 text-left transition-all hover:shadow-sm ${
+                                        isActive ? opt.activeBg + ' shadow-sm' : 'border-gray-100 bg-gray-50/50 hover:border-gray-200'
+                                    }`}
+                                >
+                                    <span className="text-lg leading-none mt-0.5 shrink-0">{opt.icon}</span>
+                                    <div className="min-w-0">
+                                        <p className={`text-xs font-bold ${isActive ? 'text-gray-900' : 'text-gray-700'}`}>{opt.title}</p>
+                                        <p className="text-[10px] text-gray-400 mt-0.5 leading-snug">{opt.desc}</p>
+                                    </div>
+                                    {isActive && (
+                                        <span className="ml-auto shrink-0 w-4 h-4 rounded-full bg-indigo-600 flex items-center justify-center">
+                                            <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                            </svg>
+                                        </span>
+                                    )}
+                                </button>
+                            );
+                        })}
+                    </div>
+
+                    {/* Rate input — hidden for free/empty */}
+                    {type && type !== 'free' && (
+                        <div>
+                            <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">
+                                {type === 'per_athlete' && 'Rate per Athlete (€)'}
+                                {type === 'fixed'       && 'Fixed Amount per Coach (€)'}
+                                {type === 'per_hour'    && 'Rate per Hour (€)'}
+                            </label>
+                            <input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={form.data.coach_salary_rate}
+                                onChange={e => form.setData({ ...form.data, coach_salary_rate: e.target.value })}
+                                placeholder="0.00"
+                                className={inputClass}
+                            />
+                        </div>
+                    )}
+
+                    {/* Earnings preview */}
+                    {type && type !== 'free' && rate > 0 && (
+                        <div className={`rounded-xl p-3.5 border text-xs space-y-1.5 ${
+                            type === 'per_athlete' ? 'bg-blue-50 border-blue-100 text-blue-900' :
+                            type === 'fixed'       ? 'bg-indigo-50 border-indigo-100 text-indigo-900' :
+                                                     'bg-amber-50 border-amber-100 text-amber-900'
+                        }`}>
+                            <p className="font-bold text-[10px] uppercase tracking-wide opacity-60 mb-2">Preview (per coach)</p>
+                            {type === 'per_athlete' && (
+                                <>
+                                    <div className="flex justify-between"><span>Attending athletes (est.):</span><span className="font-bold">?</span></div>
+                                    <div className="flex justify-between"><span>× Rate:</span><span className="font-bold">€{rate.toFixed(2)}</span></div>
+                                    <div className="flex justify-between border-t border-current/20 pt-1 font-black text-sm">
+                                        <span>Total per coach:</span><span>€{rate.toFixed(2)} × athletes</span>
+                                    </div>
+                                </>
+                            )}
+                            {type === 'fixed' && (
+                                <div className="flex justify-between font-black text-sm">
+                                    <span>Flat fee per coach:</span><span>€{rate.toFixed(2)}</span>
+                                </div>
+                            )}
+                            {type === 'per_hour' && (
+                                <>
+                                    <div className="flex justify-between"><span>Event days:</span><span className="font-bold">{eventDays}</span></div>
+                                    <div className="flex justify-between"><span>× 8 hrs/day × Rate:</span><span className="font-bold">€{rate.toFixed(2)}</span></div>
+                                    <div className="flex justify-between border-t border-current/20 pt-1 font-black text-sm">
+                                        <span>Est. per coach:</span><span>€{(eventDays * 8 * rate).toFixed(2)}</span>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    )}
+
+                    {type === 'free' && (
+                        <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-100 rounded-xl px-4 py-3">
+                            <span className="text-lg">✅</span>
+                            <p className="text-xs font-semibold text-emerald-700">Coaches are volunteering — no payment for this event.</p>
+                        </div>
+                    )}
+
+                    {!type && (
+                        <p className="text-[10px] text-gray-400 text-center py-1">Select an option above to configure coach pay for this event.</p>
+                    )}
+                </div>
+            </div>
         );
     };
 
@@ -269,6 +455,9 @@ export default function EventsIndex({ events, groups, coaches }: {
                     )}
                 </div>
 
+                {/* ── Coach Salary Section ── */}
+                <CoachSalarySection form={form} />
+
                 <div className="flex justify-end gap-3 pt-2 border-t border-gray-100">
                     <button type="button" onClick={() => { setIsCreating(false); setEditingEvent(null); }} className="px-5 py-2 bg-gray-100 text-gray-700 text-sm font-semibold rounded-xl hover:bg-gray-200 transition-all">Cancel</button>
                     <button type="submit" disabled={form.processing} className="px-6 py-2 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 transition-all disabled:opacity-50 shadow-sm">
@@ -348,6 +537,7 @@ export default function EventsIndex({ events, groups, coaches }: {
                             {events.map((ev) => {
                                 const free   = isFree(ev);
                                 const isEdit = editingEvent?.id === ev.id;
+                                const salaryBadge = ev.coach_salary_type ? SALARY_BADGE[ev.coach_salary_type] : null;
                                 return (
                                     <div key={ev.id} className={`bg-white rounded-2xl border shadow-sm hover:shadow-md transition-shadow flex flex-col overflow-hidden ${isEdit ? 'border-amber-300 ring-2 ring-amber-200' : 'border-gray-100'}`}>
                                         <div className="p-5 flex-1 space-y-3">
@@ -386,6 +576,17 @@ export default function EventsIndex({ events, groups, coaches }: {
                                                     <p className="text-[10px] text-emerald-500 font-semibold uppercase tracking-wide">Attended</p>
                                                 </div>
                                             </div>
+
+                                            {/* Coach salary badge on card */}
+                                            {salaryBadge && (
+                                                <div className="flex items-center gap-1.5">
+                                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Coach Pay:</span>
+                                                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold border ${salaryBadge.cls}`}>
+                                                        {salaryBadge.label}
+                                                        {ev.coach_salary_rate && ev.coach_salary_type !== 'free' && ` · €${parseFloat(ev.coach_salary_rate).toFixed(2)}`}
+                                                    </span>
+                                                </div>
+                                            )}
 
                                             {ev.groups.length > 0 && (
                                                 <div>
