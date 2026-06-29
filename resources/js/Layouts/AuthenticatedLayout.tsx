@@ -3,6 +3,7 @@ import NavLink from '@/Components/NavLink';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
 import { Link, usePage } from '@inertiajs/react';
 import { PropsWithChildren, ReactNode, useState } from 'react';
+import axios from 'axios';
 import mlSportsLogo from '../ml-sports.png';
 
 export default function Authenticated({
@@ -12,7 +13,17 @@ export default function Authenticated({
     const page = usePage();
     const user = page.props.auth.user;
     const unreadCount = (page.props as any).unreadMessageCount ?? 0;
+    const pendingPopups: Array<{ id: number; title: string; body: string; sender: { name: string }; created_at: string }> =
+        (page.props as any).pendingImportantMessages ?? [];
+    const [dismissedIds, setDismissedIds] = useState<number[]>([]);
     const [showingNavigationDropdown, setShowingNavigationDropdown] = useState(false);
+
+    const activePopup = pendingPopups.find(m => !dismissedIds.includes(m.id));
+
+    const dismissPopup = (id: number) => {
+        axios.post(route('messages.read', id));
+        setDismissedIds(prev => [...prev, id]);
+    };
 
     const isManager = (user as any).roles?.includes('Manager') || (user as any).roles?.includes('Super Admin');
     const isParent = (user as any).roles?.includes('Parent');
@@ -260,6 +271,54 @@ export default function Authenticated({
             )}
 
             <main>{children}</main>
+
+            {/* Important message popup — shows for coaches with unread important alerts */}
+            {activePopup && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                    <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden">
+                        {/* Red header */}
+                        <div className="bg-gradient-to-r from-red-600 to-orange-500 px-6 py-5 flex items-start gap-4">
+                            <div className="flex-shrink-0 w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                                <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+                                </svg>
+                            </div>
+                            <div>
+                                <p className="text-xs font-bold text-white/70 uppercase tracking-widest mb-0.5">Important Alert from Manager</p>
+                                <h3 className="text-lg font-black text-white leading-tight">{activePopup.title}</h3>
+                            </div>
+                        </div>
+
+                        {/* Body */}
+                        <div className="px-6 py-5">
+                            <p className="text-gray-800 text-sm leading-relaxed whitespace-pre-wrap">{activePopup.body}</p>
+                            <div className="flex items-center gap-1.5 mt-4 text-xs text-gray-400">
+                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                                </svg>
+                                <span>From <strong>{activePopup.sender.name}</strong> · {activePopup.created_at}</span>
+                            </div>
+                        </div>
+
+                        {/* Footer */}
+                        <div className="px-6 pb-6 flex gap-3">
+                            <button
+                                onClick={() => dismissPopup(activePopup.id)}
+                                className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-bold rounded-xl transition-all"
+                            >
+                                Acknowledge
+                            </button>
+                            <Link
+                                href={route('messages.index')}
+                                onClick={() => dismissPopup(activePopup.id)}
+                                className="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold rounded-xl transition-all"
+                            >
+                                View in Inbox
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

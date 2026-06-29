@@ -58,7 +58,7 @@ class HandleInertiaRequests extends Middleware
             ],
             'unreadMessageCount' => function () use ($request) {
                 $user = $request->user();
-                if (!$user || $user->hasRole(['Manager', 'Super Admin', 'Coach'])) {
+                if (!$user || $user->hasRole(['Manager', 'Super Admin'])) {
                     return 0;
                 }
                 $total = ClubMessage::forUser($user)->count();
@@ -66,6 +66,28 @@ class HandleInertiaRequests extends Middleware
                     ->whereIn('message_id', ClubMessage::forUser($user)->pluck('id'))
                     ->count();
                 return max(0, $total - $read);
+            },
+            'pendingImportantMessages' => function () use ($request) {
+                $user = $request->user();
+                if (!$user || !$user->hasRole('Coach')) {
+                    return [];
+                }
+                $readIds = MessageRead::where('user_id', $user->id)->pluck('message_id')->toArray();
+                return ClubMessage::forUser($user)
+                    ->where('message_type', 'important')
+                    ->whereNotIn('id', $readIds)
+                    ->with(['sender:id,name'])
+                    ->latest()
+                    ->get()
+                    ->map(fn($m) => [
+                        'id'         => $m->id,
+                        'title'      => $m->title,
+                        'body'       => $m->body,
+                        'sender'     => ['name' => $m->sender->name],
+                        'created_at' => $m->created_at->format('d M Y, H:i'),
+                    ])
+                    ->values()
+                    ->all();
             },
         ];
     }

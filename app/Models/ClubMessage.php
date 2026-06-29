@@ -14,6 +14,7 @@ class ClubMessage extends Model
         'recipient_type',
         'training_group_id',
         'recipient_user_id',
+        'message_type',
     ];
 
     public function sender()
@@ -36,9 +37,18 @@ class ClubMessage extends Model
         return $this->hasMany(MessageRead::class, 'message_id');
     }
 
-    // Scope: messages visible to a specific recipient user
     public function scopeForUser($query, User $user)
     {
+        // Coaches receive messages addressed to 'coaches' (all) or to their user id
+        if ($user->hasRole('Coach')) {
+            return $query->where('club_id', $user->club_id)->where(function ($q) use ($user) {
+                $q->where('recipient_type', 'coaches')
+                  ->orWhere(function ($q2) use ($user) {
+                      $q2->where('recipient_type', 'user')->where('recipient_user_id', $user->id);
+                  });
+            });
+        }
+
         $groupIds = $user->trainingGroups()->pluck('training_groups.id');
 
         return $query->where('club_id', $user->club_id)->where(function ($q) use ($user, $groupIds) {
