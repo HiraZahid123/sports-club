@@ -140,8 +140,8 @@ export default function ClubEdit({ club, join_link, status }: { club: Club; join
                     )}
 
                     {/* Club Joining Code */}
-                    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                        <div className="bg-gradient-to-r from-emerald-50 to-teal-50 px-6 py-5 border-b border-emerald-100">
+                    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
+                        <div className="bg-gradient-to-r from-emerald-50 to-teal-50 px-6 py-5 border-b border-emerald-100 rounded-t-2xl overflow-hidden">
                             <div className="flex items-center justify-between gap-3">
                                 <div className="flex items-center gap-3">
                                     <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center">
@@ -281,14 +281,14 @@ export default function ClubEdit({ club, join_link, status }: { club: Club; join
                                         {/* Right: QR code */}
                                         <div className="flex flex-col items-center gap-3 shrink-0">
                                             <p className="text-xs font-bold text-gray-400 uppercase tracking-widest self-start">QR Code</p>
-                                            <div className="p-3 bg-white border-2 border-gray-100 rounded-2xl shadow-sm" style={{ width: 172, height: 172 }}>
+                                            <div style={{ width: 176, height: 176, padding: 14, background: '#fff', border: '2px solid #f1f5f9', borderRadius: 16, boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)' }}>
                                                 <QRCode
                                                     value={joinLink}
                                                     size={148}
                                                     bgColor="#ffffff"
                                                     fgColor="#1e293b"
                                                     level="M"
-                                                    style={{ display: 'block' }}
+                                                    style={{ display: 'block', width: 148, height: 148, maxWidth: 'none' }}
                                                 />
                                             </div>
                                             <p className="text-[11px] text-gray-400 text-center max-w-[172px] leading-relaxed">
