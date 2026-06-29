@@ -58,6 +58,8 @@ Route::middleware(['auth', 'verified', 'role:Manager|Super Admin'])->prefix('man
     Route::get('/club', [\App\Http\Controllers\ClubController::class, 'edit'])->name('club.edit');
     Route::patch('/club', [\App\Http\Controllers\ClubController::class, 'update'])->name('club.update');
     Route::post('/club/logo', [\App\Http\Controllers\ClubController::class, 'uploadLogo'])->name('club.logo');
+    Route::post('/club/join-code', [\App\Http\Controllers\ClubController::class, 'updateJoinCode'])->name('club.join-code');
+    Route::post('/club/join-code/regenerate', [\App\Http\Controllers\ClubController::class, 'regenerateJoinCode'])->name('club.join-code.regenerate');
 
     Route::get('/setup', [\App\Http\Controllers\ClubController::class, 'setupIndex'])->name('setup.index');
 

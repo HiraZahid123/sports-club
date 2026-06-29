@@ -1,6 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm, router } from '@inertiajs/react';
 import { FormEventHandler, useRef, useState } from 'react';
+import QRCode from 'react-qr-code';
 
 interface Club {
     id: number;
@@ -20,6 +21,9 @@ interface Club {
 export default function ClubEdit({ club, status }: { club: Club; status?: string }) {
     const [codeCopied, setCodeCopied]   = useState(false);
     const [linkCopied, setLinkCopied]   = useState(false);
+    const [editingCode, setEditingCode] = useState(false);
+    const [codeInput, setCodeInput]     = useState(club.join_code ?? '');
+    const [regenerating, setRegenerating] = useState(false);
 
     const joinLink = club.join_code
         ? `${window.location.origin}/register/join?code=${club.join_code}`
@@ -38,6 +42,21 @@ export default function ClubEdit({ club, status }: { club: Club; status?: string
         navigator.clipboard.writeText(joinLink).then(() => {
             setLinkCopied(true);
             setTimeout(() => setLinkCopied(false), 2000);
+        });
+    };
+
+    const saveJoinCode = (e: React.FormEvent) => {
+        e.preventDefault();
+        router.post(route('manager.club.join-code'), { join_code: codeInput }, {
+            onSuccess: () => setEditingCode(false),
+        });
+    };
+
+    const regenerateCode = () => {
+        if (!confirm('Generate a new random code? The old code and any shared links will stop working.')) return;
+        setRegenerating(true);
+        router.post(route('manager.club.join-code.regenerate'), {}, {
+            onFinish: () => setRegenerating(false),
         });
     };
     const { data, setData, patch, processing, errors, recentlySuccessful } = useForm({
@@ -123,84 +142,183 @@ export default function ClubEdit({ club, status }: { club: Club; status?: string
                     )}
 
                     {/* Club Joining Code */}
-                    {club.join_code && (
-                        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                            <div className="bg-gradient-to-r from-emerald-50 to-teal-50 px-6 py-5 border-b border-emerald-100">
+                    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                        <div className="bg-gradient-to-r from-emerald-50 to-teal-50 px-6 py-5 border-b border-emerald-100">
+                            <div className="flex items-center justify-between gap-3">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-600 text-lg">🔑</div>
+                                    <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center">
+                                        <svg className="w-5 h-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                                        </svg>
+                                    </div>
                                     <div>
-                                        <h3 className="text-sm font-bold text-gray-900">Club Joining Code</h3>
-                                        <p className="text-xs text-gray-500 mt-0.5">Share the code or the invite link with athletes and parents</p>
+                                        <h3 className="text-sm font-bold text-gray-900">Club Join Code</h3>
+                                        <p className="text-xs text-gray-500 mt-0.5">Share the code, link, or QR with athletes and parents</p>
                                     </div>
                                 </div>
-                            </div>
-
-                            <div className="p-6 space-y-5">
-                                {/* Code row */}
-                                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                                    <div className="flex-1">
-                                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Club Code</p>
-                                        <p className="text-4xl font-black tracking-[0.35em] text-gray-900 font-mono">{club.join_code}</p>
-                                    </div>
-                                    <button
-                                        type="button"
-                                        onClick={copyJoinCode}
-                                        className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all shrink-0 ${
-                                            codeCopied
-                                                ? 'bg-emerald-500 text-white'
-                                                : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200'
-                                        }`}
-                                    >
-                                        {codeCopied ? (
-                                            <><svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>Copied!</>
-                                        ) : (
-                                            <><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>Copy Code</>
-                                        )}
-                                    </button>
-                                </div>
-
-                                {/* Divider */}
-                                <div className="flex items-center gap-3">
-                                    <div className="flex-1 h-px bg-gray-100" />
-                                    <span className="text-xs text-gray-400 font-semibold">or share a direct link</span>
-                                    <div className="flex-1 h-px bg-gray-100" />
-                                </div>
-
-                                {/* Invite link row */}
-                                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Invite Link</p>
-                                        <p className="text-xs text-gray-500 font-mono bg-gray-50 border border-gray-100 rounded-lg px-3 py-2 truncate">
-                                            {joinLink}
-                                        </p>
-                                    </div>
-                                    <button
-                                        type="button"
-                                        onClick={copyJoinLink}
-                                        className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all shrink-0 ${
-                                            linkCopied
-                                                ? 'bg-indigo-600 text-white'
-                                                : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200'
-                                        }`}
-                                    >
-                                        {linkCopied ? (
-                                            <><svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>Copied!</>
-                                        ) : (
-                                            <><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>Copy Link</>
-                                        )}
-                                    </button>
-                                </div>
-
-                                {/* How-to note */}
-                                <div className="bg-amber-50 border border-amber-100 rounded-xl px-4 py-3">
-                                    <p className="text-xs text-amber-800 leading-relaxed">
-                                        <strong>How athletes register:</strong> Send them the invite link — it opens the registration page with the code already filled in.
-                                        Or share the code and tell them to go to <strong>Register → Join as Athlete or Parent</strong> and enter it manually.
-                                    </p>
-                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => { setEditingCode(true); setCodeInput(club.join_code ?? ''); }}
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-emerald-200 bg-white text-xs font-semibold text-emerald-700 hover:bg-emerald-50 transition-all"
+                                >
+                                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                    </svg>
+                                    Edit Code
+                                </button>
                             </div>
                         </div>
-                    )}
+
+                        <div className="p-6 space-y-5">
+
+                            {/* Edit code form */}
+                            {editingCode && (
+                                <form onSubmit={saveJoinCode} className="flex items-center gap-3 p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
+                                    <div className="flex-1">
+                                        <label className="block text-xs font-bold text-emerald-700 uppercase tracking-wide mb-1">Custom Code (4–12 characters, letters & numbers only)</label>
+                                        <input
+                                            type="text"
+                                            value={codeInput}
+                                            onChange={e => setCodeInput(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
+                                            maxLength={12}
+                                            placeholder="e.g. DRAGON7"
+                                            className="w-full rounded-xl border border-emerald-300 bg-white px-4 py-2.5 text-sm font-mono font-bold text-gray-900 tracking-widest focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all uppercase"
+                                        />
+                                    </div>
+                                    <div className="flex gap-2 mt-5">
+                                        <button type="submit" className="px-4 py-2.5 bg-emerald-600 text-white text-sm font-bold rounded-xl hover:bg-emerald-700 transition-all">Save</button>
+                                        <button type="button" onClick={() => setEditingCode(false)} className="px-4 py-2.5 border border-gray-200 text-gray-600 text-sm font-semibold rounded-xl hover:bg-gray-50 transition-all">Cancel</button>
+                                    </div>
+                                </form>
+                            )}
+
+                            {/* No code yet */}
+                            {!club.join_code && !editingCode && (
+                                <div className="text-center py-4">
+                                    <p className="text-sm text-gray-500 mb-3">No join code set yet.</p>
+                                    <div className="flex items-center justify-center gap-3">
+                                        <button
+                                            type="button"
+                                            onClick={() => setEditingCode(true)}
+                                            className="px-4 py-2 bg-emerald-600 text-white text-sm font-bold rounded-xl hover:bg-emerald-700 transition-all"
+                                        >
+                                            Set Custom Code
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={regenerateCode}
+                                            disabled={regenerating}
+                                            className="px-4 py-2 border border-emerald-200 text-emerald-700 text-sm font-semibold rounded-xl hover:bg-emerald-50 transition-all disabled:opacity-50"
+                                        >
+                                            Generate Random Code
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Code display */}
+                            {club.join_code && (
+                                <>
+                                    <div className="flex flex-col lg:flex-row gap-6 items-start">
+                                        {/* Left: code + link */}
+                                        <div className="flex-1 space-y-4">
+                                            {/* Big code */}
+                                            <div>
+                                                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Club Code</p>
+                                                <div className="flex items-center gap-3">
+                                                    <p className="text-4xl font-black tracking-[0.35em] text-gray-900 font-mono">{club.join_code}</p>
+                                                    <button
+                                                        type="button"
+                                                        onClick={copyJoinCode}
+                                                        className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+                                                            codeCopied ? 'bg-emerald-500 text-white' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200'
+                                                        }`}
+                                                    >
+                                                        {codeCopied ? (
+                                                            <><svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>Copied!</>
+                                                        ) : (
+                                                            <><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>Copy</>
+                                                        )}
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            {/* Invite link */}
+                                            <div>
+                                                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Invite Link</p>
+                                                <div className="flex items-center gap-2">
+                                                    <p className="flex-1 text-xs text-gray-600 font-mono bg-gray-50 border border-gray-100 rounded-lg px-3 py-2 truncate min-w-0">
+                                                        {joinLink}
+                                                    </p>
+                                                    <button
+                                                        type="button"
+                                                        onClick={copyJoinLink}
+                                                        className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold transition-all shrink-0 ${
+                                                            linkCopied ? 'bg-indigo-600 text-white' : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200'
+                                                        }`}
+                                                    >
+                                                        {linkCopied ? (
+                                                            <><svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>Copied!</>
+                                                        ) : (
+                                                            <><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>Copy Link</>
+                                                        )}
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            {/* Regenerate */}
+                                            <button
+                                                type="button"
+                                                onClick={regenerateCode}
+                                                disabled={regenerating}
+                                                className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-400 hover:text-red-500 transition-colors disabled:opacity-50"
+                                            >
+                                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                                </svg>
+                                                {regenerating ? 'Generating…' : 'Generate new random code'}
+                                            </button>
+                                        </div>
+
+                                        {/* Right: QR code */}
+                                        <div className="flex flex-col items-center gap-3 shrink-0">
+                                            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest self-start">QR Code</p>
+                                            <div className="p-4 bg-white border-2 border-gray-100 rounded-2xl shadow-sm">
+                                                <QRCode
+                                                    value={joinLink}
+                                                    size={140}
+                                                    bgColor="#ffffff"
+                                                    fgColor="#1e293b"
+                                                    level="M"
+                                                />
+                                            </div>
+                                            <p className="text-[11px] text-gray-400 text-center max-w-[160px] leading-relaxed">
+                                                Scan to open the join page with code pre-filled
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {/* How-to note */}
+                                    <div className="bg-amber-50 border border-amber-100 rounded-xl px-4 py-3">
+                                        <p className="text-xs text-amber-800 leading-relaxed">
+                                            <strong>How athletes register:</strong> Scan the QR code or share the invite link — it opens the registration page with the code pre-filled.
+                                            Or give them the code directly and tell them to go to <strong>Register → Join as Athlete or Parent</strong>.
+                                        </p>
+                                    </div>
+                                </>
+                            )}
+
+                            {/* Success flash */}
+                            {status === 'join-code-updated' && (
+                                <div className="flex items-center gap-2 px-4 py-3 bg-emerald-50 border border-emerald-200 rounded-xl text-sm font-semibold text-emerald-700">
+                                    <svg className="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                    </svg>
+                                    Join code updated successfully.
+                                </div>
+                            )}
+                        </div>
+                    </div>
 
                     {/* Club Photo */}
                     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">

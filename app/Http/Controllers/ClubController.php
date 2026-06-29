@@ -48,7 +48,8 @@ class ClubController extends Controller
 
             $club = Club::create([
                 ...$validated,
-                'slug' => Str::slug($validated['name']),
+                'slug'      => Str::slug($validated['name']),
+                'join_code' => $this->generateUniqueCode(),
             ]);
 
             $request->user()->update(['club_id' => $club->id]);
@@ -82,6 +83,46 @@ class ClubController extends Controller
             'facilities'    => \App\Models\Facility::where('club_id', $clubId)->orderBy('name')->get(),
             'status'        => session('status'),
         ]);
+    }
+
+    public function updateJoinCode(Request $request)
+    {
+        $club = $request->user()->club;
+        abort_unless($club, 404);
+
+        $request->validate([
+            'join_code' => [
+                'required',
+                'string',
+                'min:4',
+                'max:12',
+                'alpha_num',
+                \Illuminate\Validation\Rule::unique('clubs', 'join_code')->ignore($club->id),
+            ],
+        ]);
+
+        $club->update(['join_code' => strtoupper($request->join_code)]);
+
+        return back()->with('status', 'join-code-updated');
+    }
+
+    public function regenerateJoinCode(Request $request)
+    {
+        $club = $request->user()->club;
+        abort_unless($club, 404);
+
+        $club->update(['join_code' => $this->generateUniqueCode()]);
+
+        return back()->with('status', 'join-code-updated');
+    }
+
+    private function generateUniqueCode(): string
+    {
+        do {
+            $code = strtoupper(Str::random(6));
+        } while (Club::where('join_code', $code)->exists());
+
+        return $code;
     }
 
     public function uploadLogo(Request $request)
