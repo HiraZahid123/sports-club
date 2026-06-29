@@ -24,8 +24,11 @@ class ClubController extends Controller
         }
 
         return Inertia::render('Manager/Club/Edit', [
-            'club'   => $clubData,
-            'status' => session('status'),
+            'club'      => $clubData,
+            'join_link' => $club->join_code
+                ? url('/register/join?code=' . $club->join_code)
+                : null,
+            'status'    => session('status'),
         ]);
     }
 

@@ -18,16 +18,14 @@ interface Club {
     closing_time?: string | null;
 }
 
-export default function ClubEdit({ club, status }: { club: Club; status?: string }) {
+export default function ClubEdit({ club, join_link, status }: { club: Club; join_link?: string | null; status?: string }) {
     const [codeCopied, setCodeCopied]   = useState(false);
     const [linkCopied, setLinkCopied]   = useState(false);
     const [editingCode, setEditingCode] = useState(false);
     const [codeInput, setCodeInput]     = useState(club.join_code ?? '');
     const [regenerating, setRegenerating] = useState(false);
 
-    const joinLink = club.join_code
-        ? `${window.location.origin}/register/join?code=${club.join_code}`
-        : '';
+    const joinLink = join_link ?? '';
 
     const copyJoinCode = () => {
         if (!club.join_code) return;
