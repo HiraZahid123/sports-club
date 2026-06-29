@@ -125,6 +125,36 @@ class BillingController extends Controller
         return back()->with('status', 'payment-logged');
     }
 
+    public function subscriptionLocked(Request $request)
+    {
+        $user = $request->user();
+
+        if ($user->hasRole('Parent')) {
+            $childrenIds = $user->children()->pluck('athlete_id');
+            $subscriptions = Subscription::whereIn('user_id', $childrenIds)
+                ->where('status', '!=', 'active')
+                ->with(['user:id,name', 'plan:id,name', 'trainingGroup:id,name'])
+                ->get();
+        } else {
+            $subscriptions = $user->subscriptions()
+                ->where('status', '!=', 'active')
+                ->with(['plan:id,name', 'trainingGroup:id,name'])
+                ->get();
+        }
+
+        $club = $user->club;
+
+        return Inertia::render('SubscriptionLocked', [
+            'subscriptions' => $subscriptions,
+            'club' => $club ? [
+                'name'  => $club->name,
+                'email' => $club->email,
+                'phone' => $club->phone,
+            ] : null,
+            'userRole' => $user->getRoleNames()->first(),
+        ]);
+    }
+
     public function parentBilling(Request $request)
     {
         $subscriptions = $request->user()->subscriptions()->with('payments')->get();

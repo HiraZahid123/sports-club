@@ -24,20 +24,12 @@ class CheckSubscription
                 return $next($request);
             }
 
-            // If user is NOT a manager/admin/coach and has NOT paid, restrict access
             if (!$user->isPaid()) {
-                // Always allow billing, logout, and profile pages
-                if ($request->routeIs(['parent.billing', 'logout', 'profile.*'])) {
+                if ($request->routeIs(['subscription.locked', 'logout', 'profile.*', 'parent.billing', 'parent.billing.*'])) {
                     return $next($request);
                 }
 
-                // Send parents to their own billing page; redirect others to login with a notice
-                if ($user->hasRole('Parent')) {
-                    return redirect()->route('parent.billing')->with('error', 'access-locked');
-                }
-
-                // Athletes or any other non-parent: redirect to login with a clear message
-                return redirect()->route('login')->with('status', 'Your membership is not currently active. Please contact your club manager.');
+                return redirect()->route('subscription.locked');
             }
         }
 
