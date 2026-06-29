@@ -184,6 +184,13 @@ Route::middleware(['auth', 'verified', 'role:Parent'])->prefix('parent')->name('
 Route::middleware('auth')->group(function () {
     Route::get('/subscription/locked', [\App\Http\Controllers\BillingController::class, 'subscriptionLocked'])->name('subscription.locked');
 
+    Route::prefix('messages')->name('messages.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\MessageController::class, 'index'])->name('index');
+        Route::post('/', [\App\Http\Controllers\MessageController::class, 'store'])->name('store');
+        Route::delete('/{message}', [\App\Http\Controllers\MessageController::class, 'destroy'])->name('destroy');
+        Route::post('/{message}/read', [\App\Http\Controllers\MessageController::class, 'markRead'])->name('read');
+    });
+
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::post('/profile/photo', [ProfileController::class, 'uploadPhoto'])->name('profile.photo');

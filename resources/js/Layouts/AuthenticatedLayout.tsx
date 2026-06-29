@@ -9,7 +9,9 @@ export default function Authenticated({
     header,
     children,
 }: PropsWithChildren<{ header?: ReactNode }>) {
-    const user = usePage().props.auth.user;
+    const page = usePage();
+    const user = page.props.auth.user;
+    const unreadCount = (page.props as any).unreadMessageCount ?? 0;
     const [showingNavigationDropdown, setShowingNavigationDropdown] = useState(false);
 
     const isManager = (user as any).roles?.includes('Manager') || (user as any).roles?.includes('Super Admin');
@@ -92,6 +94,22 @@ export default function Authenticated({
                                         My Billing
                                     </NavLink>
                                 )}
+
+                                <Link
+                                    href={route('messages.index')}
+                                    className={`relative inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                                        route().current('messages.*')
+                                            ? 'text-indigo-700 bg-indigo-50'
+                                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                                    }`}
+                                >
+                                    Messages
+                                    {unreadCount > 0 && (
+                                        <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center px-1">
+                                            {unreadCount > 9 ? '9+' : unreadCount}
+                                        </span>
+                                    )}
+                                </Link>
                             </div>
                         </div>
 
@@ -195,6 +213,18 @@ export default function Authenticated({
                         {isParent && (
                             <ResponsiveNavLink href={route('parent.billing')} active={route().current('parent.billing')}>My Billing</ResponsiveNavLink>
                         )}
+
+                        <Link
+                            href={route('messages.index')}
+                            className="flex items-center justify-between w-full py-2 px-3 rounded-lg text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-colors"
+                        >
+                            <span>Messages</span>
+                            {unreadCount > 0 && (
+                                <span className="min-w-[20px] h-5 bg-red-500 text-white text-xs font-black rounded-full flex items-center justify-center px-1.5">
+                                    {unreadCount > 9 ? '9+' : unreadCount}
+                                </span>
+                            )}
+                        </Link>
                     </div>
 
                     <div className="border-t border-gray-200 pb-3 pt-4 px-4">

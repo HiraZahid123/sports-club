@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\ClubMessage;
+use App\Models\MessageRead;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 use Tighten\Ziggy\Ziggy;
@@ -54,6 +56,17 @@ class HandleInertiaRequests extends Middleware
                 'status' => fn () => $request->session()->get('status'),
                 'message' => fn () => $request->session()->get('message'),
             ],
+            'unreadMessageCount' => function () use ($request) {
+                $user = $request->user();
+                if (!$user || $user->hasRole(['Manager', 'Super Admin', 'Coach'])) {
+                    return 0;
+                }
+                $total = ClubMessage::forUser($user)->count();
+                $read  = MessageRead::where('user_id', $user->id)
+                    ->whereIn('message_id', ClubMessage::forUser($user)->pluck('id'))
+                    ->count();
+                return max(0, $total - $read);
+            },
         ];
     }
 }
