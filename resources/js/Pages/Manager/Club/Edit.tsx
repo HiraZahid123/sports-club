@@ -283,16 +283,17 @@ export default function ClubEdit({ club, status }: { club: Club; status?: string
                                         {/* Right: QR code */}
                                         <div className="flex flex-col items-center gap-3 shrink-0">
                                             <p className="text-xs font-bold text-gray-400 uppercase tracking-widest self-start">QR Code</p>
-                                            <div className="p-4 bg-white border-2 border-gray-100 rounded-2xl shadow-sm">
+                                            <div className="p-3 bg-white border-2 border-gray-100 rounded-2xl shadow-sm" style={{ width: 172, height: 172 }}>
                                                 <QRCode
                                                     value={joinLink}
-                                                    size={140}
+                                                    size={148}
                                                     bgColor="#ffffff"
                                                     fgColor="#1e293b"
                                                     level="M"
+                                                    style={{ display: 'block' }}
                                                 />
                                             </div>
-                                            <p className="text-[11px] text-gray-400 text-center max-w-[160px] leading-relaxed">
+                                            <p className="text-[11px] text-gray-400 text-center max-w-[172px] leading-relaxed">
                                                 Scan to open the join page with code pre-filled
                                             </p>
                                         </div>
