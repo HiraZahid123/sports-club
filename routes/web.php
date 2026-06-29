@@ -85,7 +85,13 @@ Route::middleware(['auth', 'verified', 'role:Manager|Super Admin'])->prefix('man
     Route::post('/groups/{group}/schedule', [\App\Http\Controllers\TrainingGroupController::class, 'updateSchedule'])->name('groups.schedule');
 
     Route::get('/billing', [\App\Http\Controllers\BillingController::class, 'index'])->name('billing.index');
+    Route::post('/billing/subscriptions', [\App\Http\Controllers\BillingController::class, 'storeSubscription'])->name('billing.subscriptions.store');
+    Route::delete('/billing/subscriptions/{subscription}', [\App\Http\Controllers\BillingController::class, 'destroySubscription'])->name('billing.subscriptions.destroy');
     Route::post('/billing/{subscription}/pay', [\App\Http\Controllers\BillingController::class, 'logPayment'])->name('billing.pay');
+
+    Route::post('/plans', [\App\Http\Controllers\SubscriptionPlanController::class, 'store'])->name('plans.store');
+    Route::put('/plans/{plan}', [\App\Http\Controllers\SubscriptionPlanController::class, 'update'])->name('plans.update');
+    Route::delete('/plans/{plan}', [\App\Http\Controllers\SubscriptionPlanController::class, 'destroy'])->name('plans.destroy');
 
     Route::get('/reports', [\App\Http\Controllers\ReportController::class, 'index'])->name('reports.index');
     Route::post('/payouts', [\App\Http\Controllers\ReportController::class, 'storePayout'])->name('payouts.store');

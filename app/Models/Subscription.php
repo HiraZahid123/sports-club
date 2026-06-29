@@ -10,6 +10,7 @@ class Subscription extends Model
         'user_id',
         'club_id',
         'training_group_id',
+        'subscription_plan_id',
         'plan_name',
         'amount',
         'billing_cycle',
@@ -40,6 +41,11 @@ class Subscription extends Model
     public function trainingGroup()
     {
         return $this->belongsTo(TrainingGroup::class);
+    }
+
+    public function plan()
+    {
+        return $this->belongsTo(SubscriptionPlan::class, 'subscription_plan_id');
     }
 
     public function payments()
