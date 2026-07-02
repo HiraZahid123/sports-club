@@ -29,6 +29,8 @@ interface Event {
     is_free: boolean;
     groups: Group[];
     registrations: Registration[];
+    coach_salary_type?: string | null;
+    coach_salary_rate?: string | null;
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -90,6 +92,13 @@ export default function CoachEvents({ events }: { events: Event[] }) {
                                 <span className={`px-2 py-0.5 rounded-lg text-xs font-bold ${ev.is_free ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-amber-50 text-amber-700 border border-amber-100'}`}>
                                     {ev.is_free ? 'Free' : `€${parseFloat(ev.price!).toFixed(2)}`}
                                 </span>
+                                {ev.coach_salary_type && ev.coach_salary_type !== 'free' && (
+                                    <span className="px-2 py-0.5 rounded-lg text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-100">
+                                        Pay: {ev.coach_salary_type === 'per_athlete' ? `€${parseFloat(ev.coach_salary_rate!).toFixed(2)}/ath` :
+                                              ev.coach_salary_type === 'fixed' ? `€${parseFloat(ev.coach_salary_rate!).toFixed(2)}` :
+                                              ev.coach_salary_type === 'per_hour' ? `€${parseFloat(ev.coach_salary_rate!).toFixed(2)}/hr` : '—'}
+                                    </span>
+                                )}
                                 {pendingCount > 0 && (
                                     <span className="px-2 py-0.5 rounded-lg text-xs font-bold bg-red-50 text-red-600 border border-red-100">
                                         {pendingCount} pending

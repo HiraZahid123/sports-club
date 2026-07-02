@@ -113,7 +113,7 @@ Route::middleware(['auth', 'verified', 'role:Manager|Super Admin'])->prefix('man
 Route::middleware(['auth', 'verified', 'role:Coach', \App\Http\Middleware\CheckSubscription::class])->prefix('coach')->name('coach.')->group(function () {
     Route::get('/dashboard', function () {
         $coach  = auth()->user();
-        $groups = $coach->trainingGroups()->with(['athletes.athleteProfile'])->get();
+        $groups = $coach->trainingGroups()->with(['athletes.athleteProfile', 'schedules.facility'])->get();
 
         $nextPayout = \App\Models\CoachPayout::where('user_id', $coach->id)
             ->where('status', 'pending')

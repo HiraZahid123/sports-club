@@ -26,12 +26,31 @@ interface Athlete {
     athlete_profile: AthleteProfile | null;
 }
 
+interface ScheduleSlot {
+    id?: number;
+    day_of_week: string;
+    start_time: string;
+    end_time: string;
+    location: string;
+    notes: string;
+    facility?: { id: number; name: string } | null;
+}
+
 interface Group {
     id: number;
     name: string;
     skill_level: string;
     age_range: string | null;
     athletes: Athlete[];
+    schedules?: ScheduleSlot[];
+}
+
+interface CoachProfile {
+    specialization: string | null;
+    bio: string | null;
+    payment_option: string | null;
+    payment_rate: string | null;
+    hourly_rate: string | null;
 }
 
 interface Payout {
@@ -50,6 +69,29 @@ const skillColors: Record<string, string> = {
     Intermediate: 'bg-blue-50 text-blue-700 border-blue-100',
     Advanced:     'bg-indigo-50 text-indigo-700 border-indigo-100',
     Elite:        'bg-amber-50 text-amber-700 border-amber-100',
+};
+
+const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+const DAY_SHORT: Record<string, string> = {
+    Monday: 'Mon', Tuesday: 'Tue', Wednesday: 'Wed',
+    Thursday: 'Thu', Friday: 'Fri', Saturday: 'Sat', Sunday: 'Sun',
+};
+
+const DAY_COLOR: Record<string, string> = {
+    Monday:    'bg-indigo-50 text-indigo-700 border-indigo-100',
+    Tuesday:   'bg-purple-50 text-purple-700 border border-purple-100',
+    Wednesday: 'bg-blue-50 text-blue-700 border border-blue-100',
+    Thursday:  'bg-cyan-50 text-cyan-700 border border-cyan-100',
+    Friday:    'bg-emerald-50 text-emerald-700 border border-emerald-100',
+    Saturday:  'bg-amber-50 text-amber-700 border border-amber-100',
+    Sunday:    'bg-rose-50 text-rose-700 border border-rose-100',
+};
+
+const fmtTime = (t: string) => {
+    if (!t) return '';
+    const parts = t.split(':');
+    return `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}`;
 };
 
 type Section = 'overview' | 'athletes' | 'groups' | 'earnings';
@@ -328,11 +370,13 @@ export default function CoachDashboard({
     nextPayout,
     payoutHistory,
     totalEarned,
+    coachProfile,
 }: {
     groups: Group[];
     nextPayout: Payout | null;
     payoutHistory: Payout[];
     totalEarned: number;
+    coachProfile: CoachProfile | null;
 }) {
     const [activeSection, setActiveSection]     = useState<Section>('overview');
     const [selectedGroupIdx, setSelectedGroupIdx] = useState(0);
@@ -461,7 +505,7 @@ export default function CoachDashboard({
                         SECTION: OVERVIEW
                     ══════════════════════════════════════════════════════ */}
                     {activeSection === 'overview' && (
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
                             {/* Next Payout */}
                             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                                 <div className="bg-gradient-to-r from-emerald-50 to-teal-50 px-6 py-4 border-b border-emerald-100 flex items-center justify-between">
@@ -518,6 +562,47 @@ export default function CoachDashboard({
                                             <div className="w-14 h-14 bg-gray-100 rounded-2xl flex items-center justify-center text-2xl mb-4">📭</div>
                                             <p className="font-semibold text-gray-700 mb-1">No pending payout</p>
                                             <p className="text-sm text-gray-400">Your manager hasn't scheduled a payout yet.</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* My Profile & Compensation */}
+                            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
+                                <div className="bg-gradient-to-r from-indigo-50 to-blue-50 px-6 py-4 border-b border-indigo-100 flex items-center justify-between">
+                                    <div>
+                                        <h3 className="text-sm font-bold text-indigo-900">My Profile & Compensation</h3>
+                                        <p className="text-xs text-indigo-600 mt-0.5">Your specialization and pay settings</p>
+                                    </div>
+                                    <div className="w-9 h-9 bg-indigo-100 rounded-xl flex items-center justify-center text-lg">👤</div>
+                                </div>
+                                <div className="p-6 space-y-4 flex-1">
+                                    <div>
+                                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">Specialization</p>
+                                        <p className="text-sm font-bold text-gray-800">{coachProfile?.specialization || 'Not specified'}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">Compensation Plan</p>
+                                        {coachProfile?.payment_option ? (
+                                            <div className="flex items-center gap-2">
+                                                <span className="inline-flex items-center text-xs font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-lg">
+                                                    {coachProfile.payment_option === 'athlete' ? 'Per Athlete' : 
+                                                     coachProfile.payment_option === 'hourly' ? 'Hourly Rate' : 'Fixed Amount'}
+                                                </span>
+                                                <span className="text-sm font-black text-gray-900">
+                                                    €{Number(coachProfile.payment_rate || 0).toFixed(2)}
+                                                    {coachProfile.payment_option === 'hourly' ? '/hr' : 
+                                                     coachProfile.payment_option === 'athlete' ? '/athlete' : ''}
+                                                </span>
+                                            </div>
+                                        ) : (
+                                            <p className="text-xs text-gray-400 italic">No payment details set by manager yet.</p>
+                                        )}
+                                    </div>
+                                    {coachProfile?.bio && (
+                                        <div className="bg-slate-50 border border-gray-100 rounded-xl px-3 py-2">
+                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">My Biography</p>
+                                            <p className="text-xs text-gray-600 line-clamp-3 leading-relaxed">{coachProfile.bio}</p>
                                         </div>
                                     )}
                                 </div>
@@ -671,6 +756,26 @@ export default function CoachDashboard({
                                                 <p className="text-xs text-gray-500 mt-0.5">{selectedGroup.athletes.length} athletes · click to edit metrics</p>
                                             </div>
                                             <div className="w-9 h-9 bg-indigo-50 rounded-xl flex items-center justify-center text-lg">🥋</div>
+                                        </div>
+
+                                        {/* Weekly Schedule Section */}
+                                        <div className="px-6 py-4 border-b border-gray-50 bg-slate-50/50">
+                                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                                                <span>📅</span> Weekly Schedule
+                                            </p>
+                                            {!selectedGroup.schedules || selectedGroup.schedules.length === 0 ? (
+                                                <p className="text-xs text-gray-400 italic">No schedule set for this group.</p>
+                                            ) : (
+                                                <div className="flex flex-wrap gap-2">
+                                                    {selectedGroup.schedules.map((s, i) => (
+                                                        <span key={i} className={`inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-lg ${DAY_COLOR[s.day_of_week] ?? 'bg-gray-100 text-gray-600'}`}>
+                                                            <span>{DAY_SHORT[s.day_of_week]}</span>
+                                                            <span className="opacity-80">{fmtTime(s.start_time)}–{fmtTime(s.end_time)}</span>
+                                                            {(s.facility?.name || s.location) && <span className="opacity-65">· {s.facility?.name ?? s.location}</span>}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            )}
                                         </div>
 
                                         <div className="divide-y divide-gray-50 max-h-[600px] overflow-y-auto">
