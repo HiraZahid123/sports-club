@@ -76,8 +76,11 @@ const skillConfig: Record<string, { bg: string; text: string; border: string }> 
 
 const inputClass = "w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all";
 const smallInput = "w-full rounded-lg border border-gray-200 bg-gray-50 px-2 py-1.5 text-xs text-gray-800 focus:border-indigo-400 focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-400/20 transition-all";
+const HOURS = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'));
+const MINUTES = Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, '0'));
+const timeSelectClass = "w-[48px] text-center rounded-lg border border-gray-200 bg-gray-50 px-1 py-1.5 text-xs text-gray-800 focus:border-indigo-400 focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-400/20 transition-all cursor-pointer";
 
-const fmt12 = (t: string) => {
+const fmt24 = (t: string) => {
     if (!t) return '';
     const parts = t.split(':');
     return `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}`;
@@ -580,12 +583,56 @@ export default function GroupsIndex({ groups, coaches, athletes, ageCategories, 
                                                         </select>
                                                     </div>
                                                     {/* Start */}
-                                                    <div className="col-span-2">
-                                                        <input type="time" value={slot.start_time} onChange={e => updateSlot(idx, 'start_time', e.target.value)} className={smallInput} />
+                                                    <div className="col-span-2 flex items-center justify-start gap-1">
+                                                        <select
+                                                            value={(slot.start_time || '09:00').split(':')[0] || '09'}
+                                                            onChange={e => {
+                                                                const m = (slot.start_time || '09:00').split(':')[1] || '00';
+                                                                updateSlot(idx, 'start_time', `${e.target.value}:${m}`);
+                                                            }}
+                                                            className={timeSelectClass}
+                                                            style={{ appearance: 'none', WebkitAppearance: 'none', MozAppearance: 'none', backgroundImage: 'none', paddingLeft: '4px', paddingRight: '4px' }}
+                                                        >
+                                                            {HOURS.map(h => <option key={h} value={h}>{h}</option>)}
+                                                        </select>
+                                                        <span className="text-gray-400 font-bold">:</span>
+                                                        <select
+                                                            value={(slot.start_time || '09:00').split(':')[1] || '00'}
+                                                            onChange={e => {
+                                                                const h = (slot.start_time || '09:00').split(':')[0] || '09';
+                                                                updateSlot(idx, 'start_time', `${h}:${e.target.value}`);
+                                                            }}
+                                                            className={timeSelectClass}
+                                                            style={{ appearance: 'none', WebkitAppearance: 'none', MozAppearance: 'none', backgroundImage: 'none', paddingLeft: '4px', paddingRight: '4px' }}
+                                                        >
+                                                            {MINUTES.map(m => <option key={m} value={m}>{m}</option>)}
+                                                        </select>
                                                     </div>
                                                     {/* End */}
-                                                    <div className="col-span-2">
-                                                        <input type="time" value={slot.end_time} onChange={e => updateSlot(idx, 'end_time', e.target.value)} className={smallInput} />
+                                                    <div className="col-span-2 flex items-center justify-start gap-1">
+                                                        <select
+                                                            value={(slot.end_time || '10:00').split(':')[0] || '10'}
+                                                            onChange={e => {
+                                                                const m = (slot.end_time || '10:00').split(':')[1] || '00';
+                                                                updateSlot(idx, 'end_time', `${e.target.value}:${m}`);
+                                                            }}
+                                                            className={timeSelectClass}
+                                                            style={{ appearance: 'none', WebkitAppearance: 'none', MozAppearance: 'none', backgroundImage: 'none', paddingLeft: '4px', paddingRight: '4px' }}
+                                                        >
+                                                            {HOURS.map(h => <option key={h} value={h}>{h}</option>)}
+                                                        </select>
+                                                        <span className="text-gray-400 font-bold">:</span>
+                                                        <select
+                                                            value={(slot.end_time || '10:00').split(':')[1] || '00'}
+                                                            onChange={e => {
+                                                                const h = (slot.end_time || '10:00').split(':')[0] || '10';
+                                                                updateSlot(idx, 'end_time', `${h}:${e.target.value}`);
+                                                            }}
+                                                            className={timeSelectClass}
+                                                            style={{ appearance: 'none', WebkitAppearance: 'none', MozAppearance: 'none', backgroundImage: 'none', paddingLeft: '4px', paddingRight: '4px' }}
+                                                        >
+                                                            {MINUTES.map(m => <option key={m} value={m}>{m}</option>)}
+                                                        </select>
                                                     </div>
                                                     {/* Location */}
                                                     <div className="col-span-3">
@@ -715,7 +762,7 @@ export default function GroupsIndex({ groups, coaches, athletes, ageCategories, 
                                                         {group.schedules.map((s, i) => (
                                                             <span key={i} className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-lg ${DAY_COLOR[s.day_of_week] ?? 'bg-gray-100 text-gray-600'}`}>
                                                                 <span>{DAY_SHORT[s.day_of_week]}</span>
-                                                                <span className="opacity-70">{fmt12(s.start_time)}–{fmt12(s.end_time)}</span>
+                                                                <span className="opacity-70">{fmt24(s.start_time)}–{fmt24(s.end_time)}</span>
                                                                 {(s.facility?.name || s.location) && <span className="opacity-60">· {s.facility?.name ?? s.location}</span>}
                                                             </span>
                                                         ))}

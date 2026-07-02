@@ -33,6 +33,24 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        $user = Auth::user();
+
+        if ($user->hasRole(['Manager', 'Super Admin'])) {
+            return redirect()->route('manager.dashboard');
+        }
+
+        if ($user->hasRole('Coach')) {
+            return redirect()->route('coach.dashboard');
+        }
+
+        if ($user->hasRole('Athlete')) {
+            return redirect()->route('athlete.dashboard');
+        }
+
+        if ($user->hasRole('Parent')) {
+            return redirect()->route('parent.dashboard');
+        }
+
         return redirect()->intended(route('dashboard', absolute: false));
     }
 
