@@ -140,7 +140,17 @@ Route::middleware(['auth', 'verified', 'role:Coach', \App\Http\Middleware\CheckS
     })->name('dashboard');
 
     Route::get('/schedule', function () {
-        return Inertia::render('Coach/Schedule');
+        $coach = auth()->user();
+        $schedules = \App\Models\GroupSchedule::whereHas('group.users', function ($query) use ($coach) {
+            $query->where('user_id', $coach->id)->where('role_in_group', 'Coach');
+        })->with(['group', 'facility'])
+          ->orderByRaw("FIELD(day_of_week,'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday')")
+          ->orderBy('start_time')
+          ->get();
+
+        return Inertia::render('Coach/Schedule', [
+            'schedules' => $schedules,
+        ]);
     })->name('schedule');
 
     Route::post('/goals', [\App\Http\Controllers\GoalController::class, 'store'])->name('goals.store');

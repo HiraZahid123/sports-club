@@ -1,7 +1,30 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head } from '@inertiajs/react';
 
-export default function CoachSchedule() {
+interface ScheduleSlot {
+    id: number;
+    day_of_week: string;
+    start_time: string;
+    end_time: string;
+    location: string | null;
+    notes: string | null;
+    group: {
+        id: number;
+        name: string;
+    } | null;
+    facility?: {
+        id: number;
+        name: string;
+    } | null;
+}
+
+const fmtTime = (t: string) => {
+    if (!t) return '';
+    const parts = t.split(':');
+    return `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}`;
+};
+
+export default function CoachSchedule({ schedules = [] }: { schedules?: ScheduleSlot[] }) {
     return (
         <AuthenticatedLayout
             header={
@@ -33,25 +56,26 @@ export default function CoachSchedule() {
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200 text-left">
-                                    {/* Mock Data for Schedule */}
-                                    <tr>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Monday</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">16:00 - 17:30</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Beginners Group</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Main Hall (Mat 1)</td>
-                                    </tr>
-                                    <tr>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Wednesday</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">16:00 - 17:30</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Beginners Group</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Main Hall (Mat 1)</td>
-                                    </tr>
-                                    <tr>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Friday</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">18:00 - 20:00</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Elite Sparring</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Advanced Training Room</td>
-                                    </tr>
+                                    {schedules.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={4} className="px-6 py-8 text-center text-sm text-gray-500">
+                                                No scheduled training sessions.
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        schedules.map((slot) => (
+                                            <tr key={slot.id} className="hover:bg-slate-50 transition-colors">
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">{slot.day_of_week}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                    {fmtTime(slot.start_time)} - {fmtTime(slot.end_time)}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">{slot.group?.name ?? '—'}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                    {slot.facility?.name ?? slot.location ?? '—'}
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
                                 </tbody>
                             </table>
                         </div>
