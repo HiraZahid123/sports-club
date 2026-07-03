@@ -147,8 +147,8 @@ class User extends Authenticatable
             return true;
         }
 
-        return $this->subscriptions()
-            ->where('status', 'active')
+        return !$this->subscriptions()
+            ->where('status', '!=', 'active')
             ->exists();
     }
     /**
