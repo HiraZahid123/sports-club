@@ -20,9 +20,36 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): Response
     {
+        $user = $request->user();
+        $mySubscriptions = [];
+        $availablePlans = [];
+
+        if ($user->hasRole('Athlete')) {
+            $mySubscriptions = \App\Models\Subscription::where('user_id', $user->id)
+                ->with(['payments' => function ($q) {
+                    $q->latest();
+                }, 'trainingGroup', 'plan'])
+                ->latest()
+                ->get();
+
+            $subscribedGroupIds = \App\Models\Subscription::where('user_id', $user->id)
+                ->whereIn('status', ['active', 'unpaid', 'overdue'])
+                ->pluck('training_group_id')
+                ->toArray();
+
+            $availablePlans = \App\Models\SubscriptionPlan::where('club_id', $user->club_id)
+                ->where('is_active', true)
+                ->whereNotIn('training_group_id', $subscribedGroupIds)
+                ->with('trainingGroup')
+                ->orderBy('name')
+                ->get();
+        }
+
         return Inertia::render('Profile/Edit', [
-            'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
+            'mustVerifyEmail' => $user instanceof MustVerifyEmail,
             'status' => session('status'),
+            'mySubscriptions' => $mySubscriptions,
+            'availablePlans' => $availablePlans,
         ]);
     }
 

@@ -229,6 +229,8 @@ Route::middleware(['auth', 'verified', 'role:Athlete', \App\Http\Middleware\Chec
     Route::get('/events', [\App\Http\Controllers\EventController::class, 'athleteIndex'])->name('events.index');
     Route::post('/events/{event}/join', [\App\Http\Controllers\EventController::class, 'join'])->name('events.join');
     Route::post('/checkout/{subscription}', [\App\Http\Controllers\BillingController::class, 'createCheckoutSession'])->name('checkout');
+    Route::post('/profile/join-group', [\App\Http\Controllers\AthleteProfileController::class, 'joinGroup'])->name('profile.join-group');
+    Route::get('/billing/success', [\App\Http\Controllers\BillingController::class, 'paymentSuccess'])->name('billing.success');
 });
 
 // Parent Routes
@@ -244,6 +246,7 @@ Route::middleware(['auth', 'verified', 'role:Parent'])->prefix('parent')->name('
 
 Route::middleware('auth')->group(function () {
     Route::get('/subscription/locked', [\App\Http\Controllers\BillingController::class, 'subscriptionLocked'])->name('subscription.locked');
+    Route::get('/invoices/{payment}/download', [\App\Http\Controllers\InvoiceController::class, 'download'])->name('invoices.download');
 
     Route::prefix('messages')->name('messages.')->group(function () {
         Route::get('/', [\App\Http\Controllers\MessageController::class, 'index'])->name('index');

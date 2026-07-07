@@ -5,6 +5,8 @@ import { useRef, useState } from 'react';
 import DeleteUserForm from './Partials/DeleteUserForm';
 import UpdatePasswordForm from './Partials/UpdatePasswordForm';
 import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm';
+import AthleteSubscriptions from './Partials/AthleteSubscriptions';
+import JoinGroupForm from './Partials/JoinGroupForm';
 
 function ProfilePhotoCard({ status }: { status?: string }) {
     const user = usePage().props.auth.user as any;
@@ -139,7 +141,17 @@ function ProfilePhotoCard({ status }: { status?: string }) {
 export default function Edit({
     mustVerifyEmail,
     status,
-}: PageProps<{ mustVerifyEmail: boolean; status?: string }>) {
+    mySubscriptions = [],
+    availablePlans = [],
+}: PageProps<{
+    mustVerifyEmail: boolean;
+    status?: string;
+    mySubscriptions?: any[];
+    availablePlans?: any[];
+}>) {
+    const user = usePage().props.auth.user as any;
+    const isAthlete = user.roles?.includes('Athlete');
+
     return (
         <AuthenticatedLayout
             header={
@@ -163,6 +175,20 @@ export default function Edit({
                             className="max-w-xl"
                         />
                     </div>
+
+                    {isAthlete && (
+                        <>
+                            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8">
+                                <AthleteSubscriptions subscriptions={mySubscriptions} />
+                            </div>
+
+                            {availablePlans.length > 0 && (
+                                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8">
+                                    <JoinGroupForm availablePlans={availablePlans} />
+                                </div>
+                            )}
+                        </>
+                    )}
 
                     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8">
                         <UpdatePasswordForm className="max-w-xl" />

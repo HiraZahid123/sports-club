@@ -182,7 +182,16 @@ class BillingController extends Controller
         }
 
         try {
-            $checkoutSession = $stripeService->createCheckoutSession($subscription);
+            // Choose the correct success URL based on who is paying
+            if ($user->hasRole('Athlete')) {
+                $successUrl = route('athlete.billing.success') . '?session_id={CHECKOUT_SESSION_ID}';
+                $cancelUrl  = route('profile.edit');
+            } else {
+                $successUrl = route('parent.billing.success') . '?session_id={CHECKOUT_SESSION_ID}';
+                $cancelUrl  = route('parent.billing');
+            }
+
+            $checkoutSession = $stripeService->createCheckoutSession($subscription, $successUrl, $cancelUrl);
             return Inertia::location($checkoutSession->url);
         } catch (\Exception $e) {
             return back()->with('error', 'Failed to create checkout session: ' . $e->getMessage());
@@ -191,32 +200,34 @@ class BillingController extends Controller
 
     public function paymentSuccess(Request $request, \App\Services\StripeService $stripeService)
     {
+        $user = $request->user();
+        $redirectRoute = $user->hasRole('Athlete') ? 'profile.edit' : 'parent.billing';
+
         $sessionId = $request->query('session_id');
         if (!$sessionId) {
-            return redirect()->route('parent.billing')->with('error', 'Missing checkout session ID.');
+            return redirect()->route($redirectRoute)->with('error', 'Missing checkout session ID.');
         }
 
         try {
             $session = $stripeService->retrieveCheckoutSession($sessionId);
         } catch (\Exception $e) {
-            return redirect()->route('parent.billing')->with('error', 'Failed to retrieve checkout session details.');
+            return redirect()->route($redirectRoute)->with('error', 'Failed to retrieve checkout session details.');
         }
 
         if ($session->payment_status !== 'paid') {
-            return redirect()->route('parent.billing')->with('error', 'Payment has not been completed.');
+            return redirect()->route($redirectRoute)->with('error', 'Payment has not been completed.');
         }
 
         $subscriptionId = $session->metadata->subscription_id ?? null;
         if (!$subscriptionId) {
-            return redirect()->route('parent.billing')->with('error', 'Invalid payment metadata.');
+            return redirect()->route($redirectRoute)->with('error', 'Invalid payment metadata.');
         }
 
         $subscription = Subscription::with('user')->find($subscriptionId);
         if (!$subscription) {
-            return redirect()->route('parent.billing')->with('error', 'Subscription not found.');
+            return redirect()->route($redirectRoute)->with('error', 'Subscription not found.');
         }
 
-        $user = $request->user();
         $isOwned = $subscription->user_id === $user->id ||
                    $user->children()->where('users.id', $subscription->user_id)->exists();
 
@@ -226,7 +237,7 @@ class BillingController extends Controller
 
         $duplicate = Payment::where('transaction_id', $sessionId)->exists();
         if ($duplicate) {
-            return redirect()->route('parent.billing')->with('status', 'payment-already-processed');
+            return redirect()->route($redirectRoute)->with('status', 'payment-already-processed');
         }
 
         Payment::create([
@@ -245,7 +256,7 @@ class BillingController extends Controller
             'next_payment_at' => now()->addMonth(),
         ]);
 
-        if ($subscription->user->hasRole('Athlete')) {
+        if ($user->hasRole('Athlete')) {
             \App\Models\AthleteProfile::firstOrCreate(['user_id' => $subscription->user_id]);
 
             if ($subscription->training_group_id) {
@@ -254,9 +265,20 @@ class BillingController extends Controller
                 ]);
             }
 
-            return redirect()->route('athlete.dashboard')
+            return redirect()->route('profile.edit')
                 ->with('success', 'Your subscription payment was processed successfully!')
                 ->with('status', 'payment-success');
+        }
+
+        // For parents / others, perform the athlete association/sync for the subscriber user
+        if ($subscription->user && $subscription->user->hasRole('Athlete')) {
+            \App\Models\AthleteProfile::firstOrCreate(['user_id' => $subscription->user_id]);
+
+            if ($subscription->training_group_id) {
+                $subscription->user->trainingGroups()->syncWithoutDetaching([
+                    $subscription->training_group_id => ['role_in_group' => 'Athlete']
+                ]);
+            }
         }
 
         return redirect()->route('parent.billing')

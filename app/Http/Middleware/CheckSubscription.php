@@ -25,7 +25,7 @@ class CheckSubscription
             }
 
             if (!$user->isPaid()) {
-                if ($request->routeIs(['subscription.locked', 'logout', 'profile.*', 'parent.billing', 'parent.billing.*', 'athlete.checkout'])) {
+                if ($request->routeIs(['subscription.locked', 'logout', 'profile.*', 'parent.billing', 'parent.billing.*', 'athlete.checkout', 'athlete.profile.join-group', 'athlete.billing.success', 'invoices.download'])) {
                     return $next($request);
                 }
 

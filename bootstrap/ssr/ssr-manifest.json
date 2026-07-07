@@ -4,7 +4,7 @@
     "/build/assets/Login-DBJA-LuV.js"
   ],
   "resources/js/Components/DangerButton.tsx": [
-    "/build/assets/DeleteUserForm-Bm_xl2yn.js"
+    "/build/assets/DeleteUserForm-D0kPVq8V.js"
   ],
   "resources/js/Components/Dropdown.tsx": [
     "/build/assets/AuthenticatedLayout-CAEJzy7Q.js"
@@ -13,10 +13,10 @@
     "/build/assets/InputError-roYfmLKp.js"
   ],
   "resources/js/Components/InputLabel.tsx": [
-    "/build/assets/TextInput-f5gRkQj7.js"
+    "/build/assets/InputLabel-DDs2XNYP.js"
   ],
   "resources/js/Components/Modal.tsx": [
-    "/build/assets/DeleteUserForm-Bm_xl2yn.js"
+    "/build/assets/DeleteUserForm-D0kPVq8V.js"
   ],
   "resources/js/Components/NavLink.tsx": [
     "/build/assets/AuthenticatedLayout-CAEJzy7Q.js"
@@ -28,10 +28,10 @@
     "/build/assets/AuthenticatedLayout-CAEJzy7Q.js"
   ],
   "resources/js/Components/SecondaryButton.tsx": [
-    "/build/assets/DeleteUserForm-Bm_xl2yn.js"
+    "/build/assets/DeleteUserForm-D0kPVq8V.js"
   ],
   "resources/js/Components/TextInput.tsx": [
-    "/build/assets/TextInput-f5gRkQj7.js"
+    "/build/assets/TextInput-egt9uCZ_.js"
   ],
   "resources/js/Layouts/AuthenticatedLayout.tsx": [
     "/build/assets/AuthenticatedLayout-CAEJzy7Q.js"
@@ -130,16 +130,22 @@
     "/build/assets/Dashboard-DM0YUevf.js"
   ],
   "resources/js/Pages/Profile/Edit.tsx": [
-    "/build/assets/Edit-D5cmCLOM.js"
+    "/build/assets/Edit-DZrOU5hT.js"
+  ],
+  "resources/js/Pages/Profile/Partials/AthleteSubscriptions.tsx": [
+    "/build/assets/AthleteSubscriptions-ChU1lpDr.js"
   ],
   "resources/js/Pages/Profile/Partials/DeleteUserForm.tsx": [
-    "/build/assets/DeleteUserForm-Bm_xl2yn.js"
+    "/build/assets/DeleteUserForm-D0kPVq8V.js"
+  ],
+  "resources/js/Pages/Profile/Partials/JoinGroupForm.tsx": [
+    "/build/assets/JoinGroupForm-C-TneV5Z.js"
   ],
   "resources/js/Pages/Profile/Partials/UpdatePasswordForm.tsx": [
-    "/build/assets/UpdatePasswordForm-BoQN6Efg.js"
+    "/build/assets/UpdatePasswordForm-KUjEBxiO.js"
   ],
   "resources/js/Pages/Profile/Partials/UpdateProfileInformationForm.tsx": [
-    "/build/assets/UpdateProfileInformationForm-Bl223xY2.js"
+    "/build/assets/UpdateProfileInformationForm-ByHc9hmJ.js"
   ],
   "resources/js/Pages/SubscriptionLocked.tsx": [
     "/build/assets/SubscriptionLocked-Dz2tTh_-.js"
