@@ -76,32 +76,42 @@ export default function SubscriptionLocked({ subscriptions, club, userRole }: Pr
                                 {subscriptions.map(sub => {
                                     const badge = STATUS_LABEL[sub.status] ?? { label: sub.status, color: 'text-gray-600 bg-gray-100 border-gray-200' };
                                     return (
-                                        <div key={sub.id} className="rounded-2xl border border-gray-100 bg-slate-50 p-4 flex items-center justify-between gap-4">
-                                            <div className="min-w-0">
-                                                {sub.user && (
-                                                    <p className="text-xs font-semibold text-indigo-600 mb-0.5">{sub.user.name}</p>
-                                                )}
-                                                <p className="font-semibold text-gray-900 text-sm truncate">{sub.plan_name}</p>
-                                                {sub.training_group && (
-                                                    <p className="text-xs text-gray-400 mt-0.5">{sub.training_group.name}</p>
-                                                )}
-                                                {sub.next_payment_at && (
-                                                    <p className="text-xs text-gray-400 mt-1">
-                                                        Due: <span className="font-semibold text-gray-600">{sub.next_payment_at}</span>
+                                        <div key={sub.id} className="rounded-2xl border border-gray-100 bg-slate-50 p-4 flex flex-col gap-3">
+                                            <div className="flex items-center justify-between gap-4 w-full">
+                                                <div className="min-w-0">
+                                                    {sub.user && (
+                                                        <p className="text-xs font-semibold text-indigo-600 mb-0.5">{sub.user.name}</p>
+                                                    )}
+                                                    <p className="font-semibold text-gray-900 text-sm truncate">{sub.plan_name}</p>
+                                                    {sub.training_group && (
+                                                        <p className="text-xs text-gray-400 mt-0.5">{sub.training_group.name}</p>
+                                                    )}
+                                                    {sub.next_payment_at && (
+                                                        <p className="text-xs text-gray-400 mt-1">
+                                                            Due: <span className="font-semibold text-gray-600">{sub.next_payment_at}</span>
+                                                        </p>
+                                                    )}
+                                                </div>
+                                                <div className="text-right flex-shrink-0">
+                                                    <p className="text-lg font-black text-gray-900">
+                                                        €{Number(sub.amount).toFixed(2)}
                                                     </p>
-                                                )}
+                                                    <span className={`inline-block mt-1 text-xs font-bold px-2 py-0.5 rounded-lg border ${badge.color}`}>
+                                                        {badge.label}
+                                                    </span>
+                                                    <p className="text-xs text-gray-400 mt-1 capitalize">
+                                                        {sub.billing_cycle}
+                                                    </p>
+                                                </div>
                                             </div>
-                                            <div className="text-right flex-shrink-0">
-                                                <p className="text-lg font-black text-gray-900">
-                                                    €{Number(sub.amount).toFixed(2)}
-                                                </p>
-                                                <span className={`inline-block mt-1 text-xs font-bold px-2 py-0.5 rounded-lg border ${badge.color}`}>
-                                                    {badge.label}
-                                                </span>
-                                                <p className="text-xs text-gray-400 mt-1 capitalize">
-                                                    {sub.billing_cycle}
-                                                </p>
-                                            </div>
+                                            {!isParent && (sub.status === 'unpaid' || sub.status === 'overdue') && (
+                                                <button
+                                                    onClick={() => router.post(route('athlete.checkout', sub.id))}
+                                                    className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl text-center transition-all shadow-sm"
+                                                >
+                                                    💳 Pay Now
+                                                </button>
+                                            )}
                                         </div>
                                     );
                                 })}

@@ -11,6 +11,8 @@ interface Props {
 export default function RegisterJoin({ club: initialClub, prefill_code }: Props) {
     const [resolvedClub, setResolvedClub] = useState(initialClub);
     const [codeError, setCodeError] = useState('');
+    const [availableGroups, setAvailableGroups] = useState<Array<{ id: number; name: string }>>([]);
+    const [availablePlans, setAvailablePlans] = useState<Array<{ id: number; training_group_id: number | null; name: string; monthly_price: number | string; yearly_price: number | string; description: string | null }>>([]);
 
     const { data, setData, post, processing, errors, reset } = useForm({
         join_code: prefill_code || '',
@@ -20,6 +22,9 @@ export default function RegisterJoin({ club: initialClub, prefill_code }: Props)
         password: '',
         password_confirmation: '',
         child_email: '',
+        training_group_id: '',
+        subscription_plan_id: '',
+        billing_cycle: 'monthly' as 'monthly' | 'yearly',
     });
 
     const inputClass = 'w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all';
@@ -28,6 +33,8 @@ export default function RegisterJoin({ club: initialClub, prefill_code }: Props)
     const validateCode = async () => {
         setCodeError('');
         setResolvedClub(null);
+        setAvailableGroups([]);
+        setAvailablePlans([]);
         if (!data.join_code.trim()) return;
 
         try {
@@ -35,6 +42,8 @@ export default function RegisterJoin({ club: initialClub, prefill_code }: Props)
             if (res.ok) {
                 const json = await res.json();
                 setResolvedClub(json.club);
+                setAvailableGroups(json.groups || []);
+                setAvailablePlans(json.plans || []);
             } else {
                 setCodeError('No active club found with that code. Double-check and try again.');
             }
@@ -49,6 +58,10 @@ export default function RegisterJoin({ club: initialClub, prefill_code }: Props)
             onFinish: () => reset('password', 'password_confirmation'),
         });
     };
+
+    const filteredPlans = availablePlans.filter(
+        (p) => !p.training_group_id || String(p.training_group_id) === String(data.training_group_id)
+    );
 
     return (
         <div className="min-h-screen flex">
@@ -236,6 +249,88 @@ export default function RegisterJoin({ club: initialClub, prefill_code }: Props)
                                     <InputError message={errors.password_confirmation} className="mt-2" />
                                 </div>
                             </div>
+
+                            {/* Athlete: choose training group and subscription plan */}
+                            {data.role === 'Athlete' && resolvedClub && (
+                                <div className="bg-yellow-50/50 border border-yellow-100 rounded-xl p-4 space-y-4">
+                                    <p className="text-xs font-bold uppercase tracking-widest text-yellow-800">Step 4 — Choose Training Group & Subscription</p>
+
+                                    <div>
+                                        <label className={labelClass}>Training Group <span className="text-red-500">*</span></label>
+                                        <select
+                                            value={data.training_group_id}
+                                            onChange={(e) => {
+                                                const groupId = e.target.value;
+                                                setData((prev) => ({
+                                                    ...prev,
+                                                    training_group_id: groupId,
+                                                    subscription_plan_id: '',
+                                                }));
+                                            }}
+                                            className={inputClass}
+                                            required
+                                        >
+                                            <option value="">Select Training Group</option>
+                                            {availableGroups.map((g) => (
+                                                <option key={g.id} value={g.id}>{g.name}</option>
+                                            ))}
+                                        </select>
+                                        <InputError message={errors.training_group_id} className="mt-2" />
+                                    </div>
+
+                                    {data.training_group_id && (
+                                        <>
+                                            <div>
+                                                <label className={labelClass}>Subscription Plan <span className="text-red-500">*</span></label>
+                                                <select
+                                                    value={data.subscription_plan_id}
+                                                    onChange={(e) => setData('subscription_plan_id', e.target.value)}
+                                                    className={inputClass}
+                                                    required
+                                                >
+                                                    <option value="">Select Subscription Plan</option>
+                                                    {filteredPlans.map((p) => {
+                                                        const priceText = `Monthly: €${Number(p.monthly_price).toFixed(2)} | Yearly: €${Number(p.yearly_price).toFixed(2)}`;
+                                                        return (
+                                                            <option key={p.id} value={p.id}>
+                                                                {p.name} ({priceText})
+                                                            </option>
+                                                        );
+                                                    })}
+                                                </select>
+                                                <InputError message={errors.subscription_plan_id} className="mt-2" />
+                                            </div>
+
+                                            {data.subscription_plan_id && (
+                                                <div>
+                                                    <label className={labelClass}>Billing Cycle <span className="text-red-500">*</span></label>
+                                                    <div className="grid grid-cols-2 gap-3">
+                                                        {(['monthly', 'yearly'] as const).map((cycle) => {
+                                                            const plan = filteredPlans.find(p => String(p.id) === String(data.subscription_plan_id));
+                                                            const price = plan ? (cycle === 'yearly' ? plan.yearly_price : plan.monthly_price) : 0;
+                                                            return (
+                                                                <button
+                                                                    key={cycle}
+                                                                    type="button"
+                                                                    onClick={() => setData('billing_cycle', cycle)}
+                                                                    className={`py-3 px-4 rounded-xl border-2 text-sm font-bold capitalize transition-all ${
+                                                                        data.billing_cycle === cycle
+                                                                            ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                                                                            : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                                                                    }`}
+                                                                >
+                                                                    {cycle} (€{Number(price).toFixed(2)})
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                    <InputError message={errors.billing_cycle} className="mt-2" />
+                                                </div>
+                                            )}
+                                        </>
+                                    )}
+                                </div>
+                            )}
 
                             {/* Parent: link child */}
                             {data.role === 'Parent' && (

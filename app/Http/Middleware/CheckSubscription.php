@@ -25,7 +25,7 @@ class CheckSubscription
             }
 
             if (!$user->isPaid()) {
-                if ($request->routeIs(['subscription.locked', 'logout', 'profile.*', 'parent.billing', 'parent.billing.*'])) {
+                if ($request->routeIs(['subscription.locked', 'logout', 'profile.*', 'parent.billing', 'parent.billing.*', 'athlete.checkout'])) {
                     return $next($request);
                 }
 

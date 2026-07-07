@@ -24,8 +24,19 @@ Route::get('/api/clubs/validate-code', function (\Illuminate\Http\Request $reque
         return response()->json(['error' => 'Not found'], 404);
     }
 
-    return response()->json(['club' => ['id' => $club->id, 'name' => $club->name, 'join_code' => $club->join_code]]);
+    $groups = \App\Models\TrainingGroup::where('club_id', $club->id)->get(['id', 'name']);
+    $plans = \App\Models\SubscriptionPlan::where('club_id', $club->id)
+        ->where('is_active', true)
+        ->get(['id', 'training_group_id', 'name', 'monthly_price', 'yearly_price', 'description']);
+
+    return response()->json([
+        'club' => ['id' => $club->id, 'name' => $club->name, 'join_code' => $club->join_code],
+        'groups' => $groups,
+        'plans' => $plans,
+    ]);
 });
+
+Route::get('/register/success', [\App\Http\Controllers\Auth\RegisterJoinController::class, 'registerPaymentSuccess'])->name('register.payment.success');
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -217,6 +228,7 @@ Route::middleware(['auth', 'verified', 'role:Athlete', \App\Http\Middleware\Chec
 
     Route::get('/events', [\App\Http\Controllers\EventController::class, 'athleteIndex'])->name('events.index');
     Route::post('/events/{event}/join', [\App\Http\Controllers\EventController::class, 'join'])->name('events.join');
+    Route::post('/checkout/{subscription}', [\App\Http\Controllers\BillingController::class, 'createCheckoutSession'])->name('checkout');
 });
 
 // Parent Routes

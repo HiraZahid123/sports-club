@@ -245,6 +245,20 @@ class BillingController extends Controller
             'next_payment_at' => now()->addMonth(),
         ]);
 
+        if ($subscription->user->hasRole('Athlete')) {
+            \App\Models\AthleteProfile::firstOrCreate(['user_id' => $subscription->user_id]);
+
+            if ($subscription->training_group_id) {
+                $subscription->user->trainingGroups()->syncWithoutDetaching([
+                    $subscription->training_group_id => ['role_in_group' => 'Athlete']
+                ]);
+            }
+
+            return redirect()->route('athlete.dashboard')
+                ->with('success', 'Your subscription payment was processed successfully!')
+                ->with('status', 'payment-success');
+        }
+
         return redirect()->route('parent.billing')
             ->with('success', 'Your subscription payment was processed successfully!')
             ->with('status', 'payment-success');

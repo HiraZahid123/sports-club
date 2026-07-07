@@ -24,11 +24,14 @@ class StripeService
      * @return object
      * @throws \Exception
      */
-    public function createCheckoutSession(Subscription $subscription): object
+    public function createCheckoutSession(Subscription $subscription, ?string $successUrl = null, ?string $cancelUrl = null): object
     {
         if (!$this->client) {
             throw new \Exception('Stripe payment gateway is not configured.');
         }
+
+        $success = $successUrl ?? route('parent.billing.success') . '?session_id={CHECKOUT_SESSION_ID}';
+        $cancel  = $cancelUrl ?? route('parent.billing');
 
         return $this->client->checkout->sessions->create([
             'payment_method_types' => ['card'],
@@ -44,8 +47,8 @@ class StripeService
                 'quantity' => 1,
             ]],
             'mode' => 'payment',
-            'success_url' => route('parent.billing.success') . '?session_id={CHECKOUT_SESSION_ID}',
-            'cancel_url' => route('parent.billing'),
+            'success_url' => $success,
+            'cancel_url' => $cancel,
             'metadata' => [
                 'subscription_id' => $subscription->id,
             ],
