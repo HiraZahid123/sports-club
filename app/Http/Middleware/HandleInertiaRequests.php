@@ -44,6 +44,7 @@ class HandleInertiaRequests extends Middleware
                         ...$request->user()->club->toArray(),
                         'logo_path' => $request->user()->club->logo_path ? asset($request->user()->club->logo_path) : null,
                     ] : null,
+                    'athlete_profile' => $request->user()->athleteProfile ? $request->user()->athleteProfile->toArray() : null,
                 ] : null,
             ],
             'ziggy' => fn () => [

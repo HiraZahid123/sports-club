@@ -169,13 +169,50 @@ Route::middleware(['auth', 'verified', 'role:Athlete', \App\Http\Middleware\Chec
     Route::get('/dashboard', function () {
         $user = auth()->user();
         $profile = $user->athleteProfile;
+
+        // Count attended events
+        $eventsCount = \App\Models\EventRegistration::where('user_id', $user->id)
+            ->where('status', 'attended')
+            ->count();
+
+        // Classes and Sparring are not tracked in DB yet, so they default to 0
+        $classesCount = 0;
+        $sparringCount = 0;
+        $points = $profile ? ($profile->event_points ?? 0) : 0;
+
+        // Fetch upcoming schedule slots
+        $upcomingSchedules = \App\Models\GroupSchedule::whereHas('group.users', function ($query) use ($user) {
+            $query->where('user_id', $user->id)->where('role_in_group', 'Athlete');
+        })->with(['group.coaches', 'facility'])
+          ->orderByRaw("FIELD(day_of_week,'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday')")
+          ->orderBy('start_time')
+          ->limit(3)
+          ->get();
+
         return Inertia::render('Athlete/Dashboard', [
             'athleteProfile' => $profile,
+            'stats' => [
+                'classes' => $classesCount,
+                'sparring' => $sparringCount,
+                'events' => $eventsCount,
+                'points' => $points,
+            ],
+            'upcomingSchedules' => $upcomingSchedules,
         ]);
     })->name('dashboard');
 
     Route::get('/schedule', function () {
-        return Inertia::render('Athlete/Schedule');
+        $athlete = auth()->user();
+        $schedules = \App\Models\GroupSchedule::whereHas('group.users', function ($query) use ($athlete) {
+            $query->where('user_id', $athlete->id)->where('role_in_group', 'Athlete');
+        })->with(['group.coaches', 'facility'])
+          ->orderByRaw("FIELD(day_of_week,'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday')")
+          ->orderBy('start_time')
+          ->get();
+
+        return Inertia::render('Athlete/Schedule', [
+            'schedules' => $schedules,
+        ]);
     })->name('schedule');
 
     Route::get('/events', [\App\Http\Controllers\EventController::class, 'athleteIndex'])->name('events.index');

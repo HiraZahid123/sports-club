@@ -89,9 +89,14 @@ export default function Authenticated({
                                 )}
 
                                 {!isManager && !isParent && (user as any).roles?.includes('Athlete') && (
-                                    <NavLink href={route('athlete.events.index')} active={route().current('athlete.events.index')}>
-                                        Events
-                                    </NavLink>
+                                    <>
+                                        <NavLink href={route('athlete.events.index')} active={route().current('athlete.events.index')}>
+                                            Events
+                                        </NavLink>
+                                        <NavLink href={route('athlete.schedule')} active={route().current('athlete.schedule')}>
+                                            Schedule
+                                        </NavLink>
+                                    </>
                                 )}
 
                                 {!isManager && !isParent && (user as any).roles?.includes('Coach') && (
@@ -214,7 +219,10 @@ export default function Authenticated({
                         )}
 
                         {!isManager && !isParent && (user as any).roles?.includes('Athlete') && (
-                            <ResponsiveNavLink href={route('athlete.events.index')} active={route().current('athlete.events.index')}>Events</ResponsiveNavLink>
+                            <>
+                                <ResponsiveNavLink href={route('athlete.events.index')} active={route().current('athlete.events.index')}>Events</ResponsiveNavLink>
+                                <ResponsiveNavLink href={route('athlete.schedule')} active={route().current('athlete.schedule')}>Schedule</ResponsiveNavLink>
+                            </>
                         )}
 
                         {!isManager && !isParent && (user as any).roles?.includes('Coach') && (

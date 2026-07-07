@@ -72,14 +72,37 @@ function MetricsCard({ athleteProfile }: { athleteProfile?: AthleteProfile | nul
 
 // ── Main Component ────────────────────────────────────────────────────────────
 
-export default function AthleteDashboard({ athleteProfile }: { athleteProfile?: AthleteProfile | null }) {
+interface UpcomingScheduleSlot {
+    id: number;
+    day_of_week: string;
+    start_time: string;
+    end_time: string;
+    location: string | null;
+    group: {
+        name: string;
+        coaches?: Array<{ name: string }>;
+    };
+    facility?: {
+        name: string;
+    } | null;
+}
+
+export default function AthleteDashboard({
+    athleteProfile,
+    stats = { classes: 0, sparring: 0, events: 0, points: 0 },
+    upcomingSchedules = [],
+}: {
+    athleteProfile?: AthleteProfile | null;
+    stats?: { classes: number; sparring: number; events: number; points: number };
+    upcomingSchedules?: UpcomingScheduleSlot[];
+}) {
     const belt = athleteProfile?.belt_rank || '10. WHITE';
     const cardStyle = getBeltCardGradient(belt);
     const progressStats = [
-        { label: 'Classes', val: '24', icon: '📚', color: 'bg-blue-50 border-blue-100 text-blue-600' },
-        { label: 'Sparring', val: '15', icon: '🥊', color: 'bg-rose-50 border-rose-100 text-rose-600' },
-        { label: 'Events', val: '2', icon: '🏅', color: 'bg-amber-50 border-amber-100 text-amber-600' },
-        { label: 'Points', val: '450', icon: '⭐', color: 'bg-indigo-50 border-indigo-100 text-indigo-600' },
+        { label: 'Classes', val: String(stats.classes), icon: '📚', color: 'bg-blue-50 border-blue-100 text-blue-600' },
+        { label: 'Sparring', val: String(stats.sparring), icon: '🥊', color: 'bg-rose-50 border-rose-100 text-rose-600' },
+        { label: 'Events', val: String(stats.events), icon: '🏅', color: 'bg-amber-50 border-amber-100 text-amber-600' },
+        { label: 'Points', val: String(stats.points), icon: '⭐', color: 'bg-indigo-50 border-indigo-100 text-indigo-600' },
     ];
 
     return (
@@ -170,23 +193,38 @@ export default function AthleteDashboard({ athleteProfile }: { athleteProfile?: 
                                 <Link href={route('athlete.schedule')} className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 transition-colors">View All</Link>
                             </div>
                             <div className="divide-y divide-gray-50">
-                                {[
-                                    { day: '16', month: 'May', title: 'Elite Sparring Session', coach: 'Master Kim', time: '18:00', color: 'border-indigo-400 bg-indigo-50' },
-                                    { day: '18', month: 'May', title: 'Belt Grading Prep', coach: 'Coach Lee', time: '16:00', color: 'border-emerald-400 bg-emerald-50' },
-                                    { day: '22', month: 'May', title: 'Pattern Practice', coach: 'Master Kim', time: '17:30', color: 'border-blue-400 bg-blue-50' },
-                                ].map((event, i) => (
-                                    <div key={i} className={`flex items-center gap-4 px-6 py-4 hover:bg-slate-50 transition-colors border-l-4 ${event.color}`}>
-                                        <div className="text-center w-10 shrink-0">
-                                            <p className="text-lg font-black text-gray-900 leading-none">{event.day}</p>
-                                            <p className="text-[10px] font-bold text-gray-400 uppercase">{event.month}</p>
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="font-semibold text-gray-900 text-sm">{event.title}</p>
-                                            <p className="text-xs text-gray-500">{event.coach} • {event.time}</p>
-                                        </div>
-                                        <Link href={route('athlete.schedule')} className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 shrink-0 transition-colors">Details</Link>
+                                {upcomingSchedules.length > 0 ? (
+                                    upcomingSchedules.map((slot) => {
+                                        const coaches = slot.group.coaches?.map(c => c.name).join(', ') || 'No Coach';
+                                        const loc = slot.facility?.name || slot.location || 'Main Hall';
+                                        const dayColor = {
+                                            Monday: 'border-indigo-400 bg-indigo-50/50 text-indigo-700',
+                                            Tuesday: 'border-purple-400 bg-purple-50/50 text-purple-700',
+                                            Wednesday: 'border-blue-400 bg-blue-50/50 text-blue-700',
+                                            Thursday: 'border-cyan-400 bg-cyan-50/50 text-cyan-700',
+                                            Friday: 'border-emerald-400 bg-emerald-50/50 text-emerald-700',
+                                            Saturday: 'border-amber-400 bg-amber-50/50 text-amber-700',
+                                            Sunday: 'border-rose-400 bg-rose-50/50 text-rose-700',
+                                        }[slot.day_of_week] || 'border-gray-400 bg-gray-50';
+
+                                        return (
+                                            <div key={slot.id} className={`flex items-center gap-4 px-6 py-4 hover:bg-slate-50 transition-colors border-l-4 ${dayColor}`}>
+                                                <div className="text-center w-16 shrink-0">
+                                                    <p className="text-xs font-extrabold uppercase tracking-wide">{slot.day_of_week.substring(0, 3)}</p>
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="font-semibold text-gray-900 text-sm">{slot.group.name}</p>
+                                                    <p className="text-xs text-gray-500">{coaches} • {slot.start_time.substring(0, 5)} - {slot.end_time.substring(0, 5)}</p>
+                                                </div>
+                                                <span className="text-xs text-gray-400 bg-gray-50 px-2 py-1 rounded border border-gray-100 truncate max-w-28 text-center">{loc}</span>
+                                            </div>
+                                        );
+                                    })
+                                ) : (
+                                    <div className="p-6 text-center text-gray-500 text-sm">
+                                        No upcoming training sessions this week.
                                     </div>
-                                ))}
+                                )}
                             </div>
                         </div>
 
