@@ -56,6 +56,7 @@ interface CoachProfile {
 interface Payout {
     id: number;
     amount: string;
+    tip?: string | number | null;
     payout_date: string;
     status: string;
     notes: string | null;
@@ -874,7 +875,14 @@ export default function CoachDashboard({
                                                         </svg>
                                                     </div>
                                                     <div>
-                                                        <p className="text-sm font-semibold text-gray-900">{fmtCurrency(payout.amount)}</p>
+                                                        <p className="text-sm font-semibold text-gray-900">
+                                                            {fmtCurrency(payout.amount)}
+                                                            {payout.tip && Number(payout.tip) > 0 && (
+                                                                <span className="text-xs text-amber-600 font-medium ml-1">
+                                                                    (incl. {fmtCurrency(payout.tip)} tip)
+                                                                </span>
+                                                            )}
+                                                        </p>
                                                         <p className="text-xs text-gray-400">{fmt(payout.payout_date)}</p>
                                                     </div>
                                                 </div>

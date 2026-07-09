@@ -34,8 +34,9 @@ export default function ManagerDashboard({ stats }: { stats: any }) {
             valueCls: 'text-indigo-600',
         },
         {
-            name: 'Monthly Revenue',
-            value: `€${stats.monthlyRevenue}`,
+            name: 'Monthly Net Revenue',
+            value: `€${Number(stats.monthlyNetRevenue ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+            subText: `Gross: €${Number(stats.monthlyRevenue ?? 0).toLocaleString()} | Payouts: €${Number(stats.monthlyPayouts ?? 0).toLocaleString()}`,
             href: route('manager.reports.index'),
             icon: (
                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -105,6 +106,9 @@ export default function ManagerDashboard({ stats }: { stats: any }) {
                                     </div>
                                     <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 transition-colors group-hover:text-gray-700">{card.name}</p>
                                     <p className={`text-3xl font-black ${card.valueCls}`}>{card.value}</p>
+                                    {card.subText && (
+                                        <p className="text-[11px] text-gray-400 mt-1.5 font-bold transition-colors group-hover:text-gray-500">{card.subText}</p>
+                                    )}
                                 </div>
                             </Link>
                         ))}

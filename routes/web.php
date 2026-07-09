@@ -55,12 +55,21 @@ Route::get('/dashboard', function () {
 Route::middleware(['auth', 'verified', 'role:Manager|Super Admin'])->prefix('manager')->name('manager.')->group(function () {
     Route::get('/dashboard', function () {
         $clubId = auth()->user()->club_id;
+        $monthlyRevenue = \App\Models\Payment::whereHas('subscription', function($q) use ($clubId) {
+            $q->where('club_id', $clubId);
+        })->whereMonth('payment_date', now()->month)->sum('amount');
+
+        $monthlyPayouts = \App\Models\CoachPayout::where('club_id', $clubId)
+            ->whereMonth('payout_date', now()->month)
+            ->where('status', 'paid')
+            ->sum('amount');
+
         $stats = [
             'totalMembers' => \App\Models\User::where('club_id', $clubId)->count(),
             'activeGroups' => \App\Models\TrainingGroup::where('club_id', $clubId)->count(),
-            'monthlyRevenue' => \App\Models\Payment::whereHas('subscription', function($q) use ($clubId) {
-                $q->where('club_id', $clubId);
-            })->whereMonth('payment_date', now()->month)->sum('amount'),
+            'monthlyRevenue' => $monthlyRevenue,
+            'monthlyPayouts' => $monthlyPayouts,
+            'monthlyNetRevenue' => $monthlyRevenue - $monthlyPayouts,
             'overdueCount' => \App\Models\Subscription::where('club_id', $clubId)->where('status', 'overdue')->count(),
         ];
         return Inertia::render('Manager/Dashboard', ['stats' => $stats]);

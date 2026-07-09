@@ -10,6 +10,7 @@ class CoachPayout extends Model
         'user_id',
         'club_id',
         'amount',
+        'tip',
         'payout_date',
         'status',
         'notes',

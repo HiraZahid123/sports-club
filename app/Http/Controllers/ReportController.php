@@ -22,11 +22,32 @@ class ReportController extends Controller
         $revenueData = Payment::whereHas('subscription', function($q) use ($clubId) {
                 $q->where('club_id', $clubId);
             })
-            ->select(DB::raw('SUM(amount) as total'), DB::raw("DATE_FORMAT(payment_date, '%b %Y') as month"))
-            ->groupBy('month')
+            ->select(DB::raw('SUM(amount) as total'), DB::raw("DATE_FORMAT(payment_date, '%Y-%m') as month_key"), DB::raw("DATE_FORMAT(payment_date, '%b %Y') as month"))
+            ->groupBy('month_key', 'month')
             ->orderBy('payment_date', 'desc')
             ->limit(6)
             ->get();
+
+        // Coach Payouts by month (last 6 months)
+        $payoutsData = CoachPayout::where('club_id', $clubId)
+            ->where('status', 'paid')
+            ->select(DB::raw('SUM(amount) as total'), DB::raw("DATE_FORMAT(payout_date, '%Y-%m') as month_key"))
+            ->groupBy('month_key')
+            ->get()
+            ->keyBy('month_key');
+
+        // Consolidate monthly income and payouts
+        $financials = $revenueData->map(function ($item) use ($payoutsData) {
+            $monthKey = $item->month_key;
+            $payout = $payoutsData->get($monthKey);
+            $payoutTotal = $payout ? (float) $payout->total : 0.0;
+            return [
+                'month' => $item->month,
+                'income' => (float) $item->total,
+                'payouts' => $payoutTotal,
+                'net' => (float) $item->total - $payoutTotal,
+            ];
+        });
 
         // Coach List with compensation data
         $coaches = User::role('Coach')
@@ -34,7 +55,10 @@ class ReportController extends Controller
             ->with([
                 'coachProfile',
                 'trainingGroups.athletes',
-                'trainingGroups.schedules'
+                'trainingGroups.schedules',
+                'coachPayouts' => function($q) {
+                    $q->orderBy('payout_date', 'desc');
+                }
             ])
             ->get();
 
@@ -47,6 +71,7 @@ class ReportController extends Controller
 
         return Inertia::render('Manager/Reports/Index', [
             'revenueData' => $revenueData,
+            'financials' => $financials,
             'coaches' => $coaches,
             'recentPayouts' => $recentPayouts,
         ]);
@@ -59,14 +84,23 @@ class ReportController extends Controller
     {
         $validated = $request->validate([
             'user_id' => 'required|exists:users,id',
-            'amount' => 'required|numeric|min:1',
+            'amount' => 'required|numeric|min:0.01',
+            'tip' => 'nullable|numeric|min:0',
             'payout_date' => 'required|date',
             'payment_type' => 'required|string|in:Monthly Salary,Hourly Rate,Per Session,Commission,Bonus,Per Athlete,Fixed Amount',
             'notes' => 'nullable|string',
         ]);
 
+        $baseAmount = (float) $validated['amount'];
+        $tipAmount = (float) ($validated['tip'] ?? 0.00);
+
         CoachPayout::create([
-            ...$validated,
+            'user_id' => $validated['user_id'],
+            'amount' => $baseAmount + $tipAmount,
+            'tip' => $tipAmount,
+            'payout_date' => $validated['payout_date'],
+            'payment_type' => $validated['payment_type'],
+            'notes' => $validated['notes'],
             'club_id' => $request->user()->club_id,
             'status' => 'paid',
         ]);

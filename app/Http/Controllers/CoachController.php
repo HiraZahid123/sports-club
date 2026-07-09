@@ -18,6 +18,9 @@ class CoachController extends Controller
                 'coachProfile',
                 'trainingGroups.athletes',
                 'trainingGroups.schedules',
+                'coachPayouts' => function($q) {
+                    $q->orderBy('payout_date', 'desc');
+                }
             ])
             ->get();
 

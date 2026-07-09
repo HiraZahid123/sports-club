@@ -23,6 +23,16 @@ interface TrainingGroup {
     schedules: Schedule[];
 }
 
+interface Payout {
+    id: number;
+    amount: string | number;
+    tip: string | number;
+    payout_date: string;
+    status: string;
+    notes?: string | null;
+    payment_type?: string | null;
+}
+
 interface Coach {
     id: number;
     name: string;
@@ -31,6 +41,7 @@ interface Coach {
     city?: string | null;
     coach_profile?: CoachProfile | null;
     training_groups: TrainingGroup[];
+    coach_payouts?: Payout[];
 }
 
 const OPTION_META = {
@@ -72,7 +83,7 @@ function calcEarning(coach: Coach) {
 
 export default function CoachesIndex({ coaches }: { coaches: Coach[] }) {
     const [editing, setEditing] = useState<Coach | null>(null);
-    const [activeTab, setActiveTab] = useState<'info' | 'salary'>('info');
+    const [activeTab, setActiveTab] = useState<'info' | 'salary' | 'payouts'>('info');
 
     const { data, setData, put, processing, errors, reset, clearErrors } = useForm({
         name: '',
@@ -258,16 +269,25 @@ export default function CoachesIndex({ coaches }: { coaches: Coach[] }) {
                         {/* Tabs */}
                         <div className="flex border-b border-gray-100 shrink-0">
                             <button
+                                type="button"
                                 onClick={() => setActiveTab('info')}
                                 className={`flex-1 py-3 text-sm font-bold transition-colors ${activeTab === 'info' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-500 hover:text-gray-700'}`}
                             >
                                 Coach Information
                             </button>
                             <button
+                                type="button"
                                 onClick={() => setActiveTab('salary')}
                                 className={`flex-1 py-3 text-sm font-bold transition-colors ${activeTab === 'salary' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-500 hover:text-gray-700'}`}
                             >
                                 Salary & Revenue
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setActiveTab('payouts')}
+                                className={`flex-1 py-3 text-sm font-bold transition-colors ${activeTab === 'payouts' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-500 hover:text-gray-700'}`}
+                            >
+                                Payout History
                             </button>
                         </div>
 
@@ -466,24 +486,84 @@ export default function CoachesIndex({ coaches }: { coaches: Coach[] }) {
                                         )}
                                     </>
                                 )}
+                                {activeTab === 'payouts' && (
+                                    <div className="space-y-4">
+                                        <div className="flex items-center justify-between border-b border-gray-100 pb-2">
+                                            <h4 className="text-sm font-bold text-gray-900">Payout History</h4>
+                                            <span className="text-xs text-gray-500 font-medium">{(editing.coach_payouts || []).length} payout(s)</span>
+                                        </div>
+
+                                        <div className="divide-y divide-gray-100 max-h-[350px] overflow-y-auto pr-1">
+                                            {(editing.coach_payouts || []).map((payout) => (
+                                                <div key={payout.id} className="py-3 flex items-center justify-between text-sm">
+                                                    <div>
+                                                        <div className="flex items-center gap-2">
+                                                            <p className="font-semibold text-gray-950">
+                                                                €{Number(payout.amount).toFixed(2)}
+                                                            </p>
+                                                            {payout.payment_type && (
+                                                                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">
+                                                                    {payout.payment_type}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <p className="text-xs text-gray-400 mt-0.5">
+                                                            {new Date(payout.payout_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                                            {payout.tip && parseFloat(payout.tip.toString()) > 0 && (
+                                                                <span className="text-amber-600 font-semibold ml-2">
+                                                                    (incl. €{parseFloat(payout.tip.toString()).toFixed(2)} tip)
+                                                                </span>
+                                                            )}
+                                                        </p>
+                                                        {payout.notes && (
+                                                            <p className="text-xs text-gray-500 italic mt-1 bg-slate-50 p-1.5 rounded-lg border border-slate-100">
+                                                                Note: {payout.notes}
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                    <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-lg border border-emerald-100">
+                                                        Paid
+                                                    </span>
+                                                </div>
+                                            ))}
+                                            {(!editing.coach_payouts || editing.coach_payouts.length === 0) && (
+                                                <div className="py-8 text-center text-gray-400 text-xs italic">
+                                                    No payout recorded for this coach yet.
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Modal footer */}
                             <div className="shrink-0 px-6 py-4 border-t border-gray-100 flex gap-3">
-                                <button
-                                    type="button"
-                                    onClick={closeEdit}
-                                    className="flex-1 py-2.5 bg-gray-100 text-gray-700 text-sm font-semibold rounded-xl hover:bg-gray-200 transition-all"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={processing}
-                                    className="flex-1 py-2.5 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 transition-all disabled:opacity-50 shadow-sm"
-                                >
-                                    {processing ? 'Saving…' : 'Save Coach'}
-                                </button>
+                                {activeTab === 'payouts' ? (
+                                    <button
+                                        type="button"
+                                        onClick={closeEdit}
+                                        className="w-full py-2.5 bg-gray-100 text-gray-700 text-sm font-semibold rounded-xl hover:bg-gray-200 transition-all"
+                                    >
+                                        Close
+                                    </button>
+                                ) : (
+                                    <>
+                                        <button
+                                            type="button"
+                                            onClick={closeEdit}
+                                            className="flex-1 py-2.5 bg-gray-100 text-gray-700 text-sm font-semibold rounded-xl hover:bg-gray-200 transition-all"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            type="submit"
+                                            disabled={processing}
+                                            className="flex-1 py-2.5 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 transition-all disabled:opacity-50 shadow-sm"
+                                        >
+                                            {processing ? 'Saving…' : 'Save Coach'}
+                                        </button>
+                                    </>
+                                )}
                             </div>
                         </form>
                     </div>

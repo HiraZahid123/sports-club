@@ -12,11 +12,12 @@ const paymentTypeBadges: Record<string, string> = {
     'Bonus':          'bg-rose-50 text-rose-700 border-rose-100',
 };
 
-export default function ReportsIndex({ revenueData, coaches, recentPayouts }: any) {
+export default function ReportsIndex({ revenueData, financials = [], coaches, recentPayouts }: any) {
     const [selectedCoach, setSelectedCoach] = useState<any>(null);
     const { data, setData, post, processing, reset } = useForm({
         user_id: '',
         amount: '',
+        tip: '',
         payout_date: new Date().toISOString().split('T')[0],
         payment_type: 'Fixed Amount',
         notes: '',
@@ -26,6 +27,7 @@ export default function ReportsIndex({ revenueData, coaches, recentPayouts }: an
     const [pricePerAthlete, setPricePerAthlete] = useState('10');
     const [pricePerHour, setPricePerHour] = useState('');
     const [numberOfWeeks, setNumberOfWeeks] = useState('4');
+    const [isManualAmountOverride, setIsManualAmountOverride] = useState(false);
 
     // Coach Payout Settings States
     const [selectedCoachSettings, setSelectedCoachSettings] = useState<any>(null);
@@ -61,6 +63,7 @@ export default function ReportsIndex({ revenueData, coaches, recentPayouts }: an
         const defaultRate = profile?.payment_rate || '0';
 
         setCalcOption(defaultOpt);
+        setIsManualAmountOverride(false);
 
         if (defaultOpt === 'athlete') {
             setPricePerAthlete(defaultRate.toString() || '10');
@@ -74,6 +77,7 @@ export default function ReportsIndex({ revenueData, coaches, recentPayouts }: an
         setData({
             user_id: coach.id,
             amount: '',
+            tip: '',
             payout_date: new Date().toISOString().split('T')[0],
             payment_type: defaultOpt === 'athlete' ? 'Per Athlete' : (defaultOpt === 'hourly' ? 'Hourly Rate' : 'Fixed Amount'),
             notes: '',
@@ -104,6 +108,7 @@ export default function ReportsIndex({ revenueData, coaches, recentPayouts }: an
 
     useEffect(() => {
         if (!selectedCoach) return;
+        if (isManualAmountOverride) return;
 
         if (calcOption === 'athlete') {
             const amt = athleteCount * (parseFloat(pricePerAthlete) || 0);
@@ -114,20 +119,25 @@ export default function ReportsIndex({ revenueData, coaches, recentPayouts }: an
         } else {
             setData(d => ({ ...d, payment_type: 'Fixed Amount' }));
         }
-    }, [calcOption, pricePerAthlete, pricePerHour, numberOfWeeks, selectedCoach, athleteCount, totalWeeklyHours]);
+    }, [calcOption, pricePerAthlete, pricePerHour, numberOfWeeks, selectedCoach, athleteCount, totalWeeklyHours, isManualAmountOverride]);
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
         post(route('manager.payouts.store'), {
             onSuccess: () => {
                 setSelectedCoach(null);
+                setIsManualAmountOverride(false);
                 reset();
             },
         });
     };
 
-    const maxRevenue = revenueData.length > 0 ? Math.max(...revenueData.map((d: any) => parseFloat(d.total))) : 1;
-    const totalRevenue = revenueData.reduce((sum: number, d: any) => sum + parseFloat(d.total), 0);
+    // Use consolidated financials data for totals, falling back to revenueData if empty
+    const totalRevenue = financials.reduce((sum: number, d: any) => sum + d.income, 0);
+    const totalPayouts = financials.reduce((sum: number, d: any) => sum + d.payouts, 0);
+    const totalNetRevenue = financials.reduce((sum: number, d: any) => sum + d.net, 0);
+
+    const maxFinanceVal = financials.length > 0 ? Math.max(...financials.map((d: any) => Math.max(d.income, d.payouts))) : 1;
 
     return (
         <AuthenticatedLayout
@@ -145,41 +155,82 @@ export default function ReportsIndex({ revenueData, coaches, recentPayouts }: an
 
                     {/* Revenue Chart */}
                     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                        <div className="px-6 py-5 border-b border-gray-50 flex items-center justify-between">
+                        <div className="px-6 py-5 border-b border-gray-50 flex flex-wrap gap-4 items-center justify-between">
                             <div>
-                                <h3 className="text-base font-bold text-gray-900">Revenue Trends</h3>
-                                <p className="text-xs text-gray-500 mt-0.5">Last 6 months performance</p>
+                                <h3 className="text-base font-bold text-gray-900">Revenue & Compensation Trends</h3>
+                                <p className="text-xs text-gray-500 mt-0.5">Last 6 months performance (Income vs. Coach Payouts)</p>
                             </div>
-                            <div className="text-right">
-                                <p className="text-xs text-gray-400 font-medium">6-Month Total</p>
-                                <p className="text-xl font-black text-indigo-600">€{totalRevenue.toLocaleString()}</p>
+                            <div className="flex gap-6 text-sm">
+                                <div className="text-right">
+                                    <p className="text-xs text-gray-400 font-semibold">6-Month Gross Income</p>
+                                    <p className="text-lg font-black text-indigo-600">€{totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                                </div>
+                                <div className="text-right border-l border-gray-100 pl-6">
+                                    <p className="text-xs text-gray-400 font-semibold">6-Month Coach Payouts</p>
+                                    <p className="text-lg font-black text-rose-600">€{totalPayouts.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                                </div>
+                                <div className="text-right border-l border-gray-100 pl-6">
+                                    <p className="text-xs text-gray-400 font-semibold">6-Month Net Profit</p>
+                                    <p className={`text-lg font-black ${totalNetRevenue >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                        €{totalNetRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    </p>
+                                </div>
                             </div>
                         </div>
                         <div className="p-6">
-                            {revenueData.length === 0 ? (
+                            {financials.length === 0 ? (
                                 <div className="flex flex-col items-center justify-center h-40 text-gray-400">
                                     <span className="text-3xl mb-2">📊</span>
                                     <p className="text-sm">No revenue data available yet.</p>
                                 </div>
                             ) : (
-                                <div className="flex items-end gap-3 h-52">
-                                    {revenueData.map((d: any, idx: number) => {
-                                        const pct = maxRevenue > 0 ? (parseFloat(d.total) / maxRevenue) * 100 : 0;
-                                        return (
-                                            <div key={idx} className="flex-1 flex flex-col items-center group">
-                                                <div className="relative w-full flex flex-col items-center">
-                                                    <span className="mb-1 text-xs font-bold text-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        €{Number(d.total).toLocaleString()}
+                                <div className="space-y-6">
+                                    <div className="flex items-end gap-6 h-56 pt-6">
+                                        {financials.map((d: any, idx: number) => {
+                                            const incomePct = maxFinanceVal > 0 ? (d.income / maxFinanceVal) * 100 : 0;
+                                            const payoutPct = maxFinanceVal > 0 ? (d.payouts / maxFinanceVal) * 100 : 0;
+                                            return (
+                                                <div key={idx} className="flex-1 flex flex-col items-center group relative">
+                                                    <div className="w-full flex items-end justify-center gap-1.5 h-44 border-b border-gray-50 pb-1">
+                                                        {/* Income Bar */}
+                                                        <div className="flex flex-col items-center flex-1 max-w-[28px] h-full justify-end group/income relative">
+                                                            <span className="absolute -top-7 text-[10px] font-bold text-white bg-indigo-700 px-2 py-0.5 rounded shadow-md opacity-0 group-hover/income:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none">
+                                                                Inc: €{Number(d.income).toFixed(2)}
+                                                            </span>
+                                                            <div
+                                                                className="w-full bg-indigo-100 group-hover/income:bg-indigo-600 rounded-t-md transition-all duration-300 cursor-pointer"
+                                                                style={{ height: `${Math.max(incomePct, 4)}%` }}
+                                                            ></div>
+                                                        </div>
+                                                        {/* Payout Bar */}
+                                                        <div className="flex flex-col items-center flex-1 max-w-[28px] h-full justify-end group/payout relative">
+                                                            <span className="absolute -top-7 text-[10px] font-bold text-white bg-rose-700 px-2 py-0.5 rounded shadow-md opacity-0 group-hover/payout:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none">
+                                                                Pay: €{Number(d.payouts).toFixed(2)}
+                                                            </span>
+                                                            <div
+                                                                className="w-full bg-rose-100 group-hover/payout:bg-rose-500 rounded-t-md transition-all duration-300 cursor-pointer"
+                                                                style={{ height: `${Math.max(payoutPct, 4)}%` }}
+                                                            ></div>
+                                                        </div>
+                                                    </div>
+                                                    <span className="mt-2 text-[10px] font-bold text-gray-500 uppercase tracking-wide">{d.month}</span>
+                                                    <span className={`mt-1 text-[9px] font-extrabold px-1.5 py-0.5 rounded-md ${d.net >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
+                                                        Net: €{Number(d.net).toFixed(0)}
                                                     </span>
-                                                    <div
-                                                        className="w-full bg-indigo-100 group-hover:bg-indigo-600 rounded-t-xl transition-all duration-300 cursor-pointer"
-                                                        style={{ height: `${Math.max(pct * 1.8, 6)}px` }}
-                                                    ></div>
                                                 </div>
-                                                <span className="mt-3 text-[10px] font-bold text-gray-400 uppercase tracking-wide">{d.month}</span>
-                                            </div>
-                                        );
-                                    })}
+                                            );
+                                        })}
+                                    </div>
+                                    <div className="flex justify-center gap-6 text-xs font-semibold pt-2 border-t border-gray-50 text-gray-500">
+                                        <div className="flex items-center gap-1.5">
+                                            <span className="w-3 h-3 bg-indigo-600 rounded-sm"></span>
+                                            <span>Gross Income (Subscription Payments)</span>
+                                        </div>
+                                        <div className="flex items-center gap-1.5">
+                                            <span className="w-3 h-3 bg-rose-500 rounded-sm"></span>
+                                            <span>Coach Payouts (Expenses)</span>
+                                        </div>
+                                    </div>
                                 </div>
                             )}
                         </div>
@@ -266,7 +317,14 @@ export default function ReportsIndex({ revenueData, coaches, recentPayouts }: an
                                                         </span>
                                                     )}
                                                 </div>
-                                                <p className="text-xs text-gray-400">{payout.payout_date}</p>
+                                                <p className="text-xs text-gray-400">
+                                                    {payout.payout_date}
+                                                    {payout.tip && parseFloat(payout.tip) > 0 && (
+                                                        <span className="text-amber-600 font-semibold ml-2">
+                                                            (incl. €{parseFloat(payout.tip).toFixed(2)} tip)
+                                                        </span>
+                                                    )}
+                                                </p>
                                             </div>
                                         </div>
                                         <span className="font-bold text-rose-600">−€{payout.amount}</span>
@@ -287,13 +345,14 @@ export default function ReportsIndex({ revenueData, coaches, recentPayouts }: an
             {/* Pay Coach Modal */}
             {selectedCoach && (
                 <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
-                        <div className="bg-gradient-to-r from-indigo-600 to-blue-700 px-6 py-5">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden max-h-[90vh] flex flex-col">
+                        <div className="bg-gradient-to-r from-indigo-600 to-blue-700 px-6 py-5 shrink-0">
                             <h3 className="text-lg font-bold text-white">Pay Coach</h3>
                             <p className="text-indigo-200 text-sm mt-0.5">Recording payout for {selectedCoach.name}</p>
                         </div>
 
-                        <form onSubmit={submit} className="p-6 space-y-4">
+                        <form onSubmit={submit} className="flex flex-col flex-1 overflow-hidden">
+                            <div className="overflow-y-auto flex-1 p-6 space-y-4">
                             {/* Option Selector Tabs */}
                             <div>
                                 <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">Compensation Method</label>
@@ -301,7 +360,7 @@ export default function ReportsIndex({ revenueData, coaches, recentPayouts }: an
                                     <button
                                         key="athlete"
                                         type="button"
-                                        onClick={() => setCalcOption('athlete')}
+                                        onClick={() => { setCalcOption('athlete'); setIsManualAmountOverride(false); }}
                                         className={`px-2 py-3 rounded-xl border text-[11px] font-bold transition-all text-center flex flex-col items-center justify-center gap-1.5 leading-tight ${
                                             calcOption === 'athlete'
                                                 ? 'bg-indigo-600 border-indigo-600 text-white shadow-sm'
@@ -314,7 +373,7 @@ export default function ReportsIndex({ revenueData, coaches, recentPayouts }: an
                                     <button
                                         key="hourly"
                                         type="button"
-                                        onClick={() => setCalcOption('hourly')}
+                                        onClick={() => { setCalcOption('hourly'); setIsManualAmountOverride(false); }}
                                         className={`px-2 py-3 rounded-xl border text-[11px] font-bold transition-all text-center flex flex-col items-center justify-center gap-1.5 leading-tight ${
                                             calcOption === 'hourly'
                                                 ? 'bg-indigo-600 border-indigo-600 text-white shadow-sm'
@@ -327,7 +386,7 @@ export default function ReportsIndex({ revenueData, coaches, recentPayouts }: an
                                     <button
                                         key="manual"
                                         type="button"
-                                        onClick={() => setCalcOption('manual')}
+                                        onClick={() => { setCalcOption('manual'); setIsManualAmountOverride(true); }}
                                         className={`px-2 py-3 rounded-xl border text-[11px] font-bold transition-all text-center flex flex-col items-center justify-center gap-1.5 leading-tight ${
                                             calcOption === 'manual'
                                                 ? 'bg-indigo-600 border-indigo-600 text-white shadow-sm'
@@ -414,20 +473,65 @@ export default function ReportsIndex({ revenueData, coaches, recentPayouts }: an
                                 <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Payout Amount (€)</label>
                                 <input
                                     type="number"
+                                    step="0.01"
                                     value={data.amount}
-                                    onChange={(e) => setData('amount', e.target.value)}
-                                    readOnly={calcOption !== 'manual'}
+                                    onChange={(e) => {
+                                        setData('amount', e.target.value);
+                                        setIsManualAmountOverride(true);
+                                    }}
                                     placeholder="0.00"
-                                    className={`w-full rounded-xl border border-gray-200 px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 transition-all ${
-                                        calcOption !== 'manual'
-                                            ? 'bg-gray-100 border-gray-200 text-gray-500 cursor-not-allowed focus:ring-0'
-                                            : 'bg-gray-50 focus:border-indigo-500 focus:bg-white focus:ring-indigo-500/20'
-                                    }`}
+                                    className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
                                 />
                                 {calcOption !== 'manual' && (
-                                    <p className="text-[10px] text-gray-400 mt-1 font-medium">Calculated automatically based on option selected above.</p>
+                                    <div className="flex items-center justify-between mt-1 px-1">
+                                        <p className="text-[10px] text-gray-400 font-medium">
+                                            {isManualAmountOverride ? "Custom override active." : "Calculated automatically."}
+                                        </p>
+                                        {isManualAmountOverride && (
+                                            <button
+                                                type="button"
+                                                onClick={() => setIsManualAmountOverride(false)}
+                                                className="text-[10px] text-indigo-600 hover:text-indigo-800 font-bold"
+                                            >
+                                                Reset to calculation
+                                            </button>
+                                        )}
+                                    </div>
                                 )}
                             </div>
+
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Tip Amount (€) (Optional)</label>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    value={data.tip}
+                                    onChange={(e) => setData('tip', e.target.value)}
+                                    placeholder="0.00"
+                                    className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                                />
+                            </div>
+
+                            {((parseFloat(data.amount) || 0) > 0 || (parseFloat(data.tip) || 0) > 0) && (
+                                <div className="bg-amber-50/50 border border-amber-100 rounded-2xl p-4 space-y-2">
+                                    <p className="text-xs font-bold text-amber-800 uppercase tracking-wide">Payout Summary</p>
+                                    <div className="text-xs text-amber-900 space-y-1">
+                                        <div className="flex justify-between">
+                                            <span>Base Payout:</span>
+                                            <span className="font-semibold">€{(parseFloat(data.amount) || 0).toFixed(2)}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span>Tip Amount:</span>
+                                            <span className="font-semibold">€{(parseFloat(data.tip) || 0).toFixed(2)}</span>
+                                        </div>
+                                        <div className="flex justify-between border-t border-amber-200 pt-1.5 font-black text-sm">
+                                            <span>Total Paid:</span>
+                                            <span className="text-amber-700">€{((parseFloat(data.amount) || 0) + (parseFloat(data.tip) || 0)).toFixed(2)}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
 
                             <div>
                                 <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Payout Date</label>
@@ -438,7 +542,10 @@ export default function ReportsIndex({ revenueData, coaches, recentPayouts }: an
                                     className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
                                 />
                             </div>
-                            <div className="flex gap-3 pt-2">
+
+                            </div>
+
+                            <div className="shrink-0 px-6 py-4 border-t border-gray-100 flex gap-3 bg-gray-50">
                                 <button
                                     type="button"
                                     onClick={() => setSelectedCoach(null)}
@@ -462,13 +569,14 @@ export default function ReportsIndex({ revenueData, coaches, recentPayouts }: an
             {/* Edit Payment Settings Modal */}
             {selectedCoachSettings && (
                 <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
-                        <div className="bg-gradient-to-r from-slate-700 to-slate-900 px-6 py-5">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden max-h-[90vh] flex flex-col animate-in fade-in zoom-in duration-200">
+                        <div className="bg-gradient-to-r from-slate-700 to-slate-900 px-6 py-5 shrink-0">
                             <h3 className="text-lg font-bold text-white">Coach Payout Settings</h3>
                             <p className="text-slate-300 text-sm mt-0.5">Configure default payment option for {selectedCoachSettings.name}</p>
                         </div>
 
-                        <form onSubmit={submitSettings} className="p-6 space-y-4">
+                        <form onSubmit={submitSettings} className="flex flex-col flex-1 overflow-hidden">
+                            <div className="overflow-y-auto flex-1 p-6 space-y-4">
                             <div>
                                 <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">Default Payment Option</label>
                                 <div className="space-y-2">
@@ -553,7 +661,9 @@ export default function ReportsIndex({ revenueData, coaches, recentPayouts }: an
                                 )}
                             </div>
 
-                            <div className="flex gap-3 pt-2">
+                            </div>
+
+                            <div className="shrink-0 px-6 py-4 border-t border-gray-100 flex gap-3 bg-gray-50">
                                 <button
                                     type="button"
                                     onClick={() => setSelectedCoachSettings(null)}
