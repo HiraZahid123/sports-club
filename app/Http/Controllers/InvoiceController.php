@@ -27,7 +27,7 @@ class InvoiceController extends Controller
         // Authorize: check if user owns the subscription, or is the parent, or is a manager/admin of the club
         $isOwner = $subscription->user_id === $user->id;
         $isParent = $user->hasRole('Parent') && $user->children()->where('users.id', $subscription->user_id)->exists();
-        $isManager = $user->hasRole(['Manager', 'Super Admin']) && $subscription->club_id === $user->club_id;
+        $isManager = ($user->hasRole('Manager') || $user->hasRole('Super Admin')) && $subscription->club_id === $user->club_id;
 
         if (!$isOwner && !$isParent && !$isManager) {
             abort(403, 'Unauthorized to view this invoice.');
@@ -44,11 +44,20 @@ class InvoiceController extends Controller
         $athletePhone = $subscription->user->phone ?? 'N/A';
 
         $invoiceId = str_pad($payment->id, 6, '0', STR_PAD_LEFT);
-        $paymentDate = $payment->payment_date ? $payment->payment_date->format('F d, Y') : now()->format('F d, Y');
+        
+        $paymentDateVal = $payment->payment_date;
+        if ($paymentDateVal instanceof \Carbon\Carbon) {
+            $paymentDate = $paymentDateVal->format('F d, Y');
+        } elseif (is_string($paymentDateVal)) {
+            $paymentDate = \Carbon\Carbon::parse($paymentDateVal)->format('F d, Y');
+        } else {
+            $paymentDate = now()->format('F d, Y');
+        }
+        
         $amount = number_format($payment->amount, 2);
         $planName = $subscription->plan_name ?? $subscription->plan->name ?? 'Training Plan';
         $groupName = $subscription->trainingGroup->name ?? 'General Group';
-        $billingCycle = ucfirst($subscription->billing_cycle);
+        $billingCycle = ucfirst($subscription->billing_cycle ?? '');
         $transactionId = $payment->transaction_id ?? 'N/A';
         $paymentMethod = strtoupper($payment->payment_method ?? 'N/A');
 

@@ -20,7 +20,7 @@ class MemberController extends Controller
             ->whereHas('roles', function($q) {
                 $q->whereIn('name', ['Athlete', 'Parent']);
             })
-            ->with(['roles', 'athleteProfile', 'parentProfile'])
+            ->with(['roles', 'athleteProfile', 'parentProfile', 'subscriptions.payments'])
             ->get();
 
         return Inertia::render('Manager/Members/Index', [

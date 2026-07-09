@@ -8,6 +8,25 @@ interface AthleteProfile {
     date_of_birth?: string | null;
 }
 
+interface Subscription {
+    id: number;
+    plan_name: string;
+    amount: string;
+    billing_cycle: string;
+    status: string;
+    starts_at: string;
+    ends_at: string | null;
+    next_payment_at: string | null;
+    training_group?: { name: string } | null;
+    payments?: {
+        id: number;
+        amount: string;
+        payment_date: string;
+        payment_method: string;
+        status: string;
+    }[];
+}
+
 interface Member {
     id: number;
     name: string;
@@ -20,6 +39,7 @@ interface Member {
     roles: { name: string }[];
     athlete_profile?: AthleteProfile | null;
     parent_profile?: any;
+    subscriptions?: Subscription[];
 }
 
 const roleConfig: Record<string, { bg: string; text: string; dot: string }> = {
@@ -44,20 +64,6 @@ function beltBadge(belt: string | null | undefined) {
 export default function MembersIndex({ members }: { members: Member[] }) {
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [editingMember, setEditingMember] = useState<Member | null>(null);
-    const [showInviteCoach, setShowInviteCoach] = useState(false);
-
-    const inviteForm = useForm({ email: '', payment_option: 'manual', payment_rate: '0' });
-
-    const submitInvite: FormEventHandler = (e) => {
-        e.preventDefault();
-        inviteForm.post(route('manager.invitations.coach'), {
-            onSuccess: () => {
-                setShowInviteCoach(false);
-                inviteForm.reset();
-            },
-        });
-    };
-
     const beltDropdownRef = useRef<HTMLDivElement>(null);
     const [showBeltDropdown, setShowBeltDropdown] = useState(false);
 
@@ -146,15 +152,6 @@ export default function MembersIndex({ members }: { members: Member[] }) {
                         <p className="text-sm text-gray-500 mt-0.5">{members.length} total members in your club</p>
                     </div>
                     <div className="flex items-center gap-2">
-                        <button
-                            onClick={() => setShowInviteCoach(true)}
-                            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 transition-all"
-                        >
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                            </svg>
-                            Invite Coach
-                        </button>
                         <button
                             onClick={isFormOpen ? closeForm : openAddForm}
                             className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${
@@ -414,6 +411,62 @@ export default function MembersIndex({ members }: { members: Member[] }) {
                                     </div>
                                 )}
 
+                                {editingMember && editingMember.subscriptions && editingMember.subscriptions.length > 0 && (
+                                    <div className="border-t border-gray-100 pt-6">
+                                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Active Subscriptions & Invoice History</p>
+                                        <div className="space-y-4">
+                                            {editingMember.subscriptions.map((sub) => (
+                                                <div key={sub.id} className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+                                                    <div className="flex justify-between items-start gap-4 mb-3">
+                                                        <div>
+                                                            <p className="font-semibold text-gray-900 text-sm">{sub.plan_name}</p>
+                                                            <p className="text-xs text-gray-500 mt-0.5">
+                                                                {sub.billing_cycle === 'yearly' ? 'Yearly' : 'Monthly'} billing · €{Number(sub.amount).toFixed(2)}
+                                                            </p>
+                                                        </div>
+                                                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                                                            sub.status === 'active' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-amber-50 text-amber-700 border border-amber-100'
+                                                        }`}>
+                                                            {sub.status}
+                                                        </span>
+                                                    </div>
+                                                    
+                                                    {/* Invoices list */}
+                                                    {sub.payments && sub.payments.length > 0 ? (
+                                                        <div className="space-y-2 mt-2">
+                                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Payments / Invoices</p>
+                                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                                {sub.payments.map((p) => (
+                                                                    <div key={p.id} className="flex justify-between items-center bg-white px-3 py-2 rounded-lg border border-slate-100 text-xs">
+                                                                        <div>
+                                                                            <p className="font-semibold text-gray-800">Invoice #{p.id}</p>
+                                                                            <p className="text-[10px] text-gray-400 mt-0.5">{p.payment_date}</p>
+                                                                        </div>
+                                                                        <div className="flex items-center gap-2">
+                                                                            <span className="font-bold text-gray-950">€{Number(p.amount).toFixed(2)}</span>
+                                                                            <a
+                                                                                href={route('invoices.download', p.id)}
+                                                                                className="p-1 rounded-md text-indigo-600 bg-indigo-50 hover:bg-indigo-100 hover:text-indigo-800 transition-colors"
+                                                                                title="Download PDF Invoice"
+                                                                            >
+                                                                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                                                                </svg>
+                                                                            </a>
+                                                                        </div>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <p className="text-xs text-gray-400 italic mt-1">No payment logged yet.</p>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
                                 <div className="flex justify-end pt-2">
                                     <button
                                         type="submit"
@@ -536,114 +589,6 @@ export default function MembersIndex({ members }: { members: Member[] }) {
 
                 </div>
             </div>
-
-            {/* Invite Coach Modal */}
-            {showInviteCoach && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4">
-                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
-                        <div className="bg-gradient-to-r from-amber-50 to-orange-50 px-6 py-4 border-b border-amber-100 flex items-center justify-between">
-                            <div>
-                                <h3 className="text-sm font-bold text-amber-900">Invite a Coach</h3>
-                                <p className="text-xs text-amber-600 mt-0.5">They'll receive an email with an activation link</p>
-                            </div>
-                            <button
-                                onClick={() => { setShowInviteCoach(false); inviteForm.reset(); }}
-                                className="text-gray-400 hover:text-gray-600 transition-colors"
-                            >
-                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </button>
-                        </div>
-                        <form onSubmit={submitInvite} className="p-6 space-y-4">
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">Coach Email Address</label>
-                                <input
-                                    type="email"
-                                    value={inviteForm.data.email}
-                                    onChange={(e) => inviteForm.setData('email', e.target.value)}
-                                    className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:border-amber-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 transition-all"
-                                    placeholder="coach@example.com"
-                                    required
-                                />
-                                {inviteForm.errors.email && <p className="mt-2 text-xs text-red-600">{inviteForm.errors.email}</p>}
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">Salary / Revenue Option</label>
-                                <div className="space-y-2">
-                                    {[
-                                        { value: 'athlete', icon: '👤', label: 'Option 1 — Per Athlete × EUR', desc: 'Paid per athlete in their training groups.' },
-                                        { value: 'hourly',  icon: '⏱️', label: 'Option 2 — EUR Per Hour (Schedule)', desc: 'Paid based on scheduled training hours.' },
-                                        { value: 'manual',  icon: '💰', label: 'Option 3 — Fixed / Manual Amount', desc: 'Manager sets the amount manually each payout.' },
-                                    ].map((opt) => (
-                                        <label
-                                            key={opt.value}
-                                            className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
-                                                inviteForm.data.payment_option === opt.value
-                                                    ? 'border-amber-500 bg-amber-50/60'
-                                                    : 'border-gray-200 hover:bg-gray-50'
-                                            }`}
-                                        >
-                                            <input
-                                                type="radio"
-                                                name="invite_payment_option"
-                                                value={opt.value}
-                                                checked={inviteForm.data.payment_option === opt.value}
-                                                onChange={() => inviteForm.setData('payment_option', opt.value)}
-                                                className="mt-0.5 text-amber-500 focus:ring-amber-400"
-                                            />
-                                            <span className="text-base leading-none mt-0.5">{opt.icon}</span>
-                                            <div>
-                                                <p className="text-xs font-bold text-gray-800">{opt.label}</p>
-                                                <p className="text-[11px] text-gray-500 mt-0.5">{opt.desc}</p>
-                                            </div>
-                                        </label>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {inviteForm.data.payment_option !== 'manual' && (
-                                <div>
-                                    <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">
-                                        {inviteForm.data.payment_option === 'athlete' ? 'Price per Athlete (€)' : 'Price per Hour (€)'}
-                                    </label>
-                                    <input
-                                        type="number"
-                                        step="0.01"
-                                        min="0"
-                                        value={inviteForm.data.payment_rate}
-                                        onChange={(e) => inviteForm.setData('payment_rate', e.target.value)}
-                                        placeholder="0.00"
-                                        className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 focus:border-amber-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 transition-all"
-                                    />
-                                    {inviteForm.errors.payment_rate && <p className="mt-1 text-xs text-red-600">{inviteForm.errors.payment_rate}</p>}
-                                </div>
-                            )}
-
-                            <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 text-xs text-amber-800">
-                                The coach will receive an email with a secure activation link valid for 7 days. They cannot self-register — this is the only way to create a coach account.
-                            </div>
-                            <div className="flex gap-3 pt-1">
-                                <button
-                                    type="button"
-                                    onClick={() => { setShowInviteCoach(false); inviteForm.reset(); }}
-                                    className="flex-1 py-2.5 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-semibold transition-all"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={inviteForm.processing}
-                                    className="flex-1 py-2.5 px-4 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-sm font-bold transition-all shadow-sm shadow-amber-200 disabled:opacity-60"
-                                >
-                                    {inviteForm.processing ? 'Sending...' : 'Send Invitation'}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
         </AuthenticatedLayout>
     );
 }

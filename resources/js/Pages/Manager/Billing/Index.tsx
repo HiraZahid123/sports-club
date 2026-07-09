@@ -25,6 +25,13 @@ interface Subscription {
     user: { id: number; name: string };
     training_group: { name: string } | null;
     plan: Plan | null;
+    payments?: {
+        id: number;
+        amount: string;
+        payment_date: string;
+        payment_method: string | null;
+        status: string;
+    }[];
 }
 
 interface Group {
@@ -313,6 +320,27 @@ export default function BillingIndex({ subscriptions, plans, groups, members, to
                                                             <p className="text-sm text-gray-900 font-medium">{sub.plan_name}</p>
                                                             {sub.training_group && (
                                                                 <p className="text-xs text-violet-600 mt-0.5">{sub.training_group.name}</p>
+                                                            )}
+                                                            {/* Payment Invoices */}
+                                                            {sub.payments && sub.payments.length > 0 && (
+                                                                <div className="mt-2 space-y-1">
+                                                                    <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Invoices:</p>
+                                                                    <div className="flex flex-wrap gap-1.5">
+                                                                        {sub.payments.map((p) => (
+                                                                            <a
+                                                                                key={p.id}
+                                                                                href={route('invoices.download', p.id)}
+                                                                                className="inline-flex items-center gap-1 text-[9px] font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-100 px-2 py-0.5 rounded transition-all"
+                                                                                title={`Payment date: ${p.payment_date}`}
+                                                                            >
+                                                                                <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                                                                </svg>
+                                                                                #{p.id} (€{Number(p.amount).toFixed(0)})
+                                                                            </a>
+                                                                        ))}
+                                                                    </div>
+                                                                </div>
                                                             )}
                                                         </div>
                                                     </td>

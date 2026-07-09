@@ -84,6 +84,19 @@ function calcEarning(coach: Coach) {
 export default function CoachesIndex({ coaches }: { coaches: Coach[] }) {
     const [editing, setEditing] = useState<Coach | null>(null);
     const [activeTab, setActiveTab] = useState<'info' | 'salary' | 'payouts'>('info');
+    const [showInviteCoach, setShowInviteCoach] = useState(false);
+
+    const inviteForm = useForm({ email: '', payment_option: 'manual', payment_rate: '0' });
+
+    const submitInvite: FormEventHandler = (e) => {
+        e.preventDefault();
+        inviteForm.post(route('manager.invitations.coach'), {
+            onSuccess: () => {
+                setShowInviteCoach(false);
+                inviteForm.reset();
+            },
+        });
+    };
 
     const { data, setData, put, processing, errors, reset, clearErrors } = useForm({
         name: '',
@@ -131,11 +144,22 @@ export default function CoachesIndex({ coaches }: { coaches: Coach[] }) {
     return (
         <AuthenticatedLayout
             header={
-                <div>
-                    <h2 className="text-xl font-bold text-gray-900">Coach Management</h2>
-                    <p className="text-sm text-gray-500 mt-0.5">
-                        {coaches.length} coach{coaches.length !== 1 ? 'es' : ''} — edit info and configure salary / revenue options
-                    </p>
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h2 className="text-xl font-bold text-gray-900">Coach Management</h2>
+                        <p className="text-sm text-gray-500 mt-0.5">
+                            {coaches.length} coach{coaches.length !== 1 ? 'es' : ''} — edit info and configure salary / revenue options
+                        </p>
+                    </div>
+                    <button
+                        onClick={() => setShowInviteCoach(true)}
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 transition-all"
+                    >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                        Invite Coach
+                    </button>
                 </div>
             }
         >
@@ -564,6 +588,97 @@ export default function CoachesIndex({ coaches }: { coaches: Coach[] }) {
                                         </button>
                                     </>
                                 )}
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Invite Coach Modal */}
+            {showInviteCoach && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4">
+                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+                        <div className="bg-gradient-to-r from-amber-50 to-orange-50 px-6 py-4 border-b border-amber-100 flex items-center justify-between">
+                            <div>
+                                <h3 className="text-sm font-bold text-amber-900">Invite Coach</h3>
+                                <p className="text-xs text-amber-600 mt-0.5">Send a registration link to a new coach</p>
+                            </div>
+                            <button
+                                onClick={() => { setShowInviteCoach(false); inviteForm.reset(); }}
+                                className="text-gray-400 hover:text-gray-600"
+                            >
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        <form onSubmit={submitInvite} className="p-6 space-y-4">
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Email Address</label>
+                                <input
+                                    type="email"
+                                    required
+                                    value={inviteForm.data.email}
+                                    onChange={(e) => inviteForm.setData('email', e.target.value)}
+                                    placeholder="coach@example.com"
+                                    className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 focus:border-amber-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 transition-all"
+                                />
+                                {inviteForm.errors.email && <p className="mt-1 text-xs text-red-600">{inviteForm.errors.email}</p>}
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Salary / Payout Option</label>
+                                <select
+                                    value={inviteForm.data.payment_option}
+                                    onChange={(e) => {
+                                        inviteForm.setData('payment_option', e.target.value);
+                                        inviteForm.clearErrors('payment_rate');
+                                    }}
+                                    className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 focus:border-amber-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 transition-all"
+                                >
+                                    <option value="manual">Fixed / Manual Payout</option>
+                                    <option value="athlete">Per Active Athlete</option>
+                                    <option value="hourly">Hourly Rate</option>
+                                </select>
+                            </div>
+
+                            {inviteForm.data.payment_option !== 'manual' && (
+                                <div>
+                                    <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">
+                                        {inviteForm.data.payment_option === 'athlete' ? 'Price per Athlete (€)' : 'Price per Hour (€)'}
+                                    </label>
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        min="0"
+                                        value={inviteForm.data.payment_rate}
+                                        onChange={(e) => inviteForm.setData('payment_rate', e.target.value)}
+                                        placeholder="0.00"
+                                        className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 focus:border-amber-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 transition-all"
+                                    />
+                                    {inviteForm.errors.payment_rate && <p className="mt-1 text-xs text-red-600">{inviteForm.errors.payment_rate}</p>}
+                                </div>
+                            )}
+
+                            <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 text-xs text-amber-800">
+                                The coach will receive an email with a secure activation link valid for 7 days. They cannot self-register — this is the only way to create a coach account.
+                            </div>
+                            <div className="flex gap-3 pt-1">
+                                <button
+                                    type="button"
+                                    onClick={() => { setShowInviteCoach(false); inviteForm.reset(); }}
+                                    className="flex-1 py-2.5 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-semibold transition-all"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={inviteForm.processing}
+                                    className="flex-1 py-2.5 px-4 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-sm font-bold transition-all shadow-sm shadow-amber-200 disabled:opacity-60"
+                                >
+                                    {inviteForm.processing ? 'Sending...' : 'Send Invitation'}
+                                </button>
                             </div>
                         </form>
                     </div>
