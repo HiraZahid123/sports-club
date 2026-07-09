@@ -64,9 +64,6 @@ export default function Authenticated({
                                         <NavLink href={route('manager.club.edit')} active={route().current('manager.club.edit')}>
                                             Club
                                         </NavLink>
-                                        <NavLink href={route('manager.setup.index')} active={route().current('manager.setup.index')}>
-                                            Setup
-                                        </NavLink>
                                         <NavLink href={route('manager.members.index')} active={route().current('manager.members.index')}>
                                             Members
                                         </NavLink>
@@ -208,7 +205,6 @@ export default function Authenticated({
                         {isManager && (
                             <>
                                 <ResponsiveNavLink href={route('manager.club.edit')} active={route().current('manager.club.edit')}>Club Settings</ResponsiveNavLink>
-                                <ResponsiveNavLink href={route('manager.setup.index')} active={route().current('manager.setup.index')}>Club Setup</ResponsiveNavLink>
                                 <ResponsiveNavLink href={route('manager.members.index')} active={route().current('manager.members.index')}>Manage Members</ResponsiveNavLink>
                                 <ResponsiveNavLink href={route('manager.coaches.index')} active={route().current('manager.coaches.index')}>Coaches</ResponsiveNavLink>
                                 <ResponsiveNavLink href={route('manager.groups.index')} active={route().current('manager.groups.index')}>Training Groups</ResponsiveNavLink>

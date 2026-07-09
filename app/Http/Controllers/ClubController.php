@@ -23,12 +23,15 @@ class ClubController extends Controller
             $clubData['logo_path'] = asset($club->logo_path);
         }
 
+        $facilities = \App\Models\Facility::where('club_id', $club->id)->orderBy('name')->get();
+
         return Inertia::render('Manager/Club/Edit', [
-            'club'      => $clubData,
-            'join_link' => $club->join_code
+            'club'       => $clubData,
+            'facilities' => $facilities,
+            'join_link'  => $club->join_code
                 ? url('/register/join?code=' . $club->join_code)
                 : null,
-            'status'    => session('status'),
+            'status'     => session('status'),
         ]);
     }
 

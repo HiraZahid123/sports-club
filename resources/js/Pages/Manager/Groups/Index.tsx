@@ -75,6 +75,7 @@ const skillConfig: Record<string, { bg: string; text: string; border: string }> 
 };
 
 const inputClass = "w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all";
+const labelClass = "block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5";
 const smallInput = "w-full rounded-lg border border-gray-200 bg-gray-50 px-2 py-1.5 text-xs text-gray-800 focus:border-indigo-400 focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-400/20 transition-all";
 const HOURS = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'));
 const MINUTES = Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, '0'));
@@ -788,8 +789,148 @@ export default function GroupsIndex({ groups, coaches, athletes, ageCategories, 
                         </div>
                     )}
 
+                    {/* Age Categories Setup */}
+                    <div className="pt-6 border-t border-gray-100">
+                        <AgeCategoriesSection ageCategories={ageCategories} />
+                    </div>
+
                 </div>
             </div>
         </AuthenticatedLayout>
+    );
+}
+
+// ── Age Categories ───────────────────────────────────────────────────────
+function AgeCategoriesSection({ ageCategories }: { ageCategories: AgeCategory[] }) {
+    const [isCreating, setIsCreating] = useState(false);
+    const [editingId, setEditingId] = useState<number | null>(null);
+
+    const createForm = useForm({ name: '', min_age: '', max_age: '' });
+    const editForm = useForm({ name: '', min_age: '', max_age: '' });
+
+    const submitCreate: FormEventHandler = (e) => {
+        e.preventDefault();
+        createForm.post(route('manager.age-categories.store'), {
+            onSuccess: () => { setIsCreating(false); createForm.reset(); },
+        });
+    };
+
+    const openEdit = (cat: AgeCategory) => {
+        editForm.setData({
+            name: cat.name,
+            min_age: cat.min_age != null ? String(cat.min_age) : '',
+            max_age: cat.max_age != null ? String(cat.max_age) : '',
+        });
+        setEditingId(cat.id);
+        setIsCreating(false);
+    };
+
+    const submitEdit: FormEventHandler = (e) => {
+        e.preventDefault();
+        if (!editingId) return;
+        editForm.put(route('manager.age-categories.update', editingId), {
+            onSuccess: () => setEditingId(null),
+        });
+    };
+
+    const handleDelete = (cat: AgeCategory) => {
+        if (!confirm(`Delete age category "${cat.name}"? Groups using it will keep their other data but lose this assignment.`)) return;
+        router.delete(route('manager.age-categories.destroy', cat.id));
+    };
+
+    return (
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <div className="bg-gradient-to-r from-indigo-50 to-blue-50 px-6 py-5 border-b border-indigo-100 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600 text-lg">🎯</div>
+                    <div>
+                        <h3 className="text-base font-bold text-indigo-900">Age Categories Setup</h3>
+                        <p className="text-xs text-indigo-600 mt-0.5">Used when creating training groups (e.g. U10, U14, Adult)</p>
+                    </div>
+                </div>
+                <button
+                    onClick={() => { setIsCreating(!isCreating); setEditingId(null); }}
+                    className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+                        isCreating ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm shadow-indigo-200'
+                    }`}
+                >
+                    {isCreating ? 'Cancel' : '+ Add Category'}
+                </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+                {isCreating && (
+                    <form onSubmit={submitCreate} className="grid grid-cols-1 md:grid-cols-4 gap-4 bg-slate-50 rounded-xl p-4 border border-gray-100">
+                        <div className="md:col-span-2">
+                            <label className={labelClass}>Name</label>
+                            <input type="text" value={createForm.data.name} onChange={e => createForm.setData('name', e.target.value)} placeholder="e.g. U14" className={inputClass} />
+                            {createForm.errors.name && <p className="mt-1 text-xs text-red-600">{createForm.errors.name}</p>}
+                        </div>
+                        <div>
+                            <label className={labelClass}>Min Age</label>
+                            <input type="number" value={createForm.data.min_age} onChange={e => createForm.setData('min_age', e.target.value)} className={inputClass} />
+                        </div>
+                        <div>
+                            <label className={labelClass}>Max Age</label>
+                            <input type="number" value={createForm.data.max_age} onChange={e => createForm.setData('max_age', e.target.value)} className={inputClass} />
+                            {createForm.errors.max_age && <p className="mt-1 text-xs text-red-600">{createForm.errors.max_age}</p>}
+                        </div>
+                        <div className="md:col-span-4 flex justify-end">
+                            <button type="submit" disabled={createForm.processing} className="px-5 py-2 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 transition-all disabled:opacity-50 shadow-sm">
+                                {createForm.processing ? 'Saving...' : 'Create Category'}
+                            </button>
+                        </div>
+                    </form>
+                )}
+
+                {ageCategories.length === 0 && !isCreating ? (
+                    <p className="text-sm text-gray-400 italic text-center py-6">No age categories yet. Add one to use when creating training groups.</p>
+                ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {ageCategories.map(cat => (
+                            <div key={cat.id} className="relative group">
+                                {editingId === cat.id ? (
+                                    <form onSubmit={submitEdit} className="space-y-3 bg-amber-50 rounded-xl p-4 border border-amber-200">
+                                        <div>
+                                            <label className={labelClass}>Name</label>
+                                            <input type="text" value={editForm.data.name} onChange={e => editForm.setData('name', e.target.value)} className={inputClass} />
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <div>
+                                                <label className={labelClass}>Min Age</label>
+                                                <input type="number" value={editForm.data.min_age} onChange={e => editForm.setData('min_age', e.target.value)} className={inputClass} />
+                                            </div>
+                                            <div>
+                                                <label className={labelClass}>Max Age</label>
+                                                <input type="number" value={editForm.data.max_age} onChange={e => editForm.setData('max_age', e.target.value)} className={inputClass} />
+                                            </div>
+                                        </div>
+                                        <div className="flex justify-end gap-2 pt-1">
+                                            <button type="button" onClick={() => setEditingId(null)} className="px-3 py-1.5 bg-gray-100 text-gray-700 text-xs font-semibold rounded-lg hover:bg-gray-200 transition-all">Cancel</button>
+                                            <button type="submit" disabled={editForm.processing} className="px-4 py-1.5 bg-amber-500 text-white text-xs font-bold rounded-lg hover:bg-amber-600 transition-all disabled:opacity-50 shadow-sm">
+                                                {editForm.processing ? 'Saving...' : 'Save'}
+                                            </button>
+                                        </div>
+                                    </form>
+                                ) : (
+                                    <div className="flex items-center justify-between bg-slate-50 hover:bg-slate-100/75 rounded-xl px-4 py-3.5 border border-gray-100 transition-all">
+                                        <div>
+                                            <p className="text-sm font-semibold text-gray-900">{cat.name}</p>
+                                            <p className="text-xs text-gray-400 mt-0.5">
+                                                {cat.min_age != null || cat.max_age != null ? `Ages ${cat.min_age ?? '0'}–${cat.max_age ?? '∞'}` : 'No age range set'}
+                                            </p>
+                                        </div>
+                                        <div className="flex items-center gap-2.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <button onClick={() => openEdit(cat)} className="text-xs font-bold text-amber-600 hover:text-amber-700 transition-colors">Edit</button>
+                                            <button onClick={() => handleDelete(cat)} className="text-xs font-bold text-red-500 hover:text-red-700 transition-colors">Delete</button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+        </div>
     );
 }

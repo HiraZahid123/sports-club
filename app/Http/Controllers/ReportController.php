@@ -50,7 +50,7 @@ class ReportController extends Controller
         });
 
         // Coach List with compensation data
-        $coaches = User::role('Coach')
+        $coaches = User::role(['Coach', 'Coach Assistant'])
             ->where('club_id', $clubId)
             ->with([
                 'coachProfile',

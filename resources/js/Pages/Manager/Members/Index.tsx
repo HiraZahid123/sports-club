@@ -24,6 +24,7 @@ interface Member {
 
 const roleConfig: Record<string, { bg: string; text: string; dot: string }> = {
     Coach:   { bg: 'bg-emerald-50', text: 'text-emerald-700', dot: 'bg-emerald-500' },
+    'Coach Assistant': { bg: 'bg-teal-50', text: 'text-teal-700', dot: 'bg-teal-500' },
     Athlete: { bg: 'bg-blue-50',    text: 'text-blue-700',    dot: 'bg-blue-500'    },
     Parent:  { bg: 'bg-purple-50',  text: 'text-purple-700',  dot: 'bg-purple-500'  },
     Manager: { bg: 'bg-indigo-50',  text: 'text-indigo-700',  dot: 'bg-indigo-500'  },
@@ -73,7 +74,7 @@ export default function MembersIndex({ members }: { members: Member[] }) {
     const { data, setData, post, put, processing, errors, reset, clearErrors } = useForm({
         name: '',
         email: '',
-        role: 'Athlete',
+        roles: [] as string[],
         password: 'password123',
         id_code: '',
         phone: '',
@@ -88,6 +89,7 @@ export default function MembersIndex({ members }: { members: Member[] }) {
         setEditingMember(null);
         reset();
         clearErrors();
+        setData('roles', ['Athlete']);
         setIsFormOpen(true);
     };
 
@@ -96,7 +98,7 @@ export default function MembersIndex({ members }: { members: Member[] }) {
         setData({
             name: member.name,
             email: member.email,
-            role: member.roles[0]?.name || 'Athlete',
+            roles: member.roles.map(r => r.name),
             password: '',
             id_code: member.id_code ?? '',
             phone: member.phone ?? '',
@@ -227,17 +229,32 @@ export default function MembersIndex({ members }: { members: Member[] }) {
                                             />
                                             {errors.email && <p className="mt-1 text-xs text-red-600">{errors.email}</p>}
                                         </div>
-                                        <div>
-                                            <label className={labelClass}>Club Role</label>
-                                            <select
-                                                value={data.role}
-                                                onChange={(e) => setData('role', e.target.value)}
-                                                className={inputClass}
-                                            >
-                                                <option value="Athlete">Athlete</option>
-                                                <option value="Coach">Coach</option>
-                                                <option value="Parent">Parent</option>
-                                            </select>
+                                        <div className="sm:col-span-2">
+                                            <label className={labelClass}>Club Roles</label>
+                                            <div className="flex flex-wrap gap-4 mt-2">
+                                                {['Athlete', 'Parent', 'Coach', 'Coach Assistant'].map((roleOpt) => {
+                                                    const isChecked = data.roles.includes(roleOpt);
+                                                    return (
+                                                        <label key={roleOpt} className="inline-flex items-center gap-2 text-sm text-gray-700 font-medium cursor-pointer">
+                                                            <input
+                                                                type="checkbox"
+                                                                value={roleOpt}
+                                                                checked={isChecked}
+                                                                onChange={(e) => {
+                                                                    if (e.target.checked) {
+                                                                        setData('roles', [...data.roles, roleOpt]);
+                                                                    } else {
+                                                                        setData('roles', data.roles.filter(r => r !== roleOpt));
+                                                                    }
+                                                                }}
+                                                                className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4"
+                                                            />
+                                                            <span>{roleOpt}</span>
+                                                        </label>
+                                                    );
+                                                })}
+                                            </div>
+                                            {errors.roles && <p className="mt-1 text-xs text-red-600">{errors.roles}</p>}
                                         </div>
                                         {!editingMember && (
                                             <div>
@@ -329,7 +346,7 @@ export default function MembersIndex({ members }: { members: Member[] }) {
                                 </div>
 
                                 {/* Athlete-only fields */}
-                                {data.role === 'Athlete' && (
+                                {data.roles.includes('Athlete') && (
                                     <div>
                                         <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Athlete Details</p>
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -427,8 +444,6 @@ export default function MembersIndex({ members }: { members: Member[] }) {
                                 </thead>
                                 <tbody className="divide-y divide-gray-50">
                                     {members.map((member) => {
-                                        const roleName = member.roles[0]?.name || 'Member';
-                                        const style = getRoleStyle(roleName);
                                         return (
                                             <tr key={member.id} className="hover:bg-slate-50/60 transition-colors">
                                                 <td className="px-6 py-4">
@@ -449,10 +464,20 @@ export default function MembersIndex({ members }: { members: Member[] }) {
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4">
-                                                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold ${style.bg} ${style.text}`}>
-                                                        <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`}></span>
-                                                        {roleName}
-                                                    </span>
+                                                    <div className="flex flex-wrap gap-1.5">
+                                                        {member.roles.map(r => {
+                                                            const style = getRoleStyle(r.name);
+                                                            return (
+                                                                <span key={r.name} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold ${style.bg} ${style.text}`}>
+                                                                    <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`}></span>
+                                                                    {r.name}
+                                                                </span>
+                                                            );
+                                                        })}
+                                                        {member.roles.length === 0 && (
+                                                            <span className="text-gray-300 italic text-xs">—</span>
+                                                        )}
+                                                    </div>
                                                 </td>
                                                 <td className="px-6 py-4 text-sm text-gray-600">
                                                     {member.phone || <span className="text-gray-300">—</span>}
@@ -461,7 +486,7 @@ export default function MembersIndex({ members }: { members: Member[] }) {
                                                     {member.city || <span className="text-gray-300">—</span>}
                                                 </td>
                                                 <td className="px-6 py-4">
-                                                    {roleName === 'Athlete'
+                                                    {member.roles.some(r => r.name === 'Athlete')
                                                         ? (beltBadge(member.athlete_profile?.belt_rank) ?? <span className="text-gray-300 text-sm">—</span>)
                                                         : <span className="text-gray-300 text-sm">—</span>}
                                                 </td>

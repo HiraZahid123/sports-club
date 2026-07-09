@@ -33,7 +33,7 @@ class EventController extends Controller
             });
 
         $groups  = TrainingGroup::where('club_id', $clubId)->select('id', 'name')->get();
-        $coaches = User::where('club_id', $clubId)->role('Coach')->select('id', 'name')->get();
+        $coaches = User::where('club_id', $clubId)->role(['Coach', 'Coach Assistant'])->select('id', 'name')->get();
 
         return Inertia::render('Manager/Events/Index', [
             'events'  => $events,

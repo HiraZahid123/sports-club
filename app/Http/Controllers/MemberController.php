@@ -17,6 +17,9 @@ class MemberController extends Controller
         $clubId = $request->user()->club_id;
 
         $members = User::where('club_id', $clubId)
+            ->whereHas('roles', function($q) {
+                $q->whereIn('name', ['Athlete', 'Parent']);
+            })
             ->with(['roles', 'athleteProfile', 'parentProfile'])
             ->get();
 
@@ -30,7 +33,8 @@ class MemberController extends Controller
         $validated = $request->validate([
             'name'                    => 'required|string|max:255',
             'email'                   => 'required|string|email|max:255|unique:users',
-            'role'                    => 'required|string|in:Athlete,Parent,Coach',
+            'roles'                   => 'required|array|min:1',
+            'roles.*'                 => 'string|in:Athlete,Parent,Coach,Coach Assistant',
             'password'                => 'required|string|min:8',
             'id_code'                 => 'nullable|string|max:100',
             'phone'                   => 'nullable|string|max:50',
@@ -53,17 +57,19 @@ class MemberController extends Controller
             'emergency_contact_phone' => $validated['emergency_contact_phone'] ?? null,
         ]);
 
-        $user->assignRole($validated['role']);
+        $user->assignRole($validated['roles']);
 
-        if ($validated['role'] === 'Athlete') {
+        if (in_array('Athlete', $validated['roles'])) {
             AthleteProfile::create([
                 'user_id'       => $user->id,
                 'date_of_birth' => $validated['date_of_birth'] ?? null,
                 'belt_rank'     => $validated['belt_rank'] ?? null,
             ]);
-        } elseif ($validated['role'] === 'Parent') {
+        }
+        if (in_array('Parent', $validated['roles'])) {
             ParentProfile::create(['user_id' => $user->id]);
-        } elseif ($validated['role'] === 'Coach') {
+        }
+        if (in_array('Coach', $validated['roles']) || in_array('Coach Assistant', $validated['roles'])) {
             \App\Models\CoachProfile::create(['user_id' => $user->id]);
         }
 
@@ -79,7 +85,8 @@ class MemberController extends Controller
         $validated = $request->validate([
             'name'                    => 'required|string|max:255',
             'email'                   => 'required|string|email|max:255|unique:users,email,' . $user->id,
-            'role'                    => 'required|string|in:Athlete,Parent,Coach',
+            'roles'                   => 'required|array|min:1',
+            'roles.*'                 => 'string|in:Athlete,Parent,Coach,Coach Assistant',
             'id_code'                 => 'nullable|string|max:100',
             'phone'                   => 'nullable|string|max:50',
             'city'                    => 'nullable|string|max:100',
@@ -99,31 +106,10 @@ class MemberController extends Controller
             'emergency_contact_phone' => $validated['emergency_contact_phone'] ?? null,
         ]);
 
-        $currentRole = $user->roles->first()?->name;
+        $roles = $validated['roles'];
+        $user->syncRoles($roles);
 
-        if ($currentRole !== $validated['role']) {
-            if ($currentRole === 'Athlete') {
-                AthleteProfile::where('user_id', $user->id)->delete();
-            } elseif ($currentRole === 'Parent') {
-                ParentProfile::where('user_id', $user->id)->delete();
-            } elseif ($currentRole === 'Coach') {
-                \App\Models\CoachProfile::where('user_id', $user->id)->delete();
-            }
-
-            $user->syncRoles([$validated['role']]);
-
-            if ($validated['role'] === 'Athlete') {
-                AthleteProfile::create([
-                    'user_id'       => $user->id,
-                    'date_of_birth' => $validated['date_of_birth'] ?? null,
-                    'belt_rank'     => $validated['belt_rank'] ?? null,
-                ]);
-            } elseif ($validated['role'] === 'Parent') {
-                ParentProfile::create(['user_id' => $user->id]);
-            } elseif ($validated['role'] === 'Coach') {
-                \App\Models\CoachProfile::create(['user_id' => $user->id]);
-            }
-        } elseif ($currentRole === 'Athlete') {
+        if (in_array('Athlete', $roles)) {
             AthleteProfile::updateOrCreate(
                 ['user_id' => $user->id],
                 [
@@ -131,6 +117,20 @@ class MemberController extends Controller
                     'belt_rank'     => $validated['belt_rank'] ?? null,
                 ]
             );
+        } else {
+            AthleteProfile::where('user_id', $user->id)->delete();
+        }
+
+        if (in_array('Parent', $roles)) {
+            ParentProfile::firstOrCreate(['user_id' => $user->id]);
+        } else {
+            ParentProfile::where('user_id', $user->id)->delete();
+        }
+
+        if (in_array('Coach', $roles) || in_array('Coach Assistant', $roles)) {
+            \App\Models\CoachProfile::firstOrCreate(['user_id' => $user->id]);
+        } else {
+            \App\Models\CoachProfile::where('user_id', $user->id)->delete();
         }
 
         return redirect()->back()->with('status', 'member-updated');

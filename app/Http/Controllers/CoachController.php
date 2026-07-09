@@ -12,7 +12,7 @@ class CoachController extends Controller
     {
         $clubId = $request->user()->club_id;
 
-        $coaches = User::role('Coach')
+        $coaches = User::role(['Coach', 'Coach Assistant'])
             ->where('club_id', $clubId)
             ->with([
                 'coachProfile',
