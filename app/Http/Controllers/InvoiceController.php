@@ -206,7 +206,7 @@ class InvoiceController extends Controller
             <button onclick="window.print()" style="background: #4f46e5; color: white; border: none; border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 1px 2px rgba(79, 70, 229, 0.1);">
                 🖨️ Print / Save as PDF
             </button>
-            <button onclick="window.close()" style="background: white; color: #475569; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: bold; cursor: pointer;">
+            <button onclick="closeInvoice()" style="background: white; color: #475569; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: bold; cursor: pointer;">
                 Close
             </button>
         </div>
@@ -310,6 +310,18 @@ class InvoiceController extends Controller
                 window.print();
             }, 600);
         });
+
+        function closeInvoice() {
+            window.close();
+            // Fallback in case browser blocks window.close()
+            setTimeout(() => {
+                if (document.referrer) {
+                    window.location.href = document.referrer;
+                } else {
+                    window.location.href = '/dashboard';
+                }
+            }, 150);
+        }
     </script>
 </body>
 </html>
