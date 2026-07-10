@@ -395,6 +395,8 @@ export default function CoachDashboard({
         }, {} as Record<number, { athlete: Athlete; groupName: string }>)
     );
 
+    const totalSessions = groups.reduce((sum, g) => sum + (g.schedules?.length || 0), 0);
+
     // ── Stat Cards ─────────────────────────────────────────────────────────
     const statCards = [
         {
@@ -424,8 +426,8 @@ export default function CoachDashboard({
         {
             id: null,   // navigate to schedule
             label: 'Sessions This Week',
-            value: groups.length * 3,
-            sub: 'estimated',
+            value: totalSessions,
+            sub: 'scheduled',
             valueColor: 'text-blue-600',
             border: 'border-blue-100',
             ring: 'ring-blue-400',
