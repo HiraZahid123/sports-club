@@ -26,6 +26,8 @@ interface Facility {
     id: number;
     name: string;
     type: string | null;
+    capacity?: number | null;
+    notes?: string | null;
 }
 
 interface Group {
@@ -95,6 +97,7 @@ const blankSlot = (): ScheduleSlot => ({
 export default function GroupsIndex({ groups, coaches, athletes, ageCategories, facilities }: { groups: Group[], coaches: Coach[], athletes: any[], ageCategories: AgeCategory[], facilities: Facility[] }) {
     const [isCreating, setIsCreating]     = useState(false);
     const [editingGroup, setEditingGroup] = useState<Group | null>(null);
+    const [isManagingFacilities, setIsManagingFacilities] = useState(false);
 
     // local draft of schedule while editing
     const [scheduleSlots, setScheduleSlots] = useState<ScheduleSlot[]>([]);
@@ -279,20 +282,29 @@ export default function GroupsIndex({ groups, coaches, athletes, ageCategories, 
                         <h2 className="text-xl font-bold text-gray-900">Training Groups</h2>
                         <p className="text-sm text-gray-500 mt-0.5">{groups.length} groups active</p>
                     </div>
-                    <button
-                        onClick={() => { setIsCreating(!isCreating); setEditingGroup(null); }}
-                        className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${
-                            isCreating
-                                ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm shadow-indigo-200'
-                        }`}
-                    >
-                        {isCreating ? (
-                            <><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>Cancel</>
-                        ) : (
-                            <><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>New Group</>
-                        )}
-                    </button>
+                    <div className="flex items-center gap-3">
+                        <button
+                            type="button"
+                            onClick={() => setIsManagingFacilities(true)}
+                            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold bg-emerald-550 border border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-all shadow-sm"
+                        >
+                            <span>🏟️</span> Manage Facilities
+                        </button>
+                        <button
+                            onClick={() => { setIsCreating(!isCreating); setEditingGroup(null); }}
+                            className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+                                isCreating
+                                    ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                    : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm shadow-indigo-200'
+                            }`}
+                        >
+                            {isCreating ? (
+                                <><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>Cancel</>
+                            ) : (
+                                <><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>New Group</>
+                            )}
+                        </button>
+                    </div>
                 </div>
             }
         >
@@ -636,14 +648,39 @@ export default function GroupsIndex({ groups, coaches, athletes, ageCategories, 
                                                         </select>
                                                     </div>
                                                     {/* Location */}
-                                                    <div className="col-span-3">
+                                                    <div className="col-span-3 space-y-1">
                                                         {facilities.length > 0 ? (
-                                                            <select value={slot.facility_id} onChange={e => updateSlot(idx, 'facility_id', e.target.value)} className={smallInput}>
-                                                                <option value="">— No facility —</option>
-                                                                {facilities.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
-                                                            </select>
+                                                            <>
+                                                                <select
+                                                                    value={slot.facility_id ? String(slot.facility_id) : (slot.location ? 'custom' : '')}
+                                                                    onChange={e => {
+                                                                        const val = e.target.value;
+                                                                        if (val === 'custom') {
+                                                                            updateSlot(idx, 'facility_id', '');
+                                                                            updateSlot(idx, 'location', slot.location || 'Custom Location');
+                                                                        } else {
+                                                                            updateSlot(idx, 'facility_id', val);
+                                                                            updateSlot(idx, 'location', '');
+                                                                        }
+                                                                    }}
+                                                                    className={smallInput}
+                                                                >
+                                                                    <option value="">— Select Location —</option>
+                                                                    {facilities.map(f => <option key={f.id} value={f.id}>🏟️ {f.name}</option>)}
+                                                                    <option value="custom">✏️ Custom / Other Location...</option>
+                                                                </select>
+                                                                {(!slot.facility_id && slot.location !== undefined && slot.location !== null) && (
+                                                                    <input
+                                                                        type="text"
+                                                                        value={slot.location || ''}
+                                                                        onChange={e => updateSlot(idx, 'location', e.target.value)}
+                                                                        placeholder="Enter custom location..."
+                                                                        className={smallInput}
+                                                                    />
+                                                                )}
+                                                            </>
                                                         ) : (
-                                                            <input type="text" value={slot.location} onChange={e => updateSlot(idx, 'location', e.target.value)} placeholder="e.g. Hall A" className={smallInput} />
+                                                            <input type="text" value={slot.location || ''} onChange={e => updateSlot(idx, 'location', e.target.value)} placeholder="e.g. Hall A" className={smallInput} />
                                                         )}
                                                     </div>
                                                     {/* Notes */}
@@ -796,6 +833,12 @@ export default function GroupsIndex({ groups, coaches, athletes, ageCategories, 
 
                 </div>
             </div>
+
+            <FacilitiesModal
+                isOpen={isManagingFacilities}
+                onClose={() => setIsManagingFacilities(false)}
+                facilities={facilities}
+            />
         </AuthenticatedLayout>
     );
 }
@@ -930,6 +973,175 @@ function AgeCategoriesSection({ ageCategories }: { ageCategories: AgeCategory[] 
                         ))}
                     </div>
                 )}
+            </div>
+        </div>
+    );
+}
+
+// ── Facilities Setup Modal ────────────────────────────────────────────────
+function FacilitiesModal({
+    isOpen,
+    onClose,
+    facilities,
+}: {
+    isOpen: boolean;
+    onClose: () => void;
+    facilities: Facility[];
+}) {
+    const [isCreating, setIsCreating] = useState(false);
+    const [editingId, setEditingId] = useState<number | null>(null);
+
+    const createForm = useForm({ name: '', type: '', capacity: '', notes: '' });
+    const editForm = useForm({ name: '', type: '', capacity: '', notes: '' });
+
+    const submitCreate: FormEventHandler = (e) => {
+        e.preventDefault();
+        createForm.post(route('manager.facilities.store'), {
+            onSuccess: () => { setIsCreating(false); createForm.reset(); },
+        });
+    };
+
+    const openEdit = (facility: Facility) => {
+        editForm.setData({
+            name: facility.name,
+            type: facility.type ?? '',
+            capacity: facility.capacity != null ? String(facility.capacity) : '',
+            notes: facility.notes ?? '',
+        });
+        setEditingId(facility.id);
+        setIsCreating(false);
+    };
+
+    const submitEdit: FormEventHandler = (e) => {
+        e.preventDefault();
+        if (!editingId) return;
+        editForm.put(route('manager.facilities.update', editingId), {
+            onSuccess: () => setEditingId(null),
+        });
+    };
+
+    const handleDelete = (facility: Facility) => {
+        if (!confirm(`Delete facility "${facility.name}"? Schedules using it will keep their other data but lose this assignment.`)) return;
+        router.delete(route('manager.facilities.destroy', facility.id));
+    };
+
+    if (!isOpen) return null;
+
+    const smallInput = "w-full rounded-lg border border-gray-200 bg-gray-50 px-2 py-1.5 text-xs text-gray-800 focus:border-indigo-400 focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-400/20 transition-all";
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+            <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col animate-in zoom-in-95 duration-200">
+                {/* Header */}
+                <div className="bg-gradient-to-r from-emerald-600 to-teal-700 px-6 py-5 flex items-center justify-between shrink-0">
+                    <div>
+                        <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                            <span>🏟️</span> Facilities Setup
+                        </h3>
+                        <p className="text-emerald-100 text-xs mt-0.5">Manage training locations for your groups</p>
+                    </div>
+                    <button onClick={onClose} className="text-emerald-100 hover:text-white transition-colors">
+                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-6 space-y-5">
+                    <div className="flex justify-between items-center">
+                        <h4 className="text-sm font-bold text-gray-900">Current Facilities ({facilities.length})</h4>
+                        <button
+                            onClick={() => { setIsCreating(!isCreating); setEditingId(null); }}
+                            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                                isCreating ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm shadow-emerald-100'
+                            }`}
+                        >
+                            {isCreating ? 'Cancel' : '＋ Add Facility'}
+                        </button>
+                    </div>
+
+                    {isCreating && (
+                        <form onSubmit={submitCreate} className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50 border border-gray-100 rounded-xl p-4 animate-in slide-in-from-top-4 duration-200">
+                            <div>
+                                <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Name</label>
+                                <input type="text" value={createForm.data.name} onChange={e => createForm.setData('name', e.target.value)} placeholder="e.g. Hall A" className={smallInput} required />
+                                {createForm.errors.name && <p className="mt-1 text-xs text-red-600">{createForm.errors.name}</p>}
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Type</label>
+                                <input type="text" value={createForm.data.type} onChange={e => createForm.setData('type', e.target.value)} placeholder="Court / Room / Gym" className={smallInput} />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Capacity</label>
+                                <input type="number" value={createForm.data.capacity} onChange={e => createForm.setData('capacity', e.target.value)} className={smallInput} />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Notes</label>
+                                <input type="text" value={createForm.data.notes} onChange={e => createForm.setData('notes', e.target.value)} placeholder="Access instructions..." className={smallInput} />
+                            </div>
+                            <div className="sm:col-span-2 flex justify-end">
+                                <button type="submit" disabled={createForm.processing} className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-all shadow-sm">
+                                    {createForm.processing ? 'Saving...' : 'Create Facility'}
+                                </button>
+                            </div>
+                        </form>
+                    )}
+
+                    {facilities.length === 0 && !isCreating ? (
+                        <div className="text-center py-8 border-2 border-dashed border-gray-150 rounded-xl">
+                            <span className="text-2xl mb-2 block">🏟️</span>
+                            <p className="text-sm text-gray-400 italic">No facilities added yet. Create one to assign schedules to locations.</p>
+                        </div>
+                    ) : (
+                        <div className="space-y-2">
+                            {facilities.map(facility => (
+                                <div key={facility.id} className="border border-gray-100 rounded-xl bg-slate-50 hover:bg-slate-100/50 transition-colors overflow-hidden">
+                                    {editingId === facility.id ? (
+                                        <form onSubmit={submitEdit} className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-amber-50/50 border border-amber-200 rounded-xl">
+                                            <div>
+                                                <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Name</label>
+                                                <input type="text" value={editForm.data.name} onChange={e => editForm.setData('name', e.target.value)} className={smallInput} required />
+                                            </div>
+                                            <div>
+                                                <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Type</label>
+                                                <input type="text" value={editForm.data.type} onChange={e => editForm.setData('type', e.target.value)} className={smallInput} />
+                                            </div>
+                                            <div>
+                                                <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Capacity</label>
+                                                <input type="number" value={editForm.data.capacity} onChange={e => editForm.setData('capacity', e.target.value)} className={smallInput} />
+                                            </div>
+                                            <div>
+                                                <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Notes</label>
+                                                <input type="text" value={editForm.data.notes} onChange={e => editForm.setData('notes', e.target.value)} className={smallInput} />
+                                            </div>
+                                            <div className="sm:col-span-2 flex justify-end gap-2">
+                                                <button type="button" onClick={() => setEditingId(null)} className="px-3 py-1.5 bg-gray-200 text-gray-700 text-xs font-semibold rounded-lg hover:bg-gray-300">Cancel</button>
+                                                <button type="submit" disabled={editForm.processing} className="px-4 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-lg shadow-sm">Save</button>
+                                            </div>
+                                        </form>
+                                    ) : (
+                                        <div className="flex items-center justify-between px-4 py-3">
+                                            <div>
+                                                <p className="text-sm font-semibold text-gray-800">{facility.name}</p>
+                                                <p className="text-xs text-gray-400 mt-0.5">
+                                                    {[facility.type, facility.capacity ? `Capacity ${facility.capacity}` : null, facility.notes].filter(Boolean).join(' · ') || 'No details set'}
+                                                </p>
+                                            </div>
+                                            <div className="flex items-center gap-2.5">
+                                                <button type="button" onClick={() => openEdit(facility)} className="text-xs font-bold text-amber-600 hover:text-amber-700">Edit</button>
+                                                <button type="button" onClick={() => handleDelete(facility)} className="text-xs font-bold text-red-500 hover:text-red-700">Delete</button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
+                <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 flex justify-end shrink-0">
+                    <button type="button" onClick={onClose} className="px-5 py-2 bg-white border border-gray-200 text-gray-700 text-sm font-bold rounded-xl hover:bg-gray-50 transition-all">Close</button>
+                </div>
             </div>
         </div>
     );

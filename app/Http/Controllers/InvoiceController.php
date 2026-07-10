@@ -25,9 +25,9 @@ class InvoiceController extends Controller
         }
 
         // Authorize: check if user owns the subscription, or is the parent, or is a manager/admin of the club
-        $isOwner = $subscription->user_id === $user->id;
+        $isOwner = $subscription->user_id == $user->id;
         $isParent = $user->hasRole('Parent') && $user->children()->where('users.id', $subscription->user_id)->exists();
-        $isManager = ($user->hasRole('Manager') || $user->hasRole('Super Admin')) && $subscription->club_id === $user->club_id;
+        $isManager = ($user->hasRole('Manager') || $user->hasRole('Super Admin')) && $subscription->club_id == $user->club_id;
 
         if (!$isOwner && !$isParent && !$isManager) {
             abort(403, 'Unauthorized to view this invoice.');

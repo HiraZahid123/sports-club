@@ -21,7 +21,7 @@ class FacilityController extends Controller
             'club_id' => $request->user()->club_id,
         ]);
 
-        return redirect()->route('manager.setup.index')->with('status', 'facility-created');
+        return back()->with('status', 'facility-created');
     }
 
     public function update(Request $request, Facility $facility)
@@ -37,7 +37,7 @@ class FacilityController extends Controller
 
         $facility->update($validated);
 
-        return redirect()->route('manager.setup.index')->with('status', 'facility-updated');
+        return back()->with('status', 'facility-updated');
     }
 
     public function destroy(Request $request, Facility $facility)
@@ -46,6 +46,6 @@ class FacilityController extends Controller
 
         $facility->delete();
 
-        return redirect()->route('manager.setup.index')->with('status', 'facility-deleted');
+        return back()->with('status', 'facility-deleted');
     }
 }

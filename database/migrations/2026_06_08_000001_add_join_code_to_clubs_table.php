@@ -16,6 +16,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('clubs', function (Blueprint $table) {
+            $table->dropUnique(['join_code']);
             $table->dropColumn('join_code');
         });
     }

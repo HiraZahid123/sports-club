@@ -203,6 +203,8 @@ export default function AthleteSubscriptions({
                                                                     {payment.status.toLowerCase() === 'completed' ? (
                                                                         <a
                                                                             href={route('invoices.download', payment.id)}
+                                                                            target="_blank"
+                                                                            rel="noopener noreferrer"
                                                                             className="inline-flex items-center gap-1 text-xs font-bold text-indigo-600 hover:text-indigo-800 transition-colors"
                                                                         >
                                                                             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
