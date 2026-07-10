@@ -75,11 +75,16 @@ class InvoiceController extends Controller
             line-height: 1.5;
             margin: 0;
             padding: 0;
+            background-color: #f1f5f9;
         }
         .invoice-container {
             max-width: 800px;
-            margin: auto;
-            padding: 20px;
+            margin: 40px auto;
+            padding: 40px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+            border: 1px solid #e2e8f0;
         }
         table {
             width: 100%;
@@ -166,9 +171,47 @@ class InvoiceController extends Controller
             background-color: #d1fae5;
             color: #065f46;
         }
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            body {
+                background: white;
+                color: black;
+                padding: 0;
+                margin: 0;
+            }
+            .invoice-container {
+                margin: 0;
+                padding: 0;
+                max-width: 100%;
+                box-shadow: none;
+                border: none;
+                border-radius: 0;
+            }
+        }
     </style>
 </head>
 <body>
+    <!-- Print & Save Header Banner -->
+    <div class="no-print" style="background: #ffffff; border-bottom: 1px solid #e2e8f0; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; font-family: system-ui, -apple-system, sans-serif; position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <span style="font-size: 24px;">📄</span>
+            <div style="text-align: left;">
+                <strong style="color: #1e293b; font-size: 15px; display: block;">Invoice #{$invoiceId}</strong>
+                <span style="font-size: 12px; color: #64748b;">PDF download karne ke liye Destination me <strong>"Save as PDF"</strong> select karein.</span>
+            </div>
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <button onclick="window.print()" style="background: #4f46e5; color: white; border: none; border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 1px 2px rgba(79, 70, 229, 0.1);">
+                🖨️ Print / Save as PDF
+            </button>
+            <button onclick="window.close()" style="background: white; color: #475569; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: bold; cursor: pointer;">
+                Close
+            </button>
+        </div>
+    </div>
+
     <div class="invoice-container">
         <!-- Header -->
         <div class="header">
@@ -259,12 +302,19 @@ class InvoiceController extends Controller
             If you have any questions about this invoice, please contact support at {$clubEmail}.
         </div>
     </div>
+
+    <script>
+        // Auto-open print dialog
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                window.print();
+            }, 600);
+        });
+    </script>
 </body>
 </html>
 HTML;
 
-        // Render PDF
-        $pdf = Pdf::loadHTML($html);
-        return $pdf->download("Invoice-{$invoiceId}.pdf");
+        return response($html);
     }
 }

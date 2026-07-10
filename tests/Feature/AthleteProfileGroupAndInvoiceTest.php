@@ -183,7 +183,7 @@ class AthleteProfileGroupAndInvoiceTest extends TestCase
             ->get(route('invoices.download', $payment->id));
 
         $response->assertStatus(200);
-        $response->assertHeader('content-type', 'application/pdf');
+        $this->assertStringContainsString('text/html', $response->headers->get('content-type'));
     }
 
     public function test_athlete_cannot_download_other_users_invoice(): void
