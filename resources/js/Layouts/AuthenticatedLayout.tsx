@@ -82,6 +82,12 @@ export default function Authenticated({
                                         <NavLink href={route('manager.events.index')} active={route().current('manager.events.index')}>
                                             Events
                                         </NavLink>
+                                        <NavLink href={route('manager.attendance.index')} active={route().current('manager.attendance.*')}>
+                                            Attendance
+                                        </NavLink>
+                                        <NavLink href={route('leaderboard')} active={route().current('leaderboard')}>
+                                            Leaderboard
+                                        </NavLink>
                                     </>
                                 )}
 
@@ -93,19 +99,35 @@ export default function Authenticated({
                                         <NavLink href={route('athlete.schedule')} active={route().current('athlete.schedule')}>
                                             Schedule
                                         </NavLink>
+                                        <NavLink href={route('leaderboard')} active={route().current('leaderboard')}>
+                                            Leaderboard
+                                        </NavLink>
                                     </>
                                 )}
 
                                 {!isManager && !isParent && (user as any).roles?.includes('Coach') && (
-                                    <NavLink href={route('coach.events.index')} active={route().current('coach.events.index')}>
-                                        Events
-                                    </NavLink>
+                                    <>
+                                        <NavLink href={route('coach.events.index')} active={route().current('coach.events.index')}>
+                                            Events
+                                        </NavLink>
+                                        <NavLink href={route('coach.dashboard') + '?tab=attendance'} active={route().current('coach.dashboard') && typeof window !== 'undefined' && window.location.search.includes('tab=attendance')}>
+                                            Attendance
+                                        </NavLink>
+                                        <NavLink href={route('leaderboard')} active={route().current('leaderboard')}>
+                                            Leaderboard
+                                        </NavLink>
+                                    </>
                                 )}
 
                                 {isParent && (
-                                    <NavLink href={route('parent.billing')} active={route().current('parent.billing')}>
-                                        My Billing
-                                    </NavLink>
+                                    <>
+                                        <NavLink href={route('parent.billing')} active={route().current('parent.billing')}>
+                                            My Billing
+                                        </NavLink>
+                                        <NavLink href={route('leaderboard')} active={route().current('leaderboard')}>
+                                            Leaderboard
+                                        </NavLink>
+                                    </>
                                 )}
 
                                 <Link
@@ -211,6 +233,8 @@ export default function Authenticated({
                                 <ResponsiveNavLink href={route('manager.billing.index')} active={route().current('manager.billing.index')}>Billing & Revenue</ResponsiveNavLink>
                                 <ResponsiveNavLink href={route('manager.reports.index')} active={route().current('manager.reports.index')}>Financial Reports</ResponsiveNavLink>
                                 <ResponsiveNavLink href={route('manager.events.index')} active={route().current('manager.events.index')}>Events</ResponsiveNavLink>
+                                <ResponsiveNavLink href={route('manager.attendance.index')} active={route().current('manager.attendance.*')}>Attendance</ResponsiveNavLink>
+                                <ResponsiveNavLink href={route('leaderboard')} active={route().current('leaderboard')}>Leaderboard</ResponsiveNavLink>
                             </>
                         )}
 
@@ -218,15 +242,23 @@ export default function Authenticated({
                             <>
                                 <ResponsiveNavLink href={route('athlete.events.index')} active={route().current('athlete.events.index')}>Events</ResponsiveNavLink>
                                 <ResponsiveNavLink href={route('athlete.schedule')} active={route().current('athlete.schedule')}>Schedule</ResponsiveNavLink>
+                                <ResponsiveNavLink href={route('leaderboard')} active={route().current('leaderboard')}>Leaderboard</ResponsiveNavLink>
                             </>
                         )}
 
                         {!isManager && !isParent && (user as any).roles?.includes('Coach') && (
-                            <ResponsiveNavLink href={route('coach.events.index')} active={route().current('coach.events.index')}>Events</ResponsiveNavLink>
+                            <>
+                                <ResponsiveNavLink href={route('coach.events.index')} active={route().current('coach.events.index')}>Events</ResponsiveNavLink>
+                                <ResponsiveNavLink href={route('coach.dashboard') + '?tab=attendance'} active={route().current('coach.dashboard') && typeof window !== 'undefined' && window.location.search.includes('tab=attendance')}>Attendance</ResponsiveNavLink>
+                                <ResponsiveNavLink href={route('leaderboard')} active={route().current('leaderboard')}>Leaderboard</ResponsiveNavLink>
+                            </>
                         )}
 
                         {isParent && (
-                            <ResponsiveNavLink href={route('parent.billing')} active={route().current('parent.billing')}>My Billing</ResponsiveNavLink>
+                            <>
+                                <ResponsiveNavLink href={route('parent.billing')} active={route().current('parent.billing')}>My Billing</ResponsiveNavLink>
+                                <ResponsiveNavLink href={route('leaderboard')} active={route().current('leaderboard')}>Leaderboard</ResponsiveNavLink>
+                            </>
                         )}
 
                         <Link

@@ -55,6 +55,33 @@ interface Props {
 const EMPTY_PLAN = { name: '', training_group_id: '', monthly_price: '', yearly_price: '', description: '' };
 const EMPTY_SUB  = { user_id: '', subscription_plan_id: '', billing_cycle: 'monthly', starts_at: new Date().toISOString().split('T')[0] };
 
+const formatDate = (dateStr: string | null) => {
+    if (!dateStr) return '—';
+    try {
+        const dateOnly = dateStr.split('T')[0];
+        const parts = dateOnly.split('-');
+        if (parts.length === 3) {
+            const year = parseInt(parts[0], 10);
+            const month = parseInt(parts[1], 10) - 1;
+            const day = parseInt(parts[2], 10);
+            const date = new Date(year, month, day);
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+            });
+        }
+        const date = new Date(dateStr);
+        return date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+        });
+    } catch (e) {
+        return dateStr;
+    }
+};
+
 export default function BillingIndex({ subscriptions, plans, groups, members, totalRevenue }: Props) {
     const [tab, setTab]             = useState<'plans' | 'subscriptions'>('plans');
     const [editPlan, setEditPlan]   = useState<Plan | null>(null);
@@ -370,7 +397,7 @@ export default function BillingIndex({ subscriptions, plans, groups, members, to
                                                             {sub.status.charAt(0).toUpperCase() + sub.status.slice(1)}
                                                         </span>
                                                     </td>
-                                                    <td className="px-6 py-4 text-sm text-gray-500">{sub.next_payment_at || '—'}</td>
+                                                    <td className="px-6 py-4 text-sm text-gray-500">{formatDate(sub.next_payment_at)}</td>
                                                     <td className="px-6 py-4 text-right">
                                                         <div className="flex items-center justify-end gap-2">
                                                             <button

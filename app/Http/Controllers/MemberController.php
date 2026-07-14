@@ -43,6 +43,7 @@ class MemberController extends Controller
             'emergency_contact_phone' => 'nullable|string|max:50',
             'date_of_birth'           => 'nullable|date',
             'belt_rank'               => 'nullable|string|max:100',
+            'event_points'            => 'nullable|integer|min:0',
         ]);
 
         $user = User::create([
@@ -64,6 +65,7 @@ class MemberController extends Controller
                 'user_id'       => $user->id,
                 'date_of_birth' => $validated['date_of_birth'] ?? null,
                 'belt_rank'     => $validated['belt_rank'] ?? null,
+                'event_points'  => $validated['event_points'] ?? 0,
             ]);
         }
         if (in_array('Parent', $validated['roles'])) {
@@ -94,6 +96,7 @@ class MemberController extends Controller
             'emergency_contact_phone' => 'nullable|string|max:50',
             'date_of_birth'           => 'nullable|date',
             'belt_rank'               => 'nullable|string|max:100',
+            'event_points'            => 'nullable|integer|min:0',
         ]);
 
         $user->update([
@@ -110,11 +113,30 @@ class MemberController extends Controller
         $user->syncRoles($roles);
 
         if (in_array('Athlete', $roles)) {
+            $newPoints = $validated['event_points'] ?? 0;
+
+            // Sum calculated event registration points
+            $eventPoints = \App\Models\EventRegistration::where('user_id', $user->id)
+                ->where('status', 'attended')
+                ->whereHas('event')
+                ->get()
+                ->sum(fn($reg) => $reg->event->points ?? 0);
+
+            // Sum calculated training attendance points
+            $trainingPoints = \App\Models\TrainingAttendance::where('athlete_id', $user->id)
+                ->where('status', 'present')
+                ->sum(\DB::raw('base_points + extra_points'));
+
+            $calculated = $eventPoints + $trainingPoints;
+            $adjustment = $newPoints - $calculated;
+
             AthleteProfile::updateOrCreate(
                 ['user_id' => $user->id],
                 [
                     'date_of_birth' => $validated['date_of_birth'] ?? null,
                     'belt_rank'     => $validated['belt_rank'] ?? null,
+                    'event_points'  => $newPoints,
+                    'manual_points_adjustment' => $adjustment,
                 ]
             );
         } else {

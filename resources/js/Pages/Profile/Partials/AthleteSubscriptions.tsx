@@ -54,6 +54,19 @@ export default function AthleteSubscriptions({
     const formatDate = (dateStr: string | null) => {
         if (!dateStr) return 'N/A';
         try {
+            const dateOnly = dateStr.split('T')[0];
+            const parts = dateOnly.split('-');
+            if (parts.length === 3) {
+                const year = parseInt(parts[0], 10);
+                const month = parseInt(parts[1], 10) - 1;
+                const day = parseInt(parts[2], 10);
+                const date = new Date(year, month, day);
+                return date.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                });
+            }
             const date = new Date(dateStr);
             return date.toLocaleDateString('en-US', {
                 year: 'numeric',
@@ -132,7 +145,7 @@ export default function AthleteSubscriptions({
                                             <span className="text-gray-400">Ends:</span>{' '}
                                             <span className="font-semibold text-gray-700">{formatDate(sub.ends_at)}</span>
                                         </div>
-                                        {sub.status === 'active' && (
+                                        {sub.next_payment_at && (
                                             <div className="col-span-2">
                                                 <span className="text-gray-400">Next Payment:</span>{' '}
                                                 <span className="font-semibold text-indigo-600">{formatDate(sub.next_payment_at)}</span>

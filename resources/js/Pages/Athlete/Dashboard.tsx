@@ -91,10 +91,12 @@ export default function AthleteDashboard({
     athleteProfile,
     stats = { classes: 0, sparring: 0, events: 0, points: 0 },
     upcomingSchedules = [],
+    leaderboard = [],
 }: {
     athleteProfile?: AthleteProfile | null;
     stats?: { classes: number; sparring: number; events: number; points: number };
     upcomingSchedules?: UpcomingScheduleSlot[];
+    leaderboard?: Array<{ id: number; name: string; points: number; belt_rank: string }>;
 }) {
     const belt = athleteProfile?.belt_rank || '10. WHITE';
     const cardStyle = getBeltCardGradient(belt);
@@ -243,6 +245,46 @@ export default function AthleteDashboard({
                                 ) : (
                                     <p className="text-xs text-amber-500 italic leading-relaxed">No tip yet — your coach will add one soon.</p>
                                 )}
+                            </div>
+
+                            {/* Points Leaderboard */}
+                            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
+                                <div className="bg-gradient-to-r from-yellow-50 to-amber-50 px-5 py-3.5 border-b border-amber-100 flex items-center justify-between">
+                                    <div>
+                                        <h3 className="text-sm font-bold text-amber-900">Top Athletes (Points)</h3>
+                                        <p className="text-xs text-amber-600 mt-0.5">Top point earners in the club</p>
+                                    </div>
+                                    <div className="w-8 h-8 bg-amber-100 rounded-xl flex items-center justify-center text-sm">🏆</div>
+                                </div>
+                                <div className="p-4 divide-y divide-gray-50">
+                                    {leaderboard.length > 0 ? (
+                                        leaderboard.slice(0, 5).map((ath, idx) => (
+                                            <div key={ath.id} className="flex items-center justify-between py-2.5 first:pt-0 last:pb-0">
+                                                <div className="flex items-center gap-2.5">
+                                                    <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${
+                                                        idx === 0 ? 'bg-amber-500 text-white' :
+                                                        idx === 1 ? 'bg-slate-300 text-slate-800' :
+                                                        idx === 2 ? 'bg-amber-600 text-white' :
+                                                        'bg-gray-100 text-gray-500'
+                                                    }`}>
+                                                        {idx + 1}
+                                                    </span>
+                                                    <div>
+                                                        <p className="text-xs font-bold text-gray-800">{ath.name}</p>
+                                                        <span className="inline-block text-[8px] font-bold text-gray-400 uppercase">
+                                                            {ath.belt_rank}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <span className="inline-flex items-center gap-1 bg-amber-50 border border-amber-100 rounded-lg px-2 py-0.5 text-[10px] font-extrabold text-amber-700">
+                                                    ⭐ {ath.points} pts
+                                                </span>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <p className="text-xs text-gray-400 italic text-center py-4">No athlete points recorded yet.</p>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -6,6 +6,7 @@ import { BELT_OPTIONS, getBeltBadgeStyle, getBeltStyle } from '@/beltHelpers';
 interface AthleteProfile {
     belt_rank?: string | null;
     date_of_birth?: string | null;
+    event_points?: number | null;
 }
 
 interface Subscription {
@@ -41,6 +42,32 @@ interface Member {
     parent_profile?: any;
     subscriptions?: Subscription[];
 }
+
+const formatDate = (dateStr: string | null | undefined) => {
+    if (!dateStr) return '—';
+    try {
+        const dateOnly = dateStr.split('T')[0];
+        const parts = dateOnly.split('-');
+        if (parts.length === 3) {
+            const year = parseInt(parts[0], 10);
+            const month = parseInt(parts[1], 10) - 1;
+            const day = parseInt(parts[2], 10);
+            const date = new Date(year, month, day);
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+            });
+        }
+        return new Date(dateStr).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+        });
+    } catch {
+        return dateStr;
+    }
+};
 
 const roleConfig: Record<string, { bg: string; text: string; dot: string }> = {
     Coach:   { bg: 'bg-emerald-50', text: 'text-emerald-700', dot: 'bg-emerald-500' },
@@ -89,6 +116,7 @@ export default function MembersIndex({ members }: { members: Member[] }) {
         emergency_contact_phone: '',
         date_of_birth: '',
         belt_rank: '',
+        event_points: 0,
     });
 
     const openAddForm = () => {
@@ -113,6 +141,7 @@ export default function MembersIndex({ members }: { members: Member[] }) {
             emergency_contact_phone: member.emergency_contact_phone ?? '',
             date_of_birth: member.athlete_profile?.date_of_birth ?? '',
             belt_rank: member.athlete_profile?.belt_rank ?? '',
+            event_points: member.athlete_profile?.event_points ?? 0,
         });
         clearErrors();
         setIsFormOpen(true);
@@ -346,7 +375,7 @@ export default function MembersIndex({ members }: { members: Member[] }) {
                                 {data.roles.includes('Athlete') && (
                                     <div>
                                         <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Athlete Details</p>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                             <div>
                                                 <label className={labelClass}>Date of Birth</label>
                                                 <input
@@ -407,6 +436,19 @@ export default function MembersIndex({ members }: { members: Member[] }) {
                                                     <p className="mt-1 text-xs text-red-600">{errors.belt_rank}</p>
                                                 )}
                                             </div>
+                                            <div>
+                                                <label className={labelClass}>Points Score</label>
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    value={data.event_points}
+                                                    onChange={(e) => setData('event_points', Math.max(0, parseInt(e.target.value) || 0))}
+                                                    className={inputClass}
+                                                />
+                                                {errors.event_points && (
+                                                    <p className="mt-1 text-xs text-red-600">{errors.event_points}</p>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 )}
@@ -422,6 +464,7 @@ export default function MembersIndex({ members }: { members: Member[] }) {
                                                             <p className="font-semibold text-gray-900 text-sm">{sub.plan_name}</p>
                                                             <p className="text-xs text-gray-500 mt-0.5">
                                                                 {sub.billing_cycle === 'yearly' ? 'Yearly' : 'Monthly'} billing · €{Number(sub.amount).toFixed(2)}
+                                                                {sub.next_payment_at && ` · Next Due: ${formatDate(sub.next_payment_at)}`}
                                                             </p>
                                                         </div>
                                                         <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase ${

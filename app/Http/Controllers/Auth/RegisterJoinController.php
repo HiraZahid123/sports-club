@@ -168,7 +168,7 @@ class RegisterJoinController extends Controller
                 $subscription->update([
                     'status'          => 'active',
                     'last_payment_at' => now(),
-                    'next_payment_at' => now()->addMonth(),
+                    'next_payment_at' => $subscription->billing_cycle === 'yearly' ? now()->addYear() : now()->addMonth(),
                 ]);
 
                 AthleteProfile::firstOrCreate(['user_id' => $user->id]);

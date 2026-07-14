@@ -73,7 +73,7 @@ class ParentStripePaymentTest extends TestCase
         
         $this->stripeServiceMock->shouldReceive('createCheckoutSession')
             ->once()
-            ->with(\Mockery::on(fn($sub) => $sub->id === $this->subscription->id))
+            ->with(\Mockery::on(fn($sub) => $sub->id === $this->subscription->id), \Mockery::any(), \Mockery::any())
             ->andReturn($mockSession);
 
         $response = $this->actingAs($this->parent)

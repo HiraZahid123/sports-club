@@ -31,6 +31,32 @@ const STATUS_LABEL: Record<string, { label: string; color: string }> = {
     canceled: { label: 'Canceled', color: 'text-gray-700 bg-gray-100 border-gray-200' },
 };
 
+const formatDate = (dateStr: string | null | undefined) => {
+    if (!dateStr) return '—';
+    try {
+        const dateOnly = dateStr.split('T')[0];
+        const parts = dateOnly.split('-');
+        if (parts.length === 3) {
+            const year = parseInt(parts[0], 10);
+            const month = parseInt(parts[1], 10) - 1;
+            const day = parseInt(parts[2], 10);
+            const date = new Date(year, month, day);
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+            });
+        }
+        return new Date(dateStr).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+        });
+    } catch {
+        return dateStr;
+    }
+};
+
 export default function SubscriptionLocked({ subscriptions, club, userRole }: Props) {
     const isParent = userRole === 'Parent';
 
@@ -88,7 +114,7 @@ export default function SubscriptionLocked({ subscriptions, club, userRole }: Pr
                                                     )}
                                                     {sub.next_payment_at && (
                                                         <p className="text-xs text-gray-400 mt-1">
-                                                            Due: <span className="font-semibold text-gray-600">{sub.next_payment_at}</span>
+                                                            Due: <span className="font-semibold text-gray-600">{formatDate(sub.next_payment_at)}</span>
                                                         </p>
                                                     )}
                                                 </div>

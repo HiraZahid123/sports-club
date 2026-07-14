@@ -265,9 +265,8 @@ class EventController extends Controller
             'attended_at' => now(),
         ]);
 
-        // Award event points to athlete profile
-        AthleteProfile::where('user_id', $registration->user_id)
-            ->increment('event_points', $event->points);
+        // Award event points via self-healing sync
+        \App\Models\TrainingAttendance::syncProfilePoints($registration->user_id);
 
         return back();
     }
@@ -278,6 +277,9 @@ class EventController extends Controller
         abort_if($registration->event_id !== $event->id, 404);
 
         $registration->update(['status' => 'rejected']);
+
+        // Sync points since status changed from attended to rejected or similar
+        \App\Models\TrainingAttendance::syncProfilePoints($registration->user_id);
 
         return back();
     }

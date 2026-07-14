@@ -1,0 +1,130 @@
+import { jsxs, Fragment, jsx } from "react/jsx-runtime";
+import { Head, router, Link } from "@inertiajs/react";
+const STATUS_LABEL = {
+  overdue: { label: "Overdue", color: "text-red-700 bg-red-50 border-red-200" },
+  unpaid: { label: "Unpaid", color: "text-amber-700 bg-amber-50 border-amber-200" },
+  canceled: { label: "Canceled", color: "text-gray-700 bg-gray-100 border-gray-200" }
+};
+const formatDate = (dateStr) => {
+  if (!dateStr) return "—";
+  try {
+    const dateOnly = dateStr.split("T")[0];
+    const parts = dateOnly.split("-");
+    if (parts.length === 3) {
+      const year = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const day = parseInt(parts[2], 10);
+      const date = new Date(year, month, day);
+      return date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric"
+      });
+    }
+    return new Date(dateStr).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric"
+    });
+  } catch {
+    return dateStr;
+  }
+};
+function SubscriptionLocked({ subscriptions, club, userRole }) {
+  const isParent = userRole === "Parent";
+  return /* @__PURE__ */ jsxs(Fragment, { children: [
+    /* @__PURE__ */ jsx(Head, { title: "Account On Hold" }),
+    /* @__PURE__ */ jsxs("div", { className: "min-h-screen bg-slate-50 flex flex-col items-center justify-center px-4 py-12", children: [
+      /* @__PURE__ */ jsxs("div", { className: "w-full max-w-lg bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden", children: [
+        /* @__PURE__ */ jsxs("div", { className: "bg-gradient-to-r from-red-500 to-rose-600 px-8 py-8 text-center", children: [
+          /* @__PURE__ */ jsx("div", { className: "w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4", children: /* @__PURE__ */ jsx("svg", { className: "w-9 h-9 text-white", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor", strokeWidth: 2, children: /* @__PURE__ */ jsx("path", { strokeLinecap: "round", strokeLinejoin: "round", d: "M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" }) }) }),
+          /* @__PURE__ */ jsx("h1", { className: "text-2xl font-black text-white mb-1", children: "Account On Hold" }),
+          /* @__PURE__ */ jsx("p", { className: "text-red-100 text-sm", children: isParent ? "One or more of your children's memberships require payment." : "Your membership payment is overdue or unpaid." })
+        ] }),
+        /* @__PURE__ */ jsxs("div", { className: "px-8 py-7 space-y-6", children: [
+          /* @__PURE__ */ jsxs("p", { className: "text-gray-600 text-sm leading-relaxed text-center", children: [
+            "Access to your ",
+            isParent ? "children's" : "",
+            " profile and club features has been temporarily suspended until the subscription is renewed. Please contact your club manager to resolve this."
+          ] }),
+          subscriptions.length > 0 && /* @__PURE__ */ jsxs("div", { className: "space-y-3", children: [
+            /* @__PURE__ */ jsx("p", { className: "text-xs font-bold text-gray-500 uppercase tracking-wide", children: subscriptions.length === 1 ? "Unpaid Subscription" : "Unpaid Subscriptions" }),
+            subscriptions.map((sub) => {
+              const badge = STATUS_LABEL[sub.status] ?? { label: sub.status, color: "text-gray-600 bg-gray-100 border-gray-200" };
+              return /* @__PURE__ */ jsxs("div", { className: "rounded-2xl border border-gray-100 bg-slate-50 p-4 flex flex-col gap-3", children: [
+                /* @__PURE__ */ jsxs("div", { className: "flex items-center justify-between gap-4 w-full", children: [
+                  /* @__PURE__ */ jsxs("div", { className: "min-w-0", children: [
+                    sub.user && /* @__PURE__ */ jsx("p", { className: "text-xs font-semibold text-indigo-600 mb-0.5", children: sub.user.name }),
+                    /* @__PURE__ */ jsx("p", { className: "font-semibold text-gray-900 text-sm truncate", children: sub.plan_name }),
+                    sub.training_group && /* @__PURE__ */ jsx("p", { className: "text-xs text-gray-400 mt-0.5", children: sub.training_group.name }),
+                    sub.next_payment_at && /* @__PURE__ */ jsxs("p", { className: "text-xs text-gray-400 mt-1", children: [
+                      "Due: ",
+                      /* @__PURE__ */ jsx("span", { className: "font-semibold text-gray-600", children: formatDate(sub.next_payment_at) })
+                    ] })
+                  ] }),
+                  /* @__PURE__ */ jsxs("div", { className: "text-right flex-shrink-0", children: [
+                    /* @__PURE__ */ jsxs("p", { className: "text-lg font-black text-gray-900", children: [
+                      "€",
+                      Number(sub.amount).toFixed(2)
+                    ] }),
+                    /* @__PURE__ */ jsx("span", { className: `inline-block mt-1 text-xs font-bold px-2 py-0.5 rounded-lg border ${badge.color}`, children: badge.label }),
+                    /* @__PURE__ */ jsx("p", { className: "text-xs text-gray-400 mt-1 capitalize", children: sub.billing_cycle })
+                  ] })
+                ] }),
+                !isParent && (sub.status === "unpaid" || sub.status === "overdue") && /* @__PURE__ */ jsx(
+                  "button",
+                  {
+                    onClick: () => router.post(route("athlete.checkout", sub.id)),
+                    className: "w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl text-center transition-all shadow-sm",
+                    children: "💳 Pay Now"
+                  }
+                )
+              ] }, sub.id);
+            })
+          ] }),
+          subscriptions.length === 0 && /* @__PURE__ */ jsx("div", { className: "rounded-2xl border border-dashed border-gray-200 p-5 text-center text-sm text-gray-400", children: "No subscription details found. Contact your manager." }),
+          club && (club.email || club.phone) && /* @__PURE__ */ jsxs("div", { className: "rounded-2xl bg-indigo-50 border border-indigo-100 p-4", children: [
+            /* @__PURE__ */ jsxs("p", { className: "text-xs font-bold text-indigo-500 uppercase tracking-wide mb-2", children: [
+              "Contact ",
+              club.name
+            ] }),
+            /* @__PURE__ */ jsxs("div", { className: "space-y-1.5", children: [
+              club.email && /* @__PURE__ */ jsxs("a", { href: `mailto:${club.email}`, className: "flex items-center gap-2 text-sm text-indigo-700 font-semibold hover:text-indigo-900 transition-colors", children: [
+                /* @__PURE__ */ jsx("svg", { className: "w-4 h-4 flex-shrink-0", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor", strokeWidth: 2, children: /* @__PURE__ */ jsx("path", { strokeLinecap: "round", strokeLinejoin: "round", d: "M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" }) }),
+                club.email
+              ] }),
+              club.phone && /* @__PURE__ */ jsxs("a", { href: `tel:${club.phone}`, className: "flex items-center gap-2 text-sm text-indigo-700 font-semibold hover:text-indigo-900 transition-colors", children: [
+                /* @__PURE__ */ jsx("svg", { className: "w-4 h-4 flex-shrink-0", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor", strokeWidth: 2, children: /* @__PURE__ */ jsx("path", { strokeLinecap: "round", strokeLinejoin: "round", d: "M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" }) }),
+                club.phone
+              ] })
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxs("div", { className: "flex flex-col gap-2 pt-1", children: [
+            isParent && /* @__PURE__ */ jsx(
+              Link,
+              {
+                href: route("parent.billing"),
+                className: "w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-xl text-center transition-all shadow-sm shadow-indigo-200",
+                children: "View Billing & Pay"
+              }
+            ),
+            /* @__PURE__ */ jsx(
+              Link,
+              {
+                href: route("logout"),
+                method: "post",
+                as: "button",
+                className: "w-full py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold rounded-xl text-center transition-all",
+                children: "Sign Out"
+              }
+            )
+          ] })
+        ] })
+      ] }),
+      /* @__PURE__ */ jsx("p", { className: "mt-6 text-xs text-gray-400", children: "Once your manager marks the payment as received, your access will be restored automatically." })
+    ] })
+  ] });
+}
+export {
+  SubscriptionLocked as default
+};

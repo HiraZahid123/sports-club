@@ -2,8 +2,14 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 import { getBeltBadgeStyle, getBeltStyle } from '@/beltHelpers';
 
-export default function ParentDashboard() {
-    const children = [
+export default function ParentDashboard({
+    childrenData = [],
+    billingSummary = { nextPaymentDue: 'Check with Manager', amountDue: 0 }
+}: {
+    childrenData?: any[];
+    billingSummary?: { nextPaymentDue: string; amountDue: number };
+}) {
+    const children = childrenData.length > 0 ? childrenData : [
         { name: 'Alex Smith', group: 'Juniors Taekwondo', status: 'Active', belt: '8. YELLOW', progress: 60, classes: 18 },
         { name: 'Sarah Smith', group: 'Elite Sparring', status: 'Active', belt: '4. BLUE', progress: 45, classes: 24 },
     ];
@@ -30,11 +36,11 @@ export default function ParentDashboard() {
                         </div>
                         <div className="bg-white rounded-2xl border border-emerald-100 shadow-sm p-5">
                             <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">Next Payment Due</p>
-                            <p className="text-xl font-black text-emerald-600">June 01</p>
+                            <p className="text-xl font-black text-emerald-600">{billingSummary.nextPaymentDue}</p>
                         </div>
                         <div className="bg-white rounded-2xl border border-amber-100 shadow-sm p-5">
                             <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">Amount Due</p>
-                            <p className="text-3xl font-black text-amber-600">€85</p>
+                            <p className="text-3xl font-black text-amber-600">€{Number(billingSummary.amountDue).toFixed(2)}</p>
                         </div>
                     </div>
 
@@ -57,8 +63,10 @@ export default function ParentDashboard() {
                                                             <p className="text-xs text-gray-500">{child.group}</p>
                                                         </div>
                                                     </div>
-                                                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-emerald-50 text-emerald-700 text-[10px] font-bold rounded-lg border border-emerald-100">
-                                                        <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+                                                    <span className={`inline-flex items-center gap-1 px-2 py-1 text-[10px] font-bold rounded-lg border ${
+                                                        child.status === 'Active' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-rose-50 text-rose-700 border-rose-100'
+                                                    }`}>
+                                                        <span className={`w-1.5 h-1.5 rounded-full ${child.status === 'Active' ? 'bg-emerald-500' : 'bg-rose-500'}`}></span>
                                                         {child.status}
                                                     </span>
                                                 </div>
@@ -105,7 +113,7 @@ export default function ParentDashboard() {
                                 <div className="p-5 space-y-3">
                                     <div className="flex justify-between items-center">
                                         <span className="text-sm text-gray-500">Next Payment Due:</span>
-                                        <span className="font-bold text-gray-900 text-sm">June 01, 2026</span>
+                                        <span className="font-bold text-gray-900 text-sm">{billingSummary.nextPaymentDue}</span>
                                     </div>
                                     <div className="flex justify-between items-center">
                                         <span className="text-sm text-gray-500">Children:</span>
@@ -113,7 +121,7 @@ export default function ParentDashboard() {
                                     </div>
                                     <div className="flex justify-between items-center pt-2 border-t border-gray-100">
                                         <span className="text-sm font-semibold text-gray-600">Total Amount:</span>
-                                        <span className="text-xl font-black text-indigo-600">€85.00</span>
+                                        <span className="text-xl font-black text-indigo-600">€{Number(billingSummary.amountDue).toFixed(2)}</span>
                                     </div>
                                     <Link
                                         href={route('parent.billing')}

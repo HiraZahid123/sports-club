@@ -112,9 +112,13 @@ class BillingController extends Controller
             'status'          => 'completed',
         ]);
 
+        $baseDate = ($subscription->next_payment_at && Carbon::parse($subscription->next_payment_at)->isFuture())
+            ? Carbon::parse($subscription->next_payment_at)
+            : Carbon::parse($validated['payment_date']);
+
         $nextPayment = $subscription->billing_cycle === 'yearly'
-            ? now()->addYear()
-            : now()->addMonth();
+            ? $baseDate->copy()->addYear()
+            : $baseDate->copy()->addMonth();
 
         $subscription->update([
             'status'          => 'active',
@@ -250,10 +254,18 @@ class BillingController extends Controller
             'notes'           => 'Stripe Checkout completed for ' . ($subscription->user->name ?? 'member'),
         ]);
 
+        $baseDate = ($subscription->next_payment_at && Carbon::parse($subscription->next_payment_at)->isFuture())
+            ? Carbon::parse($subscription->next_payment_at)
+            : now();
+
+        $nextPayment = $subscription->billing_cycle === 'yearly'
+            ? $baseDate->copy()->addYear()
+            : $baseDate->copy()->addMonth();
+
         $subscription->update([
             'status'          => 'active',
             'last_payment_at' => now(),
-            'next_payment_at' => now()->addMonth(),
+            'next_payment_at' => $nextPayment,
         ]);
 
         if ($user->hasRole('Athlete')) {

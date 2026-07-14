@@ -1,7 +1,8 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { getBeltBadgeStyle, getBeltStyle } from '@/beltHelpers';
+import axios from 'axios';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -95,7 +96,7 @@ const fmtTime = (t: string) => {
     return `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}`;
 };
 
-type Section = 'overview' | 'athletes' | 'groups' | 'earnings';
+type Section = 'overview' | 'athletes' | 'groups' | 'earnings' | 'attendance';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -339,10 +340,11 @@ function AthleteRow({
 // ── Section Nav Bar ────────────────────────────────────────────────────────────
 function SectionNav({ active, setActive }: { active: Section; setActive: (s: Section) => void }) {
     const tabs: { id: Section; label: string; icon: string }[] = [
-        { id: 'overview',  label: 'Overview',  icon: '📊' },
-        { id: 'athletes',  label: 'Athletes',  icon: '🥋' },
-        { id: 'groups',    label: 'Groups',    icon: '🏆' },
-        { id: 'earnings',  label: 'Earnings',  icon: '💰' },
+        { id: 'overview',   label: 'Overview',   icon: '📊' },
+        { id: 'athletes',   label: 'Athletes',   icon: '🥋' },
+        { id: 'groups',     label: 'Groups',     icon: '🏆' },
+        { id: 'attendance', label: 'Attendance', icon: '📝' },
+        { id: 'earnings',   label: 'Earnings',   icon: '💰' },
     ];
     return (
         <div className="flex gap-1 bg-slate-100 rounded-2xl p-1">
@@ -372,14 +374,36 @@ export default function CoachDashboard({
     payoutHistory,
     totalEarned,
     coachProfile,
+    leaderboard = [],
 }: {
     groups: Group[];
     nextPayout: Payout | null;
     payoutHistory: Payout[];
     totalEarned: number;
     coachProfile: CoachProfile | null;
+    leaderboard?: Array<{ id: number; name: string; points: number; belt_rank: string }>;
 }) {
-    const [activeSection, setActiveSection]     = useState<Section>('overview');
+    const [activeSection, setActiveSection]     = useState<Section>(() => {
+        if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search);
+            const tabParam = params.get('tab') as Section;
+            if (['overview', 'athletes', 'groups', 'attendance', 'earnings'].includes(tabParam)) {
+                return tabParam;
+            }
+        }
+        return 'overview';
+    });
+
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search);
+            const tabParam = params.get('tab') as Section;
+            if (['overview', 'athletes', 'groups', 'attendance', 'earnings'].includes(tabParam)) {
+                setActiveSection(tabParam);
+            }
+        }
+    }, [window.location.search]);
+
     const [selectedGroupIdx, setSelectedGroupIdx] = useState(0);
     const [expandedAthleteId, setExpandedAthleteId] = useState<number | null>(null);
 
@@ -610,32 +634,36 @@ export default function CoachDashboard({
                                     )}
                                 </div>
                             </div>
-
                             {/* Quick access to sections */}
-                            <div className="grid grid-cols-1 gap-4">
-                                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-                                    <h3 className="text-sm font-bold text-gray-900 mb-4">Quick Access</h3>
-                                    <div className="space-y-2.5">
-                                        {[
-                                            { section: 'athletes' as Section, icon: '🥋', label: 'View All Athletes', sub: `${totalAthletes} athletes across ${groups.length} groups`, color: 'bg-emerald-50 hover:bg-emerald-100 border-emerald-100' },
-                                            { section: 'groups' as Section,   icon: '🏆', label: 'Training Groups',   sub: `${groups.length} active groups`, color: 'bg-indigo-50 hover:bg-indigo-100 border-indigo-100' },
-                                            { section: 'earnings' as Section, icon: '💰', label: 'My Earnings',       sub: `Total: ${fmtCurrency(totalEarned)}`, color: 'bg-amber-50 hover:bg-amber-100 border-amber-100' },
-                                        ].map(item => (
-                                            <button
-                                                key={item.section}
-                                                onClick={() => setActiveSection(item.section)}
-                                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition-all text-left ${item.color}`}
-                                            >
-                                                <span className="text-xl">{item.icon}</span>
-                                                <div>
-                                                    <p className="text-sm font-bold text-gray-900">{item.label}</p>
-                                                    <p className="text-xs text-gray-500">{item.sub}</p>
-                                                </div>
-                                                <svg className="w-4 h-4 text-gray-400 ml-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                                </svg>
-                                            </button>
-                                        ))}
+                            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col">
+                                <div className="border-b border-gray-50 pb-3 mb-4 flex items-center justify-between">
+                                    <div>
+                                        <h3 className="text-sm font-bold text-gray-900">Quick Actions</h3>
+                                        <p className="text-xs text-gray-500 mt-0.5">Fast navigation options</p>
+                                    </div>
+                                    <div className="w-8 h-8 bg-indigo-50 rounded-xl flex items-center justify-center text-sm">⚡</div>
+                                </div>
+                                <div className="space-y-3">
+                                    {[
+                                        { label: 'Mark Attendance', section: 'attendance' as Section, icon: '📝', sub: 'Log athlete attendance', color: 'bg-indigo-50 border-indigo-100 hover:bg-indigo-100' },
+                                        { label: 'View Athlete List', section: 'athletes' as Section, icon: '🥋', sub: 'Manage athlete skills', color: 'bg-emerald-50 border-emerald-100 hover:bg-emerald-100' },
+                                        { label: 'Manage Groups', section: 'groups' as Section, icon: '🏆', sub: 'View group schedules', color: 'bg-purple-50 border-purple-100 hover:bg-purple-100' },
+                                    ].map((item) => (
+                                        <button
+                                            key={item.section}
+                                            onClick={() => setActiveSection(item.section)}
+                                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition-all text-left ${item.color}`}
+                                        >
+                                            <span className="text-xl">{item.icon}</span>
+                                            <div>
+                                                <p className="text-sm font-bold text-gray-900">{item.label}</p>
+                                                <p className="text-xs text-gray-500">{item.sub}</p>
+                                            </div>
+                                            <svg className="w-4 h-4 text-gray-400 ml-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                            </svg>
+                                        </button>
+                                    ))}
                                         <Link
                                             href={route('coach.schedule')}
                                             className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition-all text-left bg-blue-50 hover:bg-blue-100 border-blue-100"
@@ -652,8 +680,7 @@ export default function CoachDashboard({
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    )}
+                        )}
 
                     {/* ══════════════════════════════════════════════════════
                         SECTION: ALL ATHLETES
@@ -912,8 +939,234 @@ export default function CoachDashboard({
                         </div>
                     )}
 
+                    {activeSection === 'attendance' && (
+                        <CoachAttendanceSection groups={groups} />
+                    )}
+
                 </div>
             </div>
         </AuthenticatedLayout>
+    );
+}
+
+interface AttendanceRow {
+    athlete_id: number;
+    name: string;
+    status: 'present' | 'absent';
+    base_points: number;
+    extra_points: number;
+}
+
+function CoachAttendanceSection({ groups }: { groups: Group[] }) {
+    const [selectedGroupId, setSelectedGroupId] = useState<string>('');
+    const [attendanceDate, setAttendanceDate] = useState<string>(new Date().toISOString().split('T')[0]);
+    const [attendanceList, setAttendanceList] = useState<AttendanceRow[]>([]);
+    const [loading, setLoading] = useState<boolean>(false);
+    const [submitting, setSubmitting] = useState<boolean>(false);
+    const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+    useEffect(() => {
+        if (groups.length > 0 && !selectedGroupId) {
+            setSelectedGroupId(String(groups[0].id));
+        }
+    }, [groups]);
+
+    const loadAttendance = () => {
+        if (!selectedGroupId || !attendanceDate) return;
+        setLoading(true);
+        setMessage(null);
+        axios.get(route('coach.attendance.load'), {
+            params: {
+                group_id: selectedGroupId,
+                date: attendanceDate
+            }
+        })
+        .then(res => {
+            setAttendanceList(res.data.attendance);
+        })
+        .catch(err => {
+            console.error(err);
+            setMessage({ type: 'error', text: 'Failed to load attendance.' });
+        })
+        .finally(() => {
+            setLoading(false);
+        });
+    };
+
+    useEffect(() => {
+        loadAttendance();
+    }, [selectedGroupId, attendanceDate]);
+
+    const handleStatusChange = (athleteId: number, status: 'present' | 'absent') => {
+        setAttendanceList(prev => prev.map(item => 
+            item.athlete_id === athleteId ? { ...item, status } : item
+        ));
+    };
+
+    const handlePointsChange = (athleteId: number, field: 'base_points' | 'extra_points', value: number) => {
+        setAttendanceList(prev => prev.map(item => 
+            item.athlete_id === athleteId ? { ...item, [field]: value } : item
+        ));
+    };
+
+    const submitAttendance = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (attendanceList.length === 0) return;
+        setSubmitting(true);
+        setMessage(null);
+        axios.post(route('coach.attendance.save'), {
+            training_group_id: Number(selectedGroupId),
+            attendance_date: attendanceDate,
+            attendance_data: attendanceList
+        })
+        .then(res => {
+            setMessage({ type: 'success', text: 'Attendance logged and points synchronized successfully!' });
+        })
+        .catch(err => {
+            console.error(err);
+            setMessage({ type: 'error', text: 'Failed to save attendance logs. Please check all values.' });
+        })
+        .finally(() => {
+            setSubmitting(false);
+        });
+    };
+
+    return (
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="bg-gradient-to-r from-indigo-50 to-blue-50 px-6 py-4 border-b border-indigo-100 flex items-center justify-between">
+                <div>
+                    <h3 className="text-sm font-bold text-indigo-900">Mark Training Attendance</h3>
+                    <p className="text-xs text-indigo-600 mt-0.5">Select a group and log athlete attendance and point rewards</p>
+                </div>
+                <div className="w-9 h-9 bg-indigo-100 rounded-xl flex items-center justify-center text-lg">📝</div>
+            </div>
+
+            <div className="p-6 space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Training Group</label>
+                        <select
+                            value={selectedGroupId}
+                            onChange={e => setSelectedGroupId(e.target.value)}
+                            className="w-full rounded-xl border border-gray-200 text-sm py-2.5 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        >
+                            {groups.map(g => (
+                                <option key={g.id} value={g.id}>{g.name} ({g.skill_level})</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Attendance Date</label>
+                        <input
+                            type="date"
+                            value={attendanceDate}
+                            onChange={e => setAttendanceDate(e.target.value)}
+                            max={new Date().toISOString().split('T')[0]}
+                            className="w-full rounded-xl border border-gray-200 text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        />
+                    </div>
+                </div>
+
+                {message && (
+                    <div className={`p-4 rounded-xl text-sm font-semibold border ${
+                        message.type === 'success' ? 'bg-emerald-50 border-emerald-100 text-emerald-800' : 'bg-red-50 border-red-100 text-red-800'
+                    }`}>
+                        {message.text}
+                    </div>
+                )}
+
+                {loading ? (
+                    <div className="flex flex-col items-center justify-center py-20 text-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mb-3"></div>
+                        <p className="text-sm text-gray-500">Loading group athletes list...</p>
+                    </div>
+                ) : (
+                    <form onSubmit={submitAttendance} className="space-y-4">
+                        {attendanceList.length === 0 ? (
+                            <div className="text-center py-10 text-gray-400 italic text-sm border-2 border-dashed border-gray-100 rounded-xl">
+                                No athletes found in this group.
+                            </div>
+                        ) : (
+                            <div className="overflow-x-auto rounded-xl border border-gray-100">
+                                <table className="min-w-full divide-y divide-gray-100 text-sm text-left">
+                                    <thead className="bg-slate-50 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                                        <tr>
+                                            <th className="px-6 py-3">Athlete</th>
+                                            <th className="px-6 py-3 text-center">Status</th>
+                                            <th className="px-6 py-3 text-center">Base Points</th>
+                                            <th className="px-6 py-3 text-center">Extra Points</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-50 bg-white">
+                                        {attendanceList.map((row) => (
+                                            <tr key={row.athlete_id} className="hover:bg-slate-50/50 transition-colors">
+                                                <td className="px-6 py-4 font-bold text-gray-900">{row.name}</td>
+                                                <td className="px-6 py-4 text-center">
+                                                    <div className="inline-flex rounded-xl p-1 bg-slate-100 border border-slate-200/50">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleStatusChange(row.athlete_id, 'present')}
+                                                            className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${
+                                                                row.status === 'present'
+                                                                    ? 'bg-emerald-600 text-white shadow-sm'
+                                                                    : 'text-gray-500 hover:text-gray-700'
+                                                            }`}
+                                                        >
+                                                            Present
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleStatusChange(row.athlete_id, 'absent')}
+                                                            className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${
+                                                                row.status === 'absent'
+                                                                    ? 'bg-rose-600 text-white shadow-sm'
+                                                                    : 'text-gray-500 hover:text-gray-700'
+                                                            }`}
+                                                        >
+                                                            Absent
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4 text-center">
+                                                    <input
+                                                        type="number"
+                                                        min="0"
+                                                        value={row.base_points}
+                                                        onChange={e => handlePointsChange(row.athlete_id, 'base_points', Math.max(0, parseInt(e.target.value) || 0))}
+                                                        disabled={row.status === 'absent'}
+                                                        className="w-16 rounded-lg border border-gray-200 text-center py-1 px-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-xs font-semibold disabled:opacity-40 disabled:bg-slate-50"
+                                                    />
+                                                </td>
+                                                <td className="px-6 py-4 text-center">
+                                                    <input
+                                                        type="number"
+                                                        value={row.extra_points}
+                                                        onChange={e => handlePointsChange(row.athlete_id, 'extra_points', parseInt(e.target.value) || 0)}
+                                                        disabled={row.status === 'absent'}
+                                                        className="w-16 rounded-lg border border-gray-200 text-center py-1 px-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-xs font-semibold disabled:opacity-40 disabled:bg-slate-50"
+                                                    />
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+
+                        {attendanceList.length > 0 && (
+                            <div className="flex justify-end pt-3">
+                                <button
+                                    type="submit"
+                                    disabled={submitting}
+                                    className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition-all shadow-sm disabled:opacity-50"
+                                >
+                                    {submitting ? 'Saving...' : 'Save Attendance Logs'}
+                                </button>
+                            </div>
+                        )}
+                    </form>
+                )}
+            </div>
+        </div>
     );
 }

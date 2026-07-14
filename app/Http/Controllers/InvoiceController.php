@@ -61,6 +61,13 @@ class InvoiceController extends Controller
         $transactionId = $payment->transaction_id ?? 'N/A';
         $paymentMethod = strtoupper($payment->payment_method ?? 'N/A');
 
+        $logoPath = public_path('ml sports.png');
+        $logoBase64 = '';
+        if (file_exists($logoPath)) {
+            $logoData = base64_encode(file_get_contents($logoPath));
+            $logoBase64 = 'data:image/png;base64,' . $logoData;
+        }
+
         $html = <<<HTML
 <!DOCTYPE html>
 <html lang="en">
@@ -68,6 +75,10 @@ class InvoiceController extends Controller
     <meta charset="UTF-8">
     <title>Invoice #{$invoiceId}</title>
     <style>
+        @page {
+            size: auto;
+            margin: 0 !important;
+        }
         body {
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
             color: #333333;
@@ -172,14 +183,18 @@ class InvoiceController extends Controller
             color: #065f46;
         }
         @media print {
+            @page {
+                size: auto;
+                margin: 0 !important;
+            }
             .no-print {
                 display: none !important;
             }
             body {
                 background: white;
                 color: black;
-                padding: 0;
-                margin: 0;
+                padding: 15mm;
+                margin: 0 !important;
             }
             .invoice-container {
                 margin: 0;
@@ -297,9 +312,18 @@ class InvoiceController extends Controller
         </div>
 
         <!-- Footer -->
-        <div class="footer">
-            Thank you for being a valued member of {$clubName}!<br>
-            If you have any questions about this invoice, please contact support at {$clubEmail}.
+        <div class="footer" style="margin-top: 60px;">
+            <table style="width: 100%; border-top: 1px solid #e2e8f0; padding-top: 20px; border-collapse: collapse;">
+                <tr>
+                    <td style="text-align: left; vertical-align: middle; width: 45%;">
+                        <img src="{$logoBase64}" alt="ML SPORT Technologies Logo" style="height: 32px; width: auto; display: block;" />
+                    </td>
+                    <td style="text-align: right; vertical-align: middle; width: 55%; color: #94a3b8; font-size: 11px; line-height: 1.4; font-family: sans-serif;">
+                        Thank you for being a valued member of {$clubName}!<br>
+                        If you have any questions, please contact support at {$clubEmail}.
+                    </td>
+                </tr>
+            </table>
         </div>
     </div>
 

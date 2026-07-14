@@ -55,6 +55,14 @@ Route::get('/dashboard', function () {
 Route::middleware(['auth', 'verified', 'role:Manager|Super Admin'])->prefix('manager')->name('manager.')->group(function () {
     Route::get('/dashboard', function () {
         $clubId = auth()->user()->club_id;
+
+        // Transition active subscriptions to overdue if next_payment_at has passed
+        \App\Models\Subscription::where('club_id', $clubId)
+            ->where('status', 'active')
+            ->whereNotNull('next_payment_at')
+            ->where('next_payment_at', '<', now()->toDateString())
+            ->update(['status' => 'overdue']);
+
         $monthlyRevenue = \App\Models\Payment::whereHas('subscription', function($q) use ($clubId) {
             $q->where('club_id', $clubId);
         })->whereMonth('payment_date', now()->month)->sum('amount');
@@ -65,14 +73,104 @@ Route::middleware(['auth', 'verified', 'role:Manager|Super Admin'])->prefix('man
             ->sum('amount');
 
         $stats = [
-            'totalMembers' => \App\Models\User::where('club_id', $clubId)->count(),
+            'totalMembers' => \App\Models\User::where('club_id', $clubId)
+                ->whereHas('roles', function ($q) {
+                    $q->where('name', 'Athlete');
+                })->count(),
             'activeGroups' => \App\Models\TrainingGroup::where('club_id', $clubId)->count(),
             'monthlyRevenue' => $monthlyRevenue,
             'monthlyPayouts' => $monthlyPayouts,
             'monthlyNetRevenue' => $monthlyRevenue - $monthlyPayouts,
             'overdueCount' => \App\Models\Subscription::where('club_id', $clubId)->where('status', 'overdue')->count(),
         ];
-        return Inertia::render('Manager/Dashboard', ['stats' => $stats]);
+
+        // Dynamic recent activity
+        $recentUsers = \App\Models\User::where('club_id', $clubId)
+            ->latest()
+            ->limit(5)
+            ->get()
+            ->map(function ($user) {
+                return [
+                    'initial' => strtoupper(substr($user->name, 0, 1)),
+                    'name' => $user->name,
+                    'action' => 'joined the club',
+                    'time' => $user->created_at ? $user->created_at->diffForHumans() : 'some time ago',
+                    'timestamp' => $user->created_at ? $user->created_at->timestamp : 0,
+                    'color' => 'bg-blue-100 text-blue-700',
+                ];
+            });
+
+        $recentPayments = \App\Models\Payment::whereHas('subscription', function($q) use ($clubId) {
+                $q->where('club_id', $clubId);
+            })
+            ->with('subscription.user')
+            ->latest()
+            ->limit(5)
+            ->get()
+            ->map(function ($payment) {
+                $userName = $payment->subscription->user->name ?? 'Unknown Athlete';
+                return [
+                    'initial' => strtoupper(substr($userName, 0, 1)),
+                    'name' => $userName,
+                    'action' => "payment recorded — €{$payment->amount}",
+                    'time' => $payment->created_at ? $payment->created_at->diffForHumans() : 'some time ago',
+                    'timestamp' => $payment->created_at ? $payment->created_at->timestamp : 0,
+                    'color' => 'bg-emerald-100 text-emerald-700',
+                ];
+            });
+
+        $recentEventRegistrations = \App\Models\EventRegistration::whereHas('event', function($q) use ($clubId) {
+                $q->where('club_id', $clubId);
+            })
+            ->with(['user', 'event'])
+            ->latest()
+            ->limit(5)
+            ->get()
+            ->map(function ($reg) {
+                $userName = $reg->user->name ?? 'Unknown Athlete';
+                $eventName = $reg->event->name ?? 'Event';
+                $statusStr = $reg->status === 'attended' ? 'attended' : ($reg->status === 'registered' ? 'registered for' : 'applied for');
+                return [
+                    'initial' => strtoupper(substr($userName, 0, 1)),
+                    'name' => $userName,
+                    'action' => "{$statusStr} {$eventName}",
+                    'time' => $reg->created_at ? $reg->created_at->diffForHumans() : 'some time ago',
+                    'timestamp' => $reg->created_at ? $reg->created_at->timestamp : 0,
+                    'color' => 'bg-indigo-100 text-indigo-700',
+                ];
+            });
+
+        $recentActivity = collect()
+            ->concat($recentUsers)
+            ->concat($recentPayments)
+            ->concat($recentEventRegistrations)
+            ->sortByDesc('timestamp')
+            ->take(5)
+            ->values()
+            ->toArray();
+
+        $leaderboard = \App\Models\User::role('Athlete')
+            ->where('club_id', $clubId)
+            ->with('athleteProfile')
+            ->get()
+            ->map(function($u) {
+                return [
+                    'id' => $u->id,
+                    'name' => $u->name,
+                    'points' => $u->athleteProfile ? ($u->athleteProfile->event_points ?? 0) : 0,
+                    'belt_rank' => $u->athleteProfile ? ($u->athleteProfile->belt_rank ?? '10. WHITE') : '10. WHITE',
+                ];
+            })
+            ->sortByDesc('points')
+            ->take(10)
+            ->values()
+            ->toArray();
+
+        return Inertia::render('Manager/Dashboard', [
+            'stats' => $stats,
+            'recentActivity' => $recentActivity,
+            'leaderboard' => $leaderboard,
+        ]);
     })->name('dashboard');
 
     Route::get('/club', [\App\Http\Controllers\ClubController::class, 'edit'])->name('club.edit');
@@ -127,6 +225,10 @@ Route::middleware(['auth', 'verified', 'role:Manager|Super Admin'])->prefix('man
     Route::post('/events', [\App\Http\Controllers\EventController::class, 'store'])->name('events.store');
     Route::post('/events/{event}', [\App\Http\Controllers\EventController::class, 'update'])->name('events.update');
     Route::delete('/events/{event}', [\App\Http\Controllers\EventController::class, 'destroy'])->name('events.destroy');
+
+    Route::get('/attendance', [\App\Http\Controllers\AttendanceController::class, 'index'])->name('attendance.index');
+    Route::post('/attendance', [\App\Http\Controllers\AttendanceController::class, 'save'])->name('attendance.save');
+    Route::get('/attendance/load', [\App\Http\Controllers\AttendanceController::class, 'loadAttendance'])->name('attendance.load');
 });
 
 // Coach Routes
@@ -150,12 +252,30 @@ Route::middleware(['auth', 'verified', 'role:Coach', \App\Http\Middleware\CheckS
             ->where('status', 'paid')
             ->sum('amount');
 
+        $leaderboard = \App\Models\User::role('Athlete')
+            ->where('club_id', $coach->club_id)
+            ->with('athleteProfile')
+            ->get()
+            ->map(function($u) {
+                return [
+                    'id' => $u->id,
+                    'name' => $u->name,
+                    'points' => $u->athleteProfile ? ($u->athleteProfile->event_points ?? 0) : 0,
+                    'belt_rank' => $u->athleteProfile ? ($u->athleteProfile->belt_rank ?? '10. WHITE') : '10. WHITE',
+                ];
+            })
+            ->sortByDesc('points')
+            ->take(10)
+            ->values()
+            ->toArray();
+
         return Inertia::render('Coach/Dashboard', [
             'groups'        => $groups,
             'nextPayout'    => $nextPayout,
             'payoutHistory' => $payoutHistory,
             'totalEarned'   => $totalEarned,
             'coachProfile'  => $coach->coachProfile,
+            'leaderboard'   => $leaderboard,
         ]);
     })->name('dashboard');
 
@@ -182,6 +302,9 @@ Route::middleware(['auth', 'verified', 'role:Coach', \App\Http\Middleware\CheckS
     Route::get('/events', [\App\Http\Controllers\EventController::class, 'coachIndex'])->name('events.index');
     Route::post('/events/{event}/registrations/{registration}/accept', [\App\Http\Controllers\EventController::class, 'acceptAttendance'])->name('events.attendance.accept');
     Route::post('/events/{event}/registrations/{registration}/reject', [\App\Http\Controllers\EventController::class, 'rejectAttendance'])->name('events.attendance.reject');
+
+    Route::get('/attendance/load', [\App\Http\Controllers\AttendanceController::class, 'loadAttendance'])->name('attendance.load');
+    Route::post('/attendance', [\App\Http\Controllers\AttendanceController::class, 'save'])->name('attendance.save');
 });
 
 // Athlete Routes
@@ -209,6 +332,23 @@ Route::middleware(['auth', 'verified', 'role:Athlete', \App\Http\Middleware\Chec
           ->limit(3)
           ->get();
 
+        $leaderboard = \App\Models\User::role('Athlete')
+            ->where('club_id', $user->club_id)
+            ->with('athleteProfile')
+            ->get()
+            ->map(function($u) {
+                return [
+                    'id' => $u->id,
+                    'name' => $u->name,
+                    'points' => $u->athleteProfile ? ($u->athleteProfile->event_points ?? 0) : 0,
+                    'belt_rank' => $u->athleteProfile ? ($u->athleteProfile->belt_rank ?? '10. WHITE') : '10. WHITE',
+                ];
+            })
+            ->sortByDesc('points')
+            ->take(10)
+            ->values()
+            ->toArray();
+
         return Inertia::render('Athlete/Dashboard', [
             'athleteProfile' => $profile,
             'stats' => [
@@ -218,6 +358,7 @@ Route::middleware(['auth', 'verified', 'role:Athlete', \App\Http\Middleware\Chec
                 'points' => $points,
             ],
             'upcomingSchedules' => $upcomingSchedules,
+            'leaderboard' => $leaderboard,
         ]);
     })->name('dashboard');
 
@@ -245,7 +386,51 @@ Route::middleware(['auth', 'verified', 'role:Athlete', \App\Http\Middleware\Chec
 // Parent Routes
 Route::middleware(['auth', 'verified', 'role:Parent'])->prefix('parent')->name('parent.')->group(function () {
     Route::get('/dashboard', function () {
-        return Inertia::render('Parent/Dashboard');
+        $parent = auth()->user();
+        $childrenIds = $parent->children()->pluck('athlete_id');
+        $children = \App\Models\User::whereIn('id', $childrenIds)
+            ->with(['athleteProfile', 'trainingGroups'])
+            ->get();
+        
+        $subscriptions = \App\Models\Subscription::whereIn('user_id', $childrenIds)
+            ->with(['user', 'payments'])
+            ->get();
+            
+        $nextDueSub = $subscriptions->where('status', '!=', 'active')->sortBy('next_payment_at')->first() 
+            ?? $subscriptions->sortBy('next_payment_at')->first();
+            
+        $nextPaymentDue = $nextDueSub ? ($nextDueSub->next_payment_at ? \Carbon\Carbon::parse($nextDueSub->next_payment_at)->format('M d, Y') : 'Check with Manager') : 'Check with Manager';
+        $amountDue = $subscriptions->where('status', '!=', 'active')->sum('amount');
+        if ($amountDue == 0 && $nextDueSub) {
+            $amountDue = $nextDueSub->amount;
+        }
+
+        $childrenData = $children->map(function($child) {
+            $group = $child->trainingGroups->first();
+            $profile = $child->athleteProfile;
+            
+            // Count attended events (representing classes here)
+            $classesCount = \App\Models\EventRegistration::where('user_id', $child->id)
+                ->where('status', 'attended')
+                ->count();
+
+            return [
+                'name' => $child->name,
+                'group' => $group ? $group->name : 'No Group',
+                'status' => $child->isPaid() ? 'Active' : 'Overdue',
+                'belt' => $profile ? ($profile->belt_rank ?? '10. WHITE') : '10. WHITE',
+                'progress' => 50,
+                'classes' => $classesCount,
+            ];
+        })->toArray();
+
+        return Inertia::render('Parent/Dashboard', [
+            'childrenData' => $childrenData,
+            'billingSummary' => [
+                'nextPaymentDue' => $nextPaymentDue,
+                'amountDue' => $amountDue,
+            ]
+        ]);
     })->middleware(\App\Http\Middleware\CheckSubscription::class)->name('dashboard');
 
     Route::get('/billing', [\App\Http\Controllers\BillingController::class, 'parentBilling'])->name('billing');
@@ -256,6 +441,29 @@ Route::middleware(['auth', 'verified', 'role:Parent'])->prefix('parent')->name('
 Route::middleware('auth')->group(function () {
     Route::get('/subscription/locked', [\App\Http\Controllers\BillingController::class, 'subscriptionLocked'])->name('subscription.locked');
     Route::get('/invoices/{payment}/download', [\App\Http\Controllers\InvoiceController::class, 'download'])->name('invoices.download');
+    
+    Route::get('/leaderboard', function() {
+        $user = auth()->user();
+        $leaderboard = \App\Models\User::role('Athlete')
+            ->where('club_id', $user->club_id)
+            ->with('athleteProfile')
+            ->get()
+            ->map(function($u) {
+                return [
+                    'id' => $u->id,
+                    'name' => $u->name,
+                    'points' => $u->athleteProfile ? ($u->athleteProfile->event_points ?? 0) : 0,
+                    'belt_rank' => $u->athleteProfile ? ($u->athleteProfile->belt_rank ?? '10. WHITE') : '10. WHITE',
+                ];
+            })
+            ->sortByDesc('points')
+            ->values()
+            ->toArray();
+
+        return Inertia::render('Leaderboard', [
+            'leaderboard' => $leaderboard,
+        ]);
+    })->middleware(\App\Http\Middleware\CheckSubscription::class)->name('leaderboard');
 
     Route::prefix('messages')->name('messages.')->group(function () {
         Route::get('/', [\App\Http\Controllers\MessageController::class, 'index'])->name('index');

@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 
-export default function ManagerDashboard({ stats }: { stats: any }) {
+export default function ManagerDashboard({ stats, recentActivity = [], leaderboard = [] }: { stats: any; recentActivity?: any[]; leaderboard?: any[] }) {
     const statCards = [
         {
             name: 'Total Athletes',
@@ -123,24 +123,24 @@ export default function ManagerDashboard({ stats }: { stats: any }) {
                                 <p className="text-xs text-gray-500 mt-0.5">Latest registrations and events</p>
                             </div>
                             <div className="divide-y divide-gray-50">
-                                {[
-                                    { initial: 'A', name: 'Alex Johnson', action: 'joined Beginners Taekwondo group', time: '2h ago', color: 'bg-blue-100 text-blue-700' },
-                                    { initial: 'S', name: 'Sarah Lee', action: 'payment recorded — €85.00', time: '4h ago', color: 'bg-emerald-100 text-emerald-700' },
-                                    { initial: 'M', name: 'Mike Chen', action: 'advanced to Intermediate group', time: '1d ago', color: 'bg-indigo-100 text-indigo-700' },
-                                    { initial: 'J', name: 'Jamie Smith', action: 'upcoming belt grading scheduled', time: '1d ago', color: 'bg-amber-100 text-amber-700' },
-                                    { initial: 'R', name: 'Rachel Park', action: 'new parent registration completed', time: '2d ago', color: 'bg-purple-100 text-purple-700' },
-                                ].map((item, i) => (
-                                    <div key={i} className="flex items-center gap-4 px-6 py-4 hover:bg-slate-50 transition-colors">
-                                        <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ${item.color}`}>
-                                            {item.initial}
+                                {recentActivity.length > 0 ? (
+                                    recentActivity.map((item, i) => (
+                                        <div key={i} className="flex items-center gap-4 px-6 py-4 hover:bg-slate-50 transition-colors">
+                                            <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ${item.color}`}>
+                                                {item.initial}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-semibold text-gray-900 truncate">{item.name}</p>
+                                                <p className="text-xs text-gray-500 truncate">{item.action}</p>
+                                            </div>
+                                            <span className="text-xs text-gray-400 shrink-0">{item.time}</span>
                                         </div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-semibold text-gray-900 truncate">{item.name}</p>
-                                            <p className="text-xs text-gray-500 truncate">{item.action}</p>
-                                        </div>
-                                        <span className="text-xs text-gray-400 shrink-0">{item.time}</span>
+                                    ))
+                                ) : (
+                                    <div className="text-center py-12 text-gray-400 italic text-sm">
+                                        No recent club activity logged yet.
                                     </div>
-                                ))}
+                                )}
                             </div>
                         </div>
 
@@ -170,6 +170,46 @@ export default function ManagerDashboard({ stats }: { stats: any }) {
                                         <p className="text-xs text-amber-700 leading-relaxed">Regional Championship — Registration closes in <span className="font-bold">3 days</span>. Ensure all athletes are enrolled.</p>
                                         <button className="mt-3 text-xs font-bold text-amber-700 hover:text-amber-900 transition-colors">View Details →</button>
                                     </div>
+                                </div>
+                            </div>
+
+                            {/* Points Leaderboard */}
+                            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
+                                <div className="bg-gradient-to-r from-yellow-50 to-amber-50 px-6 py-4 border-b border-amber-100 flex items-center justify-between">
+                                    <div>
+                                        <h3 className="text-sm font-bold text-amber-900">Top Athletes (Points)</h3>
+                                        <p className="text-xs text-amber-600 mt-0.5">Top point earners in the club</p>
+                                    </div>
+                                    <div className="w-9 h-9 bg-amber-100 rounded-xl flex items-center justify-center text-lg">🏆</div>
+                                </div>
+                                <div className="p-5 divide-y divide-gray-50">
+                                    {leaderboard.length > 0 ? (
+                                        leaderboard.slice(0, 5).map((ath, idx) => (
+                                            <div key={ath.id} className="flex items-center justify-between py-2.5 first:pt-0 last:pb-0">
+                                                <div className="flex items-center gap-3">
+                                                    <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${
+                                                        idx === 0 ? 'bg-amber-500 text-white' :
+                                                        idx === 1 ? 'bg-slate-300 text-slate-800' :
+                                                        idx === 2 ? 'bg-amber-600 text-white' :
+                                                        'bg-gray-100 text-gray-500'
+                                                    }`}>
+                                                        {idx + 1}
+                                                    </span>
+                                                    <div>
+                                                        <p className="text-xs font-bold text-gray-800">{ath.name}</p>
+                                                        <span className="inline-block text-[8px] font-bold text-gray-400 uppercase">
+                                                            {ath.belt_rank}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <span className="inline-flex items-center gap-1 bg-amber-50 border border-amber-100 rounded-lg px-2 py-0.5 text-[10px] font-extrabold text-amber-700">
+                                                    ⭐ {ath.points} pts
+                                                </span>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <p className="text-xs text-gray-400 italic text-center py-4">No athlete points recorded yet.</p>
+                                    )}
                                 </div>
                             </div>
                         </div>

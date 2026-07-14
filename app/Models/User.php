@@ -136,6 +136,13 @@ class User extends Authenticatable
                 return true;
             }
 
+            // Sync overdue status first
+            Subscription::whereIn('user_id', $childrenIds)
+                ->where('status', 'active')
+                ->whereNotNull('next_payment_at')
+                ->where('next_payment_at', '<', now()->toDateString())
+                ->update(['status' => 'overdue']);
+
             return !Subscription::whereIn('user_id', $childrenIds)
                 ->where('status', '!=', 'active')
                 ->exists();
@@ -146,6 +153,13 @@ class User extends Authenticatable
         if (!$this->subscriptions()->exists()) {
             return true;
         }
+
+        // Sync overdue status first
+        $this->subscriptions()
+            ->where('status', 'active')
+            ->whereNotNull('next_payment_at')
+            ->where('next_payment_at', '<', now()->toDateString())
+            ->update(['status' => 'overdue']);
 
         return !$this->subscriptions()
             ->where('status', '!=', 'active')

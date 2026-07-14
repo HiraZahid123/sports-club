@@ -7,7 +7,7 @@
     "/build/assets/DeleteUserForm-D0kPVq8V.js"
   ],
   "resources/js/Components/Dropdown.tsx": [
-    "/build/assets/AuthenticatedLayout-uU_SUfcq.js"
+    "/build/assets/AuthenticatedLayout-D0_10pNp.js"
   ],
   "resources/js/Components/InputError.tsx": [
     "/build/assets/InputError-roYfmLKp.js"
@@ -19,13 +19,13 @@
     "/build/assets/DeleteUserForm-D0kPVq8V.js"
   ],
   "resources/js/Components/NavLink.tsx": [
-    "/build/assets/AuthenticatedLayout-uU_SUfcq.js"
+    "/build/assets/AuthenticatedLayout-D0_10pNp.js"
   ],
   "resources/js/Components/PrimaryButton.tsx": [
     "/build/assets/PrimaryButton-DDF1xnxF.js"
   ],
   "resources/js/Components/ResponsiveNavLink.tsx": [
-    "/build/assets/AuthenticatedLayout-uU_SUfcq.js"
+    "/build/assets/AuthenticatedLayout-D0_10pNp.js"
   ],
   "resources/js/Components/SecondaryButton.tsx": [
     "/build/assets/DeleteUserForm-D0kPVq8V.js"
@@ -34,19 +34,19 @@
     "/build/assets/TextInput-egt9uCZ_.js"
   ],
   "resources/js/Layouts/AuthenticatedLayout.tsx": [
-    "/build/assets/AuthenticatedLayout-uU_SUfcq.js"
+    "/build/assets/AuthenticatedLayout-D0_10pNp.js"
   ],
   "resources/js/Layouts/GuestLayout.tsx": [
     "/build/assets/GuestLayout-Brv5APIf.js"
   ],
   "resources/js/Pages/Athlete/Dashboard.tsx": [
-    "/build/assets/Dashboard-CxUaEIzT.js"
+    "/build/assets/Dashboard-DsWwq3-H.js"
   ],
   "resources/js/Pages/Athlete/Events.tsx": [
-    "/build/assets/Events-CA7kYFGU.js"
+    "/build/assets/Events-B7ZYovfw.js"
   ],
   "resources/js/Pages/Athlete/Schedule.tsx": [
-    "/build/assets/Schedule-DQsr3XX4.js"
+    "/build/assets/Schedule-BpQxxXsQ.js"
   ],
   "resources/js/Pages/Auth/ConfirmPassword.tsx": [
     "/build/assets/ConfirmPassword-BHgdc4vg.js"
@@ -79,61 +79,67 @@
     "/build/assets/VerifyEmail-CZIbK8Sa.js"
   ],
   "resources/js/Pages/Coach/Dashboard.tsx": [
-    "/build/assets/Dashboard-DSbPE8MW.js"
+    "/build/assets/Dashboard-BtdW1xDn.js"
   ],
   "resources/js/Pages/Coach/Events.tsx": [
-    "/build/assets/Events-DLkAf3UZ.js"
+    "/build/assets/Events-CZYaS5lN.js"
   ],
   "resources/js/Pages/Coach/Schedule.tsx": [
-    "/build/assets/Schedule-cww_mlRr.js"
+    "/build/assets/Schedule-CakUmTHO.js"
   ],
   "resources/js/Pages/Dashboard.tsx": [
-    "/build/assets/Dashboard-Bcw0BJuE.js"
+    "/build/assets/Dashboard-5-T8uOyq.js"
+  ],
+  "resources/js/Pages/Leaderboard.tsx": [
+    "/build/assets/Leaderboard-BxLmYnui.js"
+  ],
+  "resources/js/Pages/Manager/Attendance/Index.tsx": [
+    "/build/assets/Index-CAZtMh6K.js"
   ],
   "resources/js/Pages/Manager/Billing/Index.tsx": [
-    "/build/assets/Index-m5tpB_Aa.js"
+    "/build/assets/Index-Dc-3D4gf.js"
   ],
   "resources/js/Pages/Manager/Club/Edit.tsx": [
-    "/build/assets/Edit-CTE206k0.js"
+    "/build/assets/Edit-Bx5i0PwM.js"
   ],
   "resources/js/Pages/Manager/Club/Setup.tsx": [
-    "/build/assets/Setup-DqAcuVEc.js"
+    "/build/assets/Setup-CZCap_LT.js"
   ],
   "resources/js/Pages/Manager/Coaches/Index.tsx": [
-    "/build/assets/Index-jD8VIjJ8.js"
+    "/build/assets/Index-e8m7rShC.js"
   ],
   "resources/js/Pages/Manager/Dashboard.tsx": [
-    "/build/assets/Dashboard-D658hTZJ.js"
+    "/build/assets/Dashboard-CiQs5m_s.js"
   ],
   "resources/js/Pages/Manager/Events/Index.tsx": [
-    "/build/assets/Index-DZcEFn4-.js"
+    "/build/assets/Index-DNgdZISZ.js"
   ],
   "resources/js/Pages/Manager/Groups/Index.tsx": [
-    "/build/assets/Index-Q_EvH3Kw.js"
+    "/build/assets/Index-CyzTVhdc.js"
   ],
   "resources/js/Pages/Manager/Members/Index.tsx": [
-    "/build/assets/Index-CR4QqFrq.js"
+    "/build/assets/Index-B1cPf1y1.js"
   ],
   "resources/js/Pages/Manager/Reports/Index.tsx": [
-    "/build/assets/Index-LJotXWB1.js"
+    "/build/assets/Index-Ce0Mh2Zn.js"
   ],
   "resources/js/Pages/Manager/Setup/Index.tsx": [
-    "/build/assets/Index-C-CZcbUe.js"
+    "/build/assets/Index-CBIAIIeR.js"
   ],
   "resources/js/Pages/Messages/Index.tsx": [
-    "/build/assets/Index-BHjc1ryz.js"
+    "/build/assets/Index-4HAAVZgN.js"
   ],
   "resources/js/Pages/Parent/Billing/Index.tsx": [
-    "/build/assets/Index-DdabOPNU.js"
+    "/build/assets/Index-DsXZ8ahq.js"
   ],
   "resources/js/Pages/Parent/Dashboard.tsx": [
-    "/build/assets/Dashboard-BSd2uPZI.js"
+    "/build/assets/Dashboard-BK0-Iu0l.js"
   ],
   "resources/js/Pages/Profile/Edit.tsx": [
-    "/build/assets/Edit-nflWrAhY.js"
+    "/build/assets/Edit-CQgsCTgD.js"
   ],
   "resources/js/Pages/Profile/Partials/AthleteSubscriptions.tsx": [
-    "/build/assets/AthleteSubscriptions-r4FmjTu3.js"
+    "/build/assets/AthleteSubscriptions-DSoh_c6Q.js"
   ],
   "resources/js/Pages/Profile/Partials/DeleteUserForm.tsx": [
     "/build/assets/DeleteUserForm-D0kPVq8V.js"
@@ -148,7 +154,7 @@
     "/build/assets/UpdateProfileInformationForm-ByHc9hmJ.js"
   ],
   "resources/js/Pages/SubscriptionLocked.tsx": [
-    "/build/assets/SubscriptionLocked-Dz2tTh_-.js"
+    "/build/assets/SubscriptionLocked-BZA5TK2c.js"
   ],
   "resources/js/Pages/Welcome.tsx": [
     "/build/assets/Welcome-CBai-QU4.js"

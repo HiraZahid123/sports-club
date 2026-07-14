@@ -2,6 +2,32 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, usePage, router } from '@inertiajs/react';
 import { useState } from 'react';
 
+const formatDate = (dateStr: string | null | undefined) => {
+    if (!dateStr) return 'Check with manager';
+    try {
+        const dateOnly = dateStr.split('T')[0];
+        const parts = dateOnly.split('-');
+        if (parts.length === 3) {
+            const year = parseInt(parts[0], 10);
+            const month = parseInt(parts[1], 10) - 1;
+            const day = parseInt(parts[2], 10);
+            const date = new Date(year, month, day);
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+            });
+        }
+        return new Date(dateStr).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+        });
+    } catch {
+        return dateStr;
+    }
+};
+
 export default function ParentBilling({ mySubscriptions, childrenSubscriptions }: { mySubscriptions: any[], childrenSubscriptions: any[] }) {
     const { flash }: any = usePage().props;
     const isLocked = flash?.error === 'access-locked';
@@ -124,7 +150,7 @@ export default function ParentBilling({ mySubscriptions, childrenSubscriptions }
                                             <div className="flex items-end justify-between">
                                                 <div>
                                                     <p className="text-xs text-gray-400 font-medium">Next Payment Due</p>
-                                                    <p className="font-semibold text-gray-900 text-sm mt-0.5">{sub.next_payment_at || 'Check with manager'}</p>
+                                                    <p className="font-semibold text-gray-900 text-sm mt-0.5">{formatDate(sub.next_payment_at)}</p>
                                                 </div>
                                                 <div className="text-right">
                                                     <p className="text-xs text-gray-400 font-medium">Amount</p>
