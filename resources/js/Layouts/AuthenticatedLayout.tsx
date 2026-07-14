@@ -28,24 +28,37 @@ export default function Authenticated({
     const isManager = (user as any).roles?.includes('Manager') || (user as any).roles?.includes('Super Admin');
     const isParent = (user as any).roles?.includes('Parent');
 
+    const isClubActive = isManager && (
+        route().current('manager.club.edit') ||
+        route().current('manager.members.index') ||
+        route().current('manager.coaches.index') ||
+        route().current('manager.groups.index') ||
+        route().current('manager.attendance.*')
+    );
+
+    const isBillingActive = isManager && (
+        route().current('manager.billing.index') ||
+        route().current('manager.reports.index')
+    );
+
     return (
         <div className="min-h-screen bg-slate-50">
             <nav className="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex h-16 items-center justify-between">
                         {/* Left: Logo + Nav */}
-                        <div className="flex items-center gap-6">
+                        <div className="flex items-center gap-2 lg:gap-6 min-w-0">
                             <Link href="/" className="flex items-center shrink-0">
                                 <img src={mlSportsLogo} alt="ML Sports" className="h-10 w-auto object-contain" />
                             </Link>
 
                             {(user as any).club && (
-                                <span className="hidden lg:block text-xs font-semibold text-gray-400 border-l border-gray-200 pl-4 uppercase tracking-widest truncate max-w-32">
+                                <span className="hidden xl:block text-xs font-semibold text-gray-400 border-l border-gray-200 pl-4 uppercase tracking-widest truncate max-w-32">
                                     {(user as any).club.name}
                                 </span>
                             )}
 
-                            <div className="hidden sm:flex items-center gap-0.5">
+                            <div className="hidden lg:flex items-center gap-0.5 min-w-0">
                                 <NavLink
                                     href={route('dashboard')}
                                     active={
@@ -61,29 +74,71 @@ export default function Authenticated({
 
                                 {isManager && (
                                     <>
-                                        <NavLink href={route('manager.club.edit')} active={route().current('manager.club.edit')}>
-                                            Club
-                                        </NavLink>
-                                        <NavLink href={route('manager.members.index')} active={route().current('manager.members.index')}>
-                                            Members
-                                        </NavLink>
-                                        <NavLink href={route('manager.coaches.index')} active={route().current('manager.coaches.index')}>
-                                            Coaches
-                                        </NavLink>
-                                        <NavLink href={route('manager.groups.index')} active={route().current('manager.groups.index')}>
-                                            Groups
-                                        </NavLink>
-                                        <NavLink href={route('manager.billing.index')} active={route().current('manager.billing.index')}>
-                                            Billing
-                                        </NavLink>
-                                        <NavLink href={route('manager.reports.index')} active={route().current('manager.reports.index')}>
-                                            Reports
-                                        </NavLink>
+                                        <Dropdown>
+                                            <Dropdown.Trigger>
+                                                <button
+                                                    type="button"
+                                                    className={
+                                                        'inline-flex items-center gap-1 border-b-2 px-2 xl:px-3 pt-1 pb-0.5 text-xs xl:text-sm font-semibold leading-5 transition-all duration-150 ease-in-out focus:outline-none cursor-pointer ' +
+                                                        (isClubActive
+                                                            ? 'border-indigo-600 text-indigo-700 bg-indigo-50 rounded-t-lg'
+                                                            : 'border-transparent text-gray-500 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50/60 rounded-t-lg')
+                                                    }
+                                                >
+                                                    <span>Club</span>
+                                                    <svg className="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.6} d="M19 9l-7 7-7-7" />
+                                                    </svg>
+                                                </button>
+                                            </Dropdown.Trigger>
+                                            <Dropdown.Content align="left">
+                                                <Dropdown.Link href={route('manager.club.edit')} className={route().current('manager.club.edit') ? 'bg-indigo-50 text-indigo-700 font-bold' : ''}>
+                                                    Club Settings
+                                                </Dropdown.Link>
+                                                <Dropdown.Link href={route('manager.members.index')} className={route().current('manager.members.index') ? 'bg-indigo-50 text-indigo-700 font-bold' : ''}>
+                                                    Members
+                                                </Dropdown.Link>
+                                                <Dropdown.Link href={route('manager.coaches.index')} className={route().current('manager.coaches.index') ? 'bg-indigo-50 text-indigo-700 font-bold' : ''}>
+                                                    Coaches
+                                                </Dropdown.Link>
+                                                <Dropdown.Link href={route('manager.groups.index')} className={route().current('manager.groups.index') ? 'bg-indigo-50 text-indigo-700 font-bold' : ''}>
+                                                    Groups
+                                                </Dropdown.Link>
+                                                <Dropdown.Link href={route('manager.attendance.index')} className={route().current('manager.attendance.*') ? 'bg-indigo-50 text-indigo-700 font-bold' : ''}>
+                                                    Attendance
+                                                </Dropdown.Link>
+                                            </Dropdown.Content>
+                                        </Dropdown>
+
+                                        <Dropdown>
+                                            <Dropdown.Trigger>
+                                                <button
+                                                    type="button"
+                                                    className={
+                                                        'inline-flex items-center gap-1 border-b-2 px-2 xl:px-3 pt-1 pb-0.5 text-xs xl:text-sm font-semibold leading-5 transition-all duration-150 ease-in-out focus:outline-none cursor-pointer ' +
+                                                        (isBillingActive
+                                                            ? 'border-indigo-600 text-indigo-700 bg-indigo-50 rounded-t-lg'
+                                                            : 'border-transparent text-gray-500 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50/60 rounded-t-lg')
+                                                    }
+                                                >
+                                                    <span>Billing</span>
+                                                    <svg className="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.6} d="M19 9l-7 7-7-7" />
+                                                    </svg>
+                                                </button>
+                                            </Dropdown.Trigger>
+                                            <Dropdown.Content align="left">
+                                                <Dropdown.Link href={route('manager.billing.index')} className={route().current('manager.billing.index') ? 'bg-indigo-50 text-indigo-700 font-bold' : ''}>
+                                                    Billing & Revenue
+                                                </Dropdown.Link>
+                                                <Dropdown.Link href={route('manager.reports.index')} className={route().current('manager.reports.index') ? 'bg-indigo-50 text-indigo-700 font-bold' : ''}>
+                                                    Financial Reports
+                                                </Dropdown.Link>
+                                            </Dropdown.Content>
+                                        </Dropdown>
+
                                         <NavLink href={route('manager.events.index')} active={route().current('manager.events.index')}>
                                             Events
-                                        </NavLink>
-                                        <NavLink href={route('manager.attendance.index')} active={route().current('manager.attendance.*')}>
-                                            Attendance
                                         </NavLink>
                                         <NavLink href={route('leaderboard')} active={route().current('leaderboard')}>
                                             Leaderboard
@@ -132,7 +187,7 @@ export default function Authenticated({
 
                                 <Link
                                     href={route('messages.index')}
-                                    className={`relative inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                                    className={`relative inline-flex items-center gap-1.5 px-2 xl:px-3 py-2 rounded-lg text-xs xl:text-sm font-semibold transition-colors ${
                                         route().current('messages.*')
                                             ? 'text-indigo-700 bg-indigo-50'
                                             : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
@@ -149,7 +204,7 @@ export default function Authenticated({
                         </div>
 
                         {/* Right: User Menu */}
-                        <div className="hidden sm:flex items-center gap-3">
+                        <div className="hidden lg:flex items-center gap-3 shrink-0">
                             <div className="flex items-center gap-2">
                                 <div className="w-8 h-8 rounded-full overflow-hidden border border-indigo-200 shrink-0">
                                     {(user as any).profile_photo ? (
@@ -186,7 +241,7 @@ export default function Authenticated({
                         </div>
 
                         {/* Mobile Hamburger */}
-                        <div className="-me-2 flex items-center sm:hidden">
+                        <div className="-me-2 flex items-center lg:hidden">
                             <button
                                 onClick={() => setShowingNavigationDropdown((prev) => !prev)}
                                 className="inline-flex items-center justify-center rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors focus:outline-none"
@@ -209,7 +264,7 @@ export default function Authenticated({
                 </div>
 
                 {/* Mobile Menu */}
-                <div className={(showingNavigationDropdown ? 'block' : 'hidden') + ' sm:hidden border-t border-gray-100'}>
+                <div className={(showingNavigationDropdown ? 'block' : 'hidden') + ' lg:hidden border-t border-gray-100'}>
                     <div className="space-y-0.5 px-4 pb-4 pt-3">
                         <ResponsiveNavLink
                             href={route('dashboard')}
