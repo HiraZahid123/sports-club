@@ -79,13 +79,13 @@
     "/build/assets/VerifyEmail-CZIbK8Sa.js"
   ],
   "resources/js/Pages/Coach/Dashboard.tsx": [
-    "/build/assets/Dashboard-7ITS7PQh.js"
+    "/build/assets/Dashboard-zqd95vFS.js"
   ],
   "resources/js/Pages/Coach/Events.tsx": [
     "/build/assets/Events-Bu-701YQ.js"
   ],
   "resources/js/Pages/Coach/Schedule.tsx": [
-    "/build/assets/Schedule-jwplZXqi.js"
+    "/build/assets/Schedule-BAwGhtms.js"
   ],
   "resources/js/Pages/Dashboard.tsx": [
     "/build/assets/Dashboard-DXalv6ll.js"
@@ -161,6 +161,9 @@
   ],
   "resources/js/beltHelpers.ts": [
     "/build/assets/beltHelpers-6FZX55wB.js"
+  ],
+  "resources/js/dateHelpers.ts": [
+    "/build/assets/dateHelpers-IrOdyjfa.js"
   ],
   "resources/js/ml-sports.png": [
     "/build/assets/ml-sports-BEC2gdiG.js",

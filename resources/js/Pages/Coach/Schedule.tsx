@@ -1,5 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
+import { getDateForDayOfWeek } from '@/dateHelpers';
 
 interface ScheduleSlot {
     id: number;
@@ -53,28 +54,73 @@ export default function CoachSchedule({ schedules = [] }: { schedules?: Schedule
                                         <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
                                         <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Group</th>
                                         <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+                                        <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200 text-left">
                                     {schedules.length === 0 ? (
                                         <tr>
-                                            <td colSpan={4} className="px-6 py-8 text-center text-sm text-gray-500">
+                                            <td colSpan={5} className="px-6 py-8 text-center text-sm text-gray-500">
                                                 No scheduled training sessions.
                                             </td>
                                         </tr>
                                     ) : (
-                                        schedules.map((slot) => (
-                                            <tr key={slot.id} className="hover:bg-slate-50 transition-colors">
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">{slot.day_of_week}</td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                    {fmtTime(slot.start_time)} - {fmtTime(slot.end_time)}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">{slot.group?.name ?? '—'}</td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                    {slot.facility?.name ?? slot.location ?? '—'}
-                                                </td>
-                                            </tr>
-                                        ))
+                                        schedules.map((slot) => {
+                                            const targetDate = getDateForDayOfWeek(slot.day_of_week);
+                                            const markAttendanceUrl = slot.group
+                                                ? route('coach.dashboard', {
+                                                      tab: 'attendance',
+                                                      group_id: slot.group.id,
+                                                      date: targetDate,
+                                                  })
+                                                : '';
+                                            return (
+                                                <tr key={slot.id} className="hover:bg-slate-50 transition-colors">
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
+                                                        {slot.group ? (
+                                                            <Link
+                                                                href={markAttendanceUrl}
+                                                                className="text-indigo-600 hover:text-indigo-900 hover:underline"
+                                                            >
+                                                                {slot.day_of_week}
+                                                            </Link>
+                                                        ) : (
+                                                            slot.day_of_week
+                                                        )}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                        {fmtTime(slot.start_time)} - {fmtTime(slot.end_time)}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
+                                                        {slot.group ? (
+                                                            <Link
+                                                                href={markAttendanceUrl}
+                                                                className="hover:underline"
+                                                            >
+                                                                {slot.group.name}
+                                                            </Link>
+                                                        ) : (
+                                                            '—'
+                                                        )}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                        {slot.facility?.name ?? slot.location ?? '—'}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                        {slot.group ? (
+                                                            <Link
+                                                                href={markAttendanceUrl}
+                                                                className="inline-flex items-center gap-1 text-emerald-600 hover:text-emerald-700 font-bold"
+                                                            >
+                                                                Mark Attendance <span className="text-xs">→</span>
+                                                            </Link>
+                                                        ) : (
+                                                            <span className="text-gray-400">—</span>
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })
                                     )}
                                 </tbody>
                             </table>

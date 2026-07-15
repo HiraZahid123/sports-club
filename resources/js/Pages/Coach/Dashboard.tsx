@@ -3,6 +3,7 @@ import { Head, Link, useForm } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import { getBeltBadgeStyle, getBeltStyle } from '@/beltHelpers';
 import axios from 'axios';
+import { getDateForDayOfWeek } from '@/dateHelpers';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -797,13 +798,24 @@ export default function CoachDashboard({
                                                 <p className="text-xs text-gray-400 italic">No schedule set for this group.</p>
                                             ) : (
                                                 <div className="flex flex-wrap gap-2">
-                                                    {selectedGroup.schedules.map((s, i) => (
-                                                        <span key={i} className={`inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-lg ${DAY_COLOR[s.day_of_week] ?? 'bg-gray-100 text-gray-600'}`}>
-                                                            <span>{DAY_SHORT[s.day_of_week]}</span>
-                                                            <span className="opacity-80">{fmtTime(s.start_time)}–{fmtTime(s.end_time)}</span>
-                                                            {(s.facility?.name || s.location) && <span className="opacity-65">· {s.facility?.name ?? s.location}</span>}
-                                                        </span>
-                                                    ))}
+                                                    {selectedGroup.schedules.map((s, i) => {
+                                                        const targetDate = getDateForDayOfWeek(s.day_of_week);
+                                                        return (
+                                                            <Link
+                                                                key={i}
+                                                                href={route('coach.dashboard', {
+                                                                    tab: 'attendance',
+                                                                    group_id: selectedGroup.id,
+                                                                    date: targetDate
+                                                                })}
+                                                                className={`inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-lg border transition-all hover:scale-105 active:scale-95 ${DAY_COLOR[s.day_of_week] ?? 'bg-gray-100 text-gray-600 border-gray-100'}`}
+                                                            >
+                                                                <span>{DAY_SHORT[s.day_of_week]}</span>
+                                                                <span className="opacity-80">{fmtTime(s.start_time)}–{fmtTime(s.end_time)}</span>
+                                                                {(s.facility?.name || s.location) && <span className="opacity-65">· {s.facility?.name ?? s.location}</span>}
+                                                            </Link>
+                                                        );
+                                                    })}
                                                 </div>
                                             )}
                                         </div>
@@ -958,8 +970,22 @@ interface AttendanceRow {
 }
 
 function CoachAttendanceSection({ groups }: { groups: Group[] }) {
-    const [selectedGroupId, setSelectedGroupId] = useState<string>('');
-    const [attendanceDate, setAttendanceDate] = useState<string>(new Date().toISOString().split('T')[0]);
+    const [selectedGroupId, setSelectedGroupId] = useState<string>(() => {
+        if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search);
+            const gp = params.get('group_id');
+            if (gp) return gp;
+        }
+        return '';
+    });
+    const [attendanceDate, setAttendanceDate] = useState<string>(() => {
+        if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search);
+            const dt = params.get('date');
+            if (dt) return dt;
+        }
+        return new Date().toISOString().split('T')[0];
+    });
     const [attendanceList, setAttendanceList] = useState<AttendanceRow[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
     const [submitting, setSubmitting] = useState<boolean>(false);
@@ -967,9 +993,27 @@ function CoachAttendanceSection({ groups }: { groups: Group[] }) {
 
     useEffect(() => {
         if (groups.length > 0 && !selectedGroupId) {
-            setSelectedGroupId(String(groups[0].id));
+            const params = new URLSearchParams(window.location.search);
+            const gp = params.get('group_id');
+            if (!gp) {
+                setSelectedGroupId(String(groups[0].id));
+            }
         }
     }, [groups]);
+
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search);
+            const gp = params.get('group_id');
+            const dt = params.get('date');
+            if (gp) {
+                setSelectedGroupId(gp);
+            }
+            if (dt) {
+                setAttendanceDate(dt);
+            }
+        }
+    }, [window.location.search]);
 
     const loadAttendance = () => {
         if (!selectedGroupId || !attendanceDate) return;

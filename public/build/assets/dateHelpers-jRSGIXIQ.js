@@ -1,0 +1,1 @@
+function y(n){const t=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"].findIndex(s=>s.toLowerCase()===n.toLowerCase());if(t===-1)return new Date().toISOString().split("T")[0];const e=new Date,o=e.getDay()===0?6:e.getDay()-1,r=t-o,a=new Date(e);return a.setDate(e.getDate()+r),a.toISOString().split("T")[0]}export{y as g};
