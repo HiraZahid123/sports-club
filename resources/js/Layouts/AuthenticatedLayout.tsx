@@ -64,7 +64,9 @@ export default function Authenticated({
                                     active={
                                         route().current('dashboard') ||
                                         route().current('manager.dashboard') ||
-                                        route().current('coach.dashboard') ||
+                                        (route().current('coach.dashboard') &&
+                                            !(typeof window !== 'undefined' &&
+                                              window.location.search.includes('tab=attendance'))) ||
                                         route().current('athlete.dashboard') ||
                                         route().current('parent.dashboard')
                                     }
@@ -271,7 +273,9 @@ export default function Authenticated({
                             active={
                                 route().current('dashboard') ||
                                 route().current('manager.dashboard') ||
-                                route().current('coach.dashboard') ||
+                                (route().current('coach.dashboard') &&
+                                    !(typeof window !== 'undefined' &&
+                                      window.location.search.includes('tab=attendance'))) ||
                                 route().current('athlete.dashboard') ||
                                 route().current('parent.dashboard')
                             }
