@@ -149,4 +149,46 @@ class NewPointsAndEventPermissionsTest extends TestCase
         $response = $this->post(route('athlete.events.join', $event->id));
         $response->assertStatus(403);
     }
+
+    public function test_attended_event_automatically_goes_to_athlete_week_plan_and_dashboard(): void
+    {
+        // 1. Create event
+        $event = Event::create([
+            'club_id' => $this->club->id,
+            'created_by' => $this->manager->id,
+            'name' => 'Weekly Special Event',
+            'start_date' => '2026-08-05', // Wednesday
+            'points' => 10,
+        ]);
+
+        // 2. Register athlete to event and set status to attended
+        $event->registrations()->create([
+            'user_id' => $this->athlete->id,
+            'status' => 'attended',
+            'registered_at' => now(),
+        ]);
+
+        $this->actingAs($this->athlete);
+
+        // Check Schedule Route
+        $response = $this->get(route('athlete.schedule'));
+        $response->assertStatus(200);
+        
+        $scheduleProps = $response->original->getData()['page']['props']['schedules'];
+        $eventSlot = collect($scheduleProps)->firstWhere('is_event', true);
+        $this->assertNotNull($eventSlot);
+        $this->assertEquals('Weekly Special Event', $eventSlot['event_name']);
+        $this->assertEquals('Wednesday', $eventSlot['day_of_week']);
+        $this->assertEquals('00:00:00', $eventSlot['start_time']);
+
+        // Check Dashboard Route
+        $responseDashboard = $this->get(route('athlete.dashboard'));
+        $responseDashboard->assertStatus(200);
+
+        $upcomingSchedulesProps = $responseDashboard->original->getData()['page']['props']['upcomingSchedules'];
+        $dashboardEventSlot = collect($upcomingSchedulesProps)->firstWhere('is_event', true);
+        $this->assertNotNull($dashboardEventSlot);
+        $this->assertEquals('Event: Weekly Special Event', $dashboardEventSlot['group']['name']);
+        $this->assertEquals('Wednesday', $dashboardEventSlot['day_of_week']);
+    }
 }

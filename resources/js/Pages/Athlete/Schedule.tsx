@@ -2,12 +2,14 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head } from '@inertiajs/react';
 
 interface ScheduleSlot {
-    id: number;
+    id: number | string;
     day_of_week: string;
     start_time: string;
     end_time: string;
     location: string | null;
     notes: string | null;
+    is_event?: boolean;
+    event_name?: string;
     group: {
         id: number;
         name: string;
@@ -80,13 +82,24 @@ export default function AthleteSchedule({ schedules = [] }: { schedules?: Schedu
                                                         <div key={slot.id} className="p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 hover:bg-slate-50/55 transition-all">
                                                             <div className="space-y-1.5">
                                                                 <div className="flex items-center gap-2.5">
-                                                                    <span className="px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-xl text-xs font-extrabold border border-indigo-100">
-                                                                        {slot.group.name}
-                                                                    </span>
+                                                                    {slot.is_event ? (
+                                                                        <span className="px-2.5 py-1 bg-amber-50 text-amber-700 rounded-xl text-xs font-extrabold border border-amber-100">
+                                                                            Event
+                                                                        </span>
+                                                                    ) : (
+                                                                        <span className="px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-xl text-xs font-extrabold border border-indigo-100">
+                                                                            {slot.group.name}
+                                                                        </span>
+                                                                    )}
                                                                     <span className="text-sm font-black text-gray-700">
-                                                                        {fmtTime(slot.start_time)} - {fmtTime(slot.end_time)}
+                                                                        {slot.is_event ? 'All Day' : `${fmtTime(slot.start_time)} - ${fmtTime(slot.end_time)}`}
                                                                     </span>
                                                                 </div>
+                                                                {slot.is_event && (
+                                                                    <p className="text-sm font-bold text-gray-900">
+                                                                        {slot.event_name}
+                                                                    </p>
+                                                                )}
                                                                 <p className="text-xs text-gray-500">
                                                                     Coach: <strong className="text-gray-700 font-semibold">{coaches}</strong>
                                                                 </p>

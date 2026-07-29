@@ -333,13 +333,57 @@ Route::middleware(['auth', 'verified', 'role:Athlete', \App\Http\Middleware\Chec
         $points = $profile ? ($profile->event_points ?? 0) : 0;
 
         // Fetch upcoming schedule slots
-        $upcomingSchedules = \App\Models\GroupSchedule::whereHas('group.users', function ($query) use ($user) {
+        $upcomingSchedulesMapped = \App\Models\GroupSchedule::whereHas('group.users', function ($query) use ($user) {
             $query->where('user_id', $user->id)->where('role_in_group', 'Athlete');
         })->with(['group.coaches', 'facility'])
-          ->orderByRaw("FIELD(day_of_week,'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday')")
-          ->orderBy('start_time')
-          ->limit(3)
-          ->get();
+          ->get()
+          ->map(function ($s) {
+              return [
+                  'id' => $s->id,
+                  'day_of_week' => $s->day_of_week,
+                  'start_time' => $s->start_time,
+                  'end_time' => $s->end_time,
+                  'location' => $s->location,
+                  'is_event' => false,
+                  'group' => [
+                      'name' => $s->group->name,
+                      'coaches' => $s->group->coaches->map(fn($c) => ['name' => $c->name])->toArray(),
+                  ],
+                  'facility' => $s->facility ? [
+                      'name' => $s->facility->name,
+                  ] : null,
+              ];
+          });
+
+        $attendedEvents = \App\Models\EventRegistration::where('user_id', $user->id)
+            ->where('status', 'attended')
+            ->with(['event.coaches'])
+            ->get();
+
+        $eventSchedules = $attendedEvents->map(function ($reg) {
+            $event = $reg->event;
+            if (!$event) return null;
+
+            return [
+                'id' => 'event-' . $event->id,
+                'day_of_week' => \Carbon\Carbon::parse($event->start_date)->format('l'),
+                'start_time' => '00:00:00',
+                'end_time' => '23:59:59',
+                'location' => $event->location,
+                'is_event' => true,
+                'group' => [
+                    'name' => 'Event: ' . $event->name,
+                    'coaches' => $event->coaches->map(fn($c) => ['name' => $c->name])->toArray(),
+                ],
+                'facility' => null,
+            ];
+        })->filter();
+
+        $upcomingSchedules = $upcomingSchedulesMapped->concat($eventSchedules)->sortBy(function ($item) {
+            $dayOrder = array_search($item['day_of_week'], ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']);
+            return $dayOrder * 100000 + (strtotime($item['start_time']) ?: 0);
+        })->take(3)->values()->toArray();
+
 
         $leaderboard = \App\Models\User::role('Athlete')
             ->where('club_id', $user->club_id)
@@ -423,15 +467,65 @@ Route::middleware(['auth', 'verified', 'role:Athlete', \App\Http\Middleware\Chec
 
     Route::get('/schedule', function () {
         $athlete = auth()->user();
-        $schedules = \App\Models\GroupSchedule::whereHas('group.users', function ($query) use ($athlete) {
+        $schedulesMapped = \App\Models\GroupSchedule::whereHas('group.users', function ($query) use ($athlete) {
             $query->where('user_id', $athlete->id)->where('role_in_group', 'Athlete');
         })->with(['group.coaches', 'facility'])
-          ->orderByRaw("FIELD(day_of_week,'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday')")
-          ->orderBy('start_time')
-          ->get();
+          ->get()
+          ->map(function ($s) {
+              return [
+                  'id' => $s->id,
+                  'day_of_week' => $s->day_of_week,
+                  'start_time' => $s->start_time,
+                  'end_time' => $s->end_time,
+                  'location' => $s->location,
+                  'notes' => $s->notes,
+                  'is_event' => false,
+                  'group' => [
+                      'id' => $s->group->id,
+                      'name' => $s->group->name,
+                      'coaches' => $s->group->coaches->map(fn($c) => ['id' => $c->id, 'name' => $c->name])->toArray(),
+                  ],
+                  'facility' => $s->facility ? [
+                      'id' => $s->facility->id,
+                      'name' => $s->facility->name,
+                  ] : null,
+              ];
+          });
+
+        $attendedEvents = \App\Models\EventRegistration::where('user_id', $athlete->id)
+            ->where('status', 'attended')
+            ->with(['event.coaches'])
+            ->get();
+
+        $eventSchedules = $attendedEvents->map(function ($reg) {
+            $event = $reg->event;
+            if (!$event) return null;
+
+            return [
+                'id' => 'event-' . $event->id,
+                'day_of_week' => \Carbon\Carbon::parse($event->start_date)->format('l'),
+                'start_time' => '00:00:00',
+                'end_time' => '23:59:59',
+                'location' => $event->location,
+                'notes' => $event->description,
+                'is_event' => true,
+                'event_name' => $event->name,
+                'group' => [
+                    'id' => 0,
+                    'name' => 'Event',
+                    'coaches' => $event->coaches->map(fn($c) => ['id' => $c->id, 'name' => $c->name])->toArray(),
+                ],
+                'facility' => null,
+            ];
+        })->filter();
+
+        $merged = $schedulesMapped->concat($eventSchedules)->sortBy(function ($item) {
+            $dayOrder = array_search($item['day_of_week'], ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']);
+            return $dayOrder * 100000 + (strtotime($item['start_time']) ?: 0);
+        })->values()->toArray();
 
         return Inertia::render('Athlete/Schedule', [
-            'schedules' => $schedules,
+            'schedules' => $merged,
         ]);
     })->name('schedule');
 

@@ -73,11 +73,12 @@ function MetricsCard({ athleteProfile }: { athleteProfile?: AthleteProfile | nul
 // ── Main Component ────────────────────────────────────────────────────────────
 
 interface UpcomingScheduleSlot {
-    id: number;
+    id: number | string;
     day_of_week: string;
     start_time: string;
     end_time: string;
     location: string | null;
+    is_event?: boolean;
     group: {
         name: string;
         coaches?: Array<{ name: string }>;
@@ -225,7 +226,7 @@ export default function AthleteDashboard({
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <p className="font-semibold text-gray-900 text-sm">{slot.group.name}</p>
-                                                    <p className="text-xs text-gray-500">{coaches} • {slot.start_time.substring(0, 5)} - {slot.end_time.substring(0, 5)}</p>
+                                                    <p className="text-xs text-gray-500">{coaches} • {slot.is_event ? 'All Day' : `${slot.start_time.substring(0, 5)} - ${slot.end_time.substring(0, 5)}`}</p>
                                                 </div>
                                                 <span className="text-xs text-gray-400 bg-gray-50 px-2 py-1 rounded border border-gray-100 truncate max-w-28 text-center">{loc}</span>
                                             </div>

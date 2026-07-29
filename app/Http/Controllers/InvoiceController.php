@@ -214,7 +214,7 @@ class InvoiceController extends Controller
             <span style="font-size: 24px;">📄</span>
             <div style="text-align: left;">
                 <strong style="color: #1e293b; font-size: 15px; display: block;">Invoice #{$invoiceId}</strong>
-                <span style="font-size: 12px; color: #64748b;">PDF download karne ke liye Destination me <strong>"Save as PDF"</strong> select karein.</span>
+                <span style="font-size: 12px; color: #64748b;">To download the PDF, select <strong>"Save as PDF"</strong> as the Destination.</span>
             </div>
         </div>
         <div style="display: flex; gap: 10px;">
