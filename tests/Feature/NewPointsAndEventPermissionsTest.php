@@ -191,4 +191,52 @@ class NewPointsAndEventPermissionsTest extends TestCase
         $this->assertEquals('Event: Weekly Special Event', $dashboardEventSlot['group']['name']);
         $this->assertEquals('Wednesday', $dashboardEventSlot['day_of_week']);
     }
+
+    public function test_athlete_dashboard_shows_only_same_day_group_birthdays(): void
+    {
+        // 1. Create a peer athlete in the same group with birthday today
+        $peerSameGroupToday = User::factory()->create(['club_id' => $this->club->id]);
+        $peerSameGroupToday->assignRole('Athlete');
+        $peerSameGroupToday->trainingGroups()->attach($this->group->id, ['role_in_group' => 'Athlete']);
+        AthleteProfile::create([
+            'user_id' => $peerSameGroupToday->id,
+            'date_of_birth' => now()->subYears(15)->format('Y-m-d'), // Turns 15 today
+        ]);
+
+        // 2. Create another peer in same group but birthday tomorrow (or other day)
+        $peerSameGroupOtherDay = User::factory()->create(['club_id' => $this->club->id]);
+        $peerSameGroupOtherDay->assignRole('Athlete');
+        $peerSameGroupOtherDay->trainingGroups()->attach($this->group->id, ['role_in_group' => 'Athlete']);
+        AthleteProfile::create([
+            'user_id' => $peerSameGroupOtherDay->id,
+            'date_of_birth' => now()->subYears(16)->addDays(2)->format('Y-m-d'), // birthday not today
+        ]);
+
+        // 3. Create an athlete in a different group with birthday today
+        $otherGroup = TrainingGroup::create([
+            'club_id' => $this->club->id,
+            'name' => 'Other Group',
+            'monthly_price' => 50,
+        ]);
+        $peerOtherGroupToday = User::factory()->create(['club_id' => $this->club->id]);
+        $peerOtherGroupToday->assignRole('Athlete');
+        $peerOtherGroupToday->trainingGroups()->attach($otherGroup->id, ['role_in_group' => 'Athlete']);
+        AthleteProfile::create([
+            'user_id' => $peerOtherGroupToday->id,
+            'date_of_birth' => now()->subYears(14)->format('Y-m-d'), // birthday today, but not in same group
+        ]);
+
+        $this->actingAs($this->athlete);
+
+        $response = $this->get(route('athlete.dashboard'));
+        $response->assertStatus(200);
+
+        $birthdays = $response->original->getData()['page']['props']['birthdays'];
+        
+        // Assert only peerSameGroupToday is returned
+        $this->assertCount(1, $birthdays);
+        $this->assertEquals($peerSameGroupToday->name, $birthdays[0]['name']);
+        $this->assertEquals(15, $birthdays[0]['age']);
+        $this->assertContains('Vip Group', $birthdays[0]['groups']);
+    }
 }

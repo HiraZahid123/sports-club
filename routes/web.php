@@ -451,6 +451,35 @@ Route::middleware(['auth', 'verified', 'role:Athlete', \App\Http\Middleware\Chec
             ->values()
             ->toArray();
 
+        $groupIds = $user->trainingGroups()->pluck('training_groups.id');
+        $todayMonthDay = now()->format('m-d');
+        $birthdays = \App\Models\User::role('Athlete')
+            ->where('id', '!=', $user->id)
+            ->whereHas('trainingGroups', function ($q) use ($groupIds) {
+                $q->whereIn('training_groups.id', $groupIds);
+            })
+            ->with(['athleteProfile', 'trainingGroups'])
+            ->get()
+            ->filter(function ($member) use ($todayMonthDay) {
+                $dob = $member->athleteProfile?->date_of_birth;
+                if (!$dob) return false;
+                try {
+                    return \Carbon\Carbon::parse($dob)->format('m-d') === $todayMonthDay;
+                } catch (\Exception $e) {
+                    return false;
+                }
+            })
+            ->map(function ($member) {
+                return [
+                    'id' => $member->id,
+                    'name' => $member->name,
+                    'groups' => $member->trainingGroups->pluck('name')->toArray(),
+                    'age' => $member->athleteProfile?->date_of_birth ? \Carbon\Carbon::parse($member->athleteProfile->date_of_birth)->age : null,
+                ];
+            })
+            ->values()
+            ->toArray();
+
         return Inertia::render('Athlete/Dashboard', [
             'athleteProfile' => $profile,
             'stats' => [
@@ -462,6 +491,7 @@ Route::middleware(['auth', 'verified', 'role:Athlete', \App\Http\Middleware\Chec
             'upcomingSchedules' => $upcomingSchedules,
             'leaderboard' => $leaderboard,
             'pointHistory' => $pointHistory,
+            'birthdays' => $birthdays,
         ]);
     })->name('dashboard');
 

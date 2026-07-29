@@ -97,18 +97,27 @@ interface PointLog {
     points: number;
 }
 
+interface BirthdayAthlete {
+    id: number;
+    name: string;
+    groups: string[];
+    age: number | null;
+}
+
 export default function AthleteDashboard({
     athleteProfile,
     stats = { classes: 0, sparring: 0, events: 0, points: 0 },
     upcomingSchedules = [],
     leaderboard = [],
     pointHistory = [],
+    birthdays = [],
 }: {
     athleteProfile?: AthleteProfile | null;
     stats?: { classes: number; sparring: number; events: number; points: number };
     upcomingSchedules?: UpcomingScheduleSlot[];
     leaderboard?: Array<{ id: number; name: string; points: number; belt_rank: string }>;
     pointHistory?: PointLog[];
+    birthdays?: BirthdayAthlete[];
 }) {
     const belt = athleteProfile?.belt_rank || '10. WHITE';
     const cardStyle = getBeltCardGradient(belt);
@@ -248,6 +257,31 @@ export default function AthleteDashboard({
 
                         {/* Metrics & Tip */}
                         <div className="space-y-5">
+                            {/* Birthdays today */}
+                            {birthdays && birthdays.length > 0 && (
+                                <div className="bg-gradient-to-br from-indigo-50 to-pink-50 rounded-2xl border border-indigo-100 p-5 shadow-sm">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <span className="text-xl">🎂</span>
+                                        <p className="text-sm font-black text-indigo-900">Today's Birthdays</p>
+                                    </div>
+                                    <div className="space-y-3">
+                                        {birthdays.map(b => (
+                                            <div key={b.id} className="flex items-center justify-between bg-white/60 backdrop-blur-sm rounded-xl p-3 border border-indigo-100/50">
+                                                <div className="text-left">
+                                                    <p className="text-xs font-bold text-gray-800">{b.name}</p>
+                                                    <p className="text-[10px] text-gray-400 font-semibold mt-0.5">{b.groups.join(', ')}</p>
+                                                </div>
+                                                {b.age !== null && (
+                                                    <span className="text-[10px] font-black text-indigo-700 bg-indigo-50 border border-indigo-100 rounded-lg px-2 py-0.5 shrink-0">
+                                                        Turns {b.age} 🎉
+                                                    </span>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
                             {/* Coach-set Metrics */}
                             <MetricsCard athleteProfile={athleteProfile} />
 
