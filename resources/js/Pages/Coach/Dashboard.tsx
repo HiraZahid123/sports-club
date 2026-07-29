@@ -800,6 +800,7 @@ export default function CoachDashboard({
                                                 <div className="flex flex-wrap gap-2">
                                                     {selectedGroup.schedules.map((s, i) => {
                                                         const targetDate = getDateForDayOfWeek(s.day_of_week);
+                                                        const dateNum = new Date(targetDate).getDate();
                                                         return (
                                                             <Link
                                                                 key={i}
@@ -810,7 +811,7 @@ export default function CoachDashboard({
                                                                 })}
                                                                 className={`inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-lg border transition-all hover:scale-105 active:scale-95 ${DAY_COLOR[s.day_of_week] ?? 'bg-gray-100 text-gray-600 border-gray-100'}`}
                                                             >
-                                                                <span>{DAY_SHORT[s.day_of_week]}</span>
+                                                                <span>{DAY_SHORT[s.day_of_week]} ({dateNum})</span>
                                                                 <span className="opacity-80">{fmtTime(s.start_time)}–{fmtTime(s.end_time)}</span>
                                                                 {(s.facility?.name || s.location) && <span className="opacity-65">· {s.facility?.name ?? s.location}</span>}
                                                             </Link>

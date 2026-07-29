@@ -74,18 +74,23 @@ export default function CoachSchedule({ schedules = [] }: { schedules?: Schedule
                                                       date: targetDate,
                                                   })
                                                 : '';
+                                            const dateNum = new Date(targetDate).getDate();
                                             return (
                                                 <tr key={slot.id} className="hover:bg-slate-50 transition-colors">
                                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
                                                         {slot.group ? (
                                                             <Link
                                                                 href={markAttendanceUrl}
-                                                                className="text-indigo-600 hover:text-indigo-900 hover:underline"
+                                                                className="text-indigo-600 hover:text-indigo-900 hover:underline inline-flex items-center gap-2"
                                                             >
-                                                                {slot.day_of_week}
+                                                                <span>{slot.day_of_week}</span>
+                                                                <span className="bg-indigo-50 text-indigo-700 text-[11px] font-black px-1.5 py-0.5 rounded border border-indigo-100">{dateNum}</span>
                                                             </Link>
                                                         ) : (
-                                                            slot.day_of_week
+                                                            <div className="inline-flex items-center gap-2">
+                                                                <span>{slot.day_of_week}</span>
+                                                                <span className="bg-gray-50 text-gray-600 text-[11px] font-black px-1.5 py-0.5 rounded border border-gray-100">{dateNum}</span>
+                                                            </div>
                                                         )}
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">

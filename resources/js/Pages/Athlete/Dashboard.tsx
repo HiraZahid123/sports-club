@@ -1,6 +1,8 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 import { getBeltStyle, getBeltCardGradient, getNextBelt } from '@/beltHelpers';
+import { getDateForDayOfWeek } from '@/dateHelpers';
+
 
 interface AthleteProfile {
     belt_rank?: string | null;
@@ -219,10 +221,14 @@ export default function AthleteDashboard({
                                             Sunday: 'border-rose-400 bg-rose-50/50 text-rose-700',
                                         }[slot.day_of_week] || 'border-gray-400 bg-gray-50';
 
+                                        const targetDate = getDateForDayOfWeek(slot.day_of_week);
+                                        const dateNum = new Date(targetDate).getDate();
+
                                         return (
                                             <div key={slot.id} className={`flex items-center gap-4 px-6 py-4 hover:bg-slate-50 transition-colors border-l-4 ${dayColor}`}>
-                                                <div className="text-center w-16 shrink-0">
-                                                    <p className="text-xs font-extrabold uppercase tracking-wide">{slot.day_of_week.substring(0, 3)}</p>
+                                                <div className="text-center w-16 shrink-0 flex flex-col items-center justify-center">
+                                                    <p className="text-xs font-extrabold uppercase tracking-wide text-gray-400">{slot.day_of_week.substring(0, 3)}</p>
+                                                    <p className="text-xl font-black text-gray-800 leading-none mt-1">{dateNum}</p>
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <p className="font-semibold text-gray-900 text-sm">{slot.group.name}</p>

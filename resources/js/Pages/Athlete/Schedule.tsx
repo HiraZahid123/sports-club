@@ -1,5 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head } from '@inertiajs/react';
+import { getDateForDayOfWeek } from '@/dateHelpers';
+
 
 interface ScheduleSlot {
     id: number | string;
@@ -68,10 +70,16 @@ export default function AthleteSchedule({ schedules = [] }: { schedules?: Schedu
                                     const daySlots = schedulesByDay[day];
                                     if (daySlots.length === 0) return null;
 
+                                    const dateStr = getDateForDayOfWeek(day);
+                                    const dateNum = new Date(dateStr).getDate();
+
                                     return (
                                         <div key={day} className="border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
-                                            <div className="bg-slate-50 px-5 py-3 border-b border-gray-100">
+                                            <div className="bg-slate-50 px-5 py-3 border-b border-gray-100 flex items-center justify-between">
                                                 <h4 className="text-sm font-bold text-indigo-900">{day}</h4>
+                                                <span className="text-sm font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-lg border border-indigo-100">
+                                                    {dateNum}
+                                                </span>
                                             </div>
                                             <div className="divide-y divide-gray-100">
                                                 {daySlots.map(slot => {
