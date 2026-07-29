@@ -258,12 +258,12 @@ export default function AthleteDashboard({
                         {/* Metrics & Tip */}
                         <div className="space-y-5">
                             {/* Birthdays today */}
-                            {birthdays && birthdays.length > 0 && (
-                                <div className="bg-gradient-to-br from-indigo-50 to-pink-50 rounded-2xl border border-indigo-100 p-5 shadow-sm">
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <span className="text-xl">🎂</span>
-                                        <p className="text-sm font-black text-indigo-900">Today's Birthdays</p>
-                                    </div>
+                            <div className="bg-gradient-to-br from-indigo-50 to-pink-50 rounded-2xl border border-indigo-100 p-5 shadow-sm">
+                                <div className="flex items-center gap-2 mb-3">
+                                    <span className="text-xl">🎂</span>
+                                    <p className="text-sm font-black text-indigo-900">Today's Birthdays</p>
+                                </div>
+                                {birthdays && birthdays.length > 0 ? (
                                     <div className="space-y-3">
                                         {birthdays.map(b => (
                                             <div key={b.id} className="flex items-center justify-between bg-white/60 backdrop-blur-sm rounded-xl p-3 border border-indigo-100/50">
@@ -279,8 +279,10 @@ export default function AthleteDashboard({
                                             </div>
                                         ))}
                                     </div>
-                                </div>
-                            )}
+                                ) : (
+                                    <p className="text-xs text-indigo-700/80 italic text-left">No birthdays in your groups today.</p>
+                                )}
+                            </div>
 
                             {/* Coach-set Metrics */}
                             <MetricsCard athleteProfile={athleteProfile} />
