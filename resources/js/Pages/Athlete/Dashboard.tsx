@@ -87,16 +87,25 @@ interface UpcomingScheduleSlot {
     } | null;
 }
 
+interface PointLog {
+    date: string;
+    type: 'training' | 'event' | 'reset';
+    description: string;
+    points: number;
+}
+
 export default function AthleteDashboard({
     athleteProfile,
     stats = { classes: 0, sparring: 0, events: 0, points: 0 },
     upcomingSchedules = [],
     leaderboard = [],
+    pointHistory = [],
 }: {
     athleteProfile?: AthleteProfile | null;
     stats?: { classes: number; sparring: number; events: number; points: number };
     upcomingSchedules?: UpcomingScheduleSlot[];
     leaderboard?: Array<{ id: number; name: string; points: number; belt_rank: string }>;
+    pointHistory?: PointLog[];
 }) {
     const belt = athleteProfile?.belt_rank || '10. WHITE';
     const cardStyle = getBeltCardGradient(belt);
@@ -286,6 +295,71 @@ export default function AthleteDashboard({
                                     )}
                                 </div>
                             </div>
+                        </div>
+                    </div>
+
+                    {/* Points History Log */}
+                    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                        <div className="px-6 py-4 border-b border-gray-50 flex items-center justify-between">
+                            <div>
+                                <h3 className="text-base font-bold text-gray-900">Points History Log</h3>
+                                <p className="text-sm text-gray-500 mt-0.5">Detailed timeline of points earned or reset archives</p>
+                            </div>
+                            <span className="text-2xl">⏳</span>
+                        </div>
+                        <div className="p-6">
+                            {pointHistory.length === 0 ? (
+                                <div className="text-center py-10 text-gray-400 italic text-sm">
+                                    No points history logged yet. Attend classes or events to earn points!
+                                </div>
+                            ) : (
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left border-collapse text-xs">
+                                        <thead>
+                                            <tr className="border-b border-gray-100 text-gray-400 uppercase tracking-wider font-extrabold">
+                                                <th className="py-3 px-4">Date</th>
+                                                <th className="py-3 px-4">Type</th>
+                                                <th className="py-3 px-4">Description</th>
+                                                <th className="py-3 px-4 text-right">Points</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-50">
+                                            {pointHistory.map((log, index) => {
+                                                const badgeStyle = {
+                                                    training: 'bg-emerald-50 text-emerald-700 border-emerald-100',
+                                                    event: 'bg-indigo-50 text-indigo-700 border-indigo-100',
+                                                    reset: 'bg-amber-50 text-amber-700 border-amber-100'
+                                                }[log.type];
+
+                                                const label = {
+                                                    training: 'Training Attendance',
+                                                    event: 'Event Category',
+                                                    reset: 'Period Reset Archive'
+                                                }[log.type];
+
+                                                return (
+                                                    <tr key={index} className="hover:bg-slate-50/50 transition-colors">
+                                                        <td className="py-3.5 px-4 font-medium text-gray-500 font-mono">
+                                                            {log.date}
+                                                        </td>
+                                                        <td className="py-3.5 px-4">
+                                                            <span className={`inline-flex items-center border rounded-lg px-2 py-0.5 text-[10px] font-bold ${badgeStyle}`}>
+                                                                {label}
+                                                            </span>
+                                                        </td>
+                                                        <td className="py-3.5 px-4 text-gray-700 font-semibold">
+                                                            {log.description}
+                                                        </td>
+                                                        <td className={`py-3.5 px-4 text-right font-black text-sm ${log.type === 'reset' ? 'text-amber-600' : 'text-indigo-600'}`}>
+                                                            {log.type === 'reset' ? `${log.points} pts` : `+${log.points} pts`}
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
                         </div>
                     </div>
 

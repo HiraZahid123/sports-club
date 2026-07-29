@@ -33,7 +33,8 @@ export default function Authenticated({
         route().current('manager.members.index') ||
         route().current('manager.coaches.index') ||
         route().current('manager.groups.index') ||
-        route().current('manager.attendance.*')
+        route().current('manager.attendance.*') ||
+        route().current('manager.points.*')
     );
 
     const isBillingActive = isManager && (
@@ -108,6 +109,9 @@ export default function Authenticated({
                                                 </Dropdown.Link>
                                                 <Dropdown.Link href={route('manager.attendance.index')} className={route().current('manager.attendance.*') ? 'bg-indigo-50 text-indigo-700 font-bold' : ''}>
                                                     Attendance
+                                                </Dropdown.Link>
+                                                <Dropdown.Link href={route('manager.points.setup')} className={route().current('manager.points.setup') ? 'bg-indigo-50 text-indigo-700 font-bold' : ''}>
+                                                    Points Setup
                                                 </Dropdown.Link>
                                             </Dropdown.Content>
                                         </Dropdown>

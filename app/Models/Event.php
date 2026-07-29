@@ -18,6 +18,8 @@ class Event extends Model
         'stripe_payment_link',
         'points',
         'pdf_path',
+        'image_path',
+        'event_category_id',
         'coach_salary_type',
         'coach_salary_rate',
     ];
@@ -42,7 +44,7 @@ class Event extends Model
 
     public function groups()
     {
-        return $this->belongsToMany(TrainingGroup::class, 'event_groups');
+        return $this->belongsToMany(TrainingGroup::class, 'event_groups')->withPivot('can_join');
     }
 
     public function coaches()
@@ -54,6 +56,12 @@ class Event extends Model
     {
         return $this->hasMany(EventRegistration::class);
     }
+
+    public function eventCategory()
+    {
+        return $this->belongsTo(EventCategory::class);
+    }
+
 
     public function isFree(): bool
     {

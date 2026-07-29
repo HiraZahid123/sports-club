@@ -30,13 +30,16 @@ class AttendanceController extends Controller
                 ->get()
                 ->keyBy('athlete_id');
 
-            $attendanceData = $group->athletes->map(function ($athlete) use ($existingAttendance) {
+            $club = $request->user()->club;
+            $defaultPoints = $club->settings['regular_training_points'] ?? 5;
+
+            $attendanceData = $group->athletes->map(function ($athlete) use ($existingAttendance, $defaultPoints) {
                 $att = $existingAttendance->get($athlete->id);
                 return [
                     'athlete_id'   => $athlete->id,
                     'name'         => $athlete->name,
                     'status'       => $att ? $att->status : 'absent',
-                    'base_points'  => $att ? $att->base_points : 5,
+                    'base_points'  => $att ? $att->base_points : $defaultPoints,
                     'extra_points' => $att ? $att->extra_points : 0,
                 ];
             });
@@ -80,13 +83,16 @@ class AttendanceController extends Controller
             ->get()
             ->keyBy('athlete_id');
 
-        $data = $group->athletes->map(function ($athlete) use ($existing) {
+        $club = $request->user()->club;
+        $defaultPoints = $club->settings['regular_training_points'] ?? 5;
+
+        $data = $group->athletes->map(function ($athlete) use ($existing, $defaultPoints) {
             $att = $existing->get($athlete->id);
             return [
                 'athlete_id'   => $athlete->id,
                 'name'         => $athlete->name,
                 'status'       => $att ? $att->status : 'absent',
-                'base_points'  => $att ? $att->base_points : 5,
+                'base_points'  => $att ? $att->base_points : $defaultPoints,
                 'extra_points' => $att ? $att->extra_points : 0,
             ];
         });

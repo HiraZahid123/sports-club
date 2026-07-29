@@ -58,25 +58,42 @@ class TrainingAttendance extends Model
      */
     public static function syncProfilePoints(int $athleteId): void
     {
+        $user = User::findOrFail($athleteId);
         $profile = AthleteProfile::firstOrCreate(['user_id' => $athleteId]);
+        $club = $user->club;
+        $periodStart = $club && isset($club->settings['points_period_start'])
+            ? $club->settings['points_period_start']
+            : null;
 
-        // Sum event registration points
-        $eventPoints = EventRegistration::where('user_id', $athleteId)
+        // Sum event registration points since period start
+        $eventQuery = EventRegistration::where('user_id', $athleteId)
             ->where('status', 'attended')
-            ->whereHas('event')
-            ->get()
-            ->sum(function ($reg) {
-                return $reg->event->points ?? 0;
-            });
+            ->whereHas('event');
 
-        // Sum training attendance points (present status)
-        $trainingPoints = self::where('athlete_id', $athleteId)
-            ->where('status', 'present')
-            ->sum(DB::raw('base_points + extra_points'));
+        if ($periodStart) {
+            $eventQuery->whereHas('event', function ($q) use ($periodStart) {
+                $q->where('start_date', '>=', $periodStart);
+            });
+        }
+
+        $eventPoints = $eventQuery->get()->sum(function ($reg) {
+            return $reg->event->points ?? 0;
+        });
+
+        // Sum training attendance points (present status) since period start
+        $trainingQuery = self::where('athlete_id', $athleteId)
+            ->where('status', 'present');
+
+        if ($periodStart) {
+            $trainingQuery->where('attendance_date', '>=', $periodStart);
+        }
+
+        $trainingPoints = $trainingQuery->sum(DB::raw('base_points + extra_points'));
 
         // Update the athlete profile
         $profile->update([
             'event_points' => $eventPoints + $trainingPoints + ($profile->manual_points_adjustment ?? 0),
         ]);
     }
+
 }

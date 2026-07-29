@@ -230,7 +230,15 @@ Route::middleware(['auth', 'verified', 'role:Manager|Super Admin'])->prefix('man
     Route::get('/attendance', [\App\Http\Controllers\AttendanceController::class, 'index'])->name('attendance.index');
     Route::post('/attendance', [\App\Http\Controllers\AttendanceController::class, 'save'])->name('attendance.save');
     Route::get('/attendance/load', [\App\Http\Controllers\AttendanceController::class, 'loadAttendance'])->name('attendance.load');
+
+    Route::get('/points', [\App\Http\Controllers\PointsSystemController::class, 'edit'])->name('points.setup');
+    Route::post('/points/settings', [\App\Http\Controllers\PointsSystemController::class, 'updateSettings'])->name('points.settings');
+    Route::post('/points/reset', [\App\Http\Controllers\PointsSystemController::class, 'resetPoints'])->name('points.reset');
+    Route::post('/points/categories', [\App\Http\Controllers\PointsSystemController::class, 'storeCategory'])->name('points.categories.store');
+    Route::put('/points/categories/{category}', [\App\Http\Controllers\PointsSystemController::class, 'updateCategory'])->name('points.categories.update');
+    Route::delete('/points/categories/{category}', [\App\Http\Controllers\PointsSystemController::class, 'destroyCategory'])->name('points.categories.destroy');
 });
+
 
 // Coach Routes
 Route::middleware(['auth', 'verified', 'role:Coach', \App\Http\Middleware\CheckSubscription::class])->prefix('coach')->name('coach.')->group(function () {
@@ -350,6 +358,55 @@ Route::middleware(['auth', 'verified', 'role:Athlete', \App\Http\Middleware\Chec
             ->values()
             ->toArray();
 
+        // Consolidate point history
+        $trainingLogs = \App\Models\TrainingAttendance::where('athlete_id', $user->id)
+            ->where('status', 'present')
+            ->with('trainingGroup')
+            ->latest('attendance_date')
+            ->get()
+            ->map(function ($att) {
+                return [
+                    'date' => $att->attendance_date->toDateString(),
+                    'type' => 'training',
+                    'description' => "Attended training with " . ($att->trainingGroup->name ?? 'Group'),
+                    'points' => $att->base_points + $att->extra_points,
+                ];
+            });
+
+        $eventLogs = \App\Models\EventRegistration::where('user_id', $user->id)
+            ->where('status', 'attended')
+            ->with('event')
+            ->get()
+            ->map(function ($reg) {
+                $eventDate = $reg->attended_at ? $reg->attended_at->toDateString() : ($reg->event->start_date ? $reg->event->start_date->toDateString() : $reg->updated_at->toDateString());
+                return [
+                    'date' => $eventDate,
+                    'type' => 'event',
+                    'description' => "Attended event: " . ($reg->event->name ?? 'Event'),
+                    'points' => $reg->event->points ?? 0,
+                ];
+            });
+
+        $resetLogs = \App\Models\AthletePointHistory::where('athlete_id', $user->id)
+            ->latest('period_end_date')
+            ->get()
+            ->map(function ($hist) {
+                return [
+                    'date' => $hist->period_end_date->toDateString(),
+                    'type' => 'reset',
+                    'description' => "Period points archived (Period: " . $hist->period_start_date->toDateString() . " to " . $hist->period_end_date->toDateString() . ")",
+                    'points' => $hist->points,
+                ];
+            });
+
+        $pointHistory = collect()
+            ->concat($trainingLogs)
+            ->concat($eventLogs)
+            ->concat($resetLogs)
+            ->sortByDesc('date')
+            ->values()
+            ->toArray();
+
         return Inertia::render('Athlete/Dashboard', [
             'athleteProfile' => $profile,
             'stats' => [
@@ -360,6 +417,7 @@ Route::middleware(['auth', 'verified', 'role:Athlete', \App\Http\Middleware\Chec
             ],
             'upcomingSchedules' => $upcomingSchedules,
             'leaderboard' => $leaderboard,
+            'pointHistory' => $pointHistory,
         ]);
     })->name('dashboard');
 

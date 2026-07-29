@@ -24,10 +24,12 @@ interface Event {
     stripe_payment_link: string | null;
     points: number;
     pdf_url: string | null;
+    image_url: string | null;
     is_free: boolean;
     groups: Group[];
     coaches: Coach[];
     registration: Registration | null;
+    can_join_event: boolean;
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -88,7 +90,36 @@ export default function AthleteEvents({ events, event_points }: {
         const cfg    = status ? STATUS_CONFIG[status] : null;
 
         return (
-            <div key={ev.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow flex flex-col overflow-hidden">
+            <div key={ev.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col overflow-hidden">
+                {/* Poster Display */}
+                {ev.image_url ? (
+                    <div className="relative aspect-[16/9] w-full overflow-hidden bg-slate-100 border-b border-gray-50">
+                        <img src={ev.image_url} alt={ev.name} className="w-full h-full object-cover transition-transform duration-500 hover:scale-105" />
+                        {!ev.can_join_event && (
+                            <span className="absolute top-3 right-3 bg-slate-900/80 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg">
+                                👁️ View Only
+                            </span>
+                        )}
+                    </div>
+                ) : (
+                    <div className="relative aspect-[16/9] w-full overflow-hidden bg-gradient-to-br from-indigo-500 via-indigo-600 to-purple-700 border-b border-gray-50 flex flex-col justify-between p-4 text-white">
+                        <div className="flex justify-between items-start">
+                            <span className="bg-white/10 backdrop-blur-md border border-white/20 text-white text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md">
+                                Event
+                            </span>
+                            {!ev.can_join_event && (
+                                <span className="bg-slate-900/85 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg">
+                                    👁️ View Only
+                                </span>
+                            )}
+                        </div>
+                        <div className="space-y-1">
+                            <h4 className="font-black text-sm leading-snug drop-shadow-sm line-clamp-2">{ev.name}</h4>
+                            <p className="text-[10px] text-white/80 font-medium">🏆 Earn {ev.points} Points</p>
+                        </div>
+                    </div>
+                )}
+
                 <div className="p-5 flex-1 space-y-3">
                     {/* Header */}
                     <div className="flex items-start justify-between gap-2">
@@ -161,29 +192,36 @@ export default function AthleteEvents({ events, event_points }: {
                             )}
                         </div>
                     ) : (
-                        ev.is_free ? (
-                            <button
-                                onClick={() => handleJoin(ev)}
-                                disabled={joining === ev.id}
-                                className="w-full py-2 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 transition-all disabled:opacity-50 shadow-sm"
-                            >
-                                {joining === ev.id ? 'Registering…' : 'Register'}
-                            </button>
+                        !ev.can_join_event ? (
+                            <div className="text-center py-2 bg-gray-100 text-gray-500 border border-gray-200/50 text-xs font-semibold rounded-xl select-none">
+                                👁️ View Only — Group Restricted
+                            </div>
                         ) : (
-                            <button
-                                onClick={() => handlePay(ev)}
-                                disabled={joining === ev.id}
-                                className="w-full py-2 bg-amber-500 text-white text-sm font-bold rounded-xl hover:bg-amber-600 transition-all disabled:opacity-50 shadow-sm flex items-center justify-center gap-2"
-                            >
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
-                                {joining === ev.id ? 'Processing…' : `Pay & Register — €${parseFloat(ev.price!).toFixed(2)}`}
-                            </button>
+                            ev.is_free ? (
+                                <button
+                                    onClick={() => handleJoin(ev)}
+                                    disabled={joining === ev.id}
+                                    className="w-full py-2 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 transition-all disabled:opacity-50 shadow-sm"
+                                >
+                                    {joining === ev.id ? 'Registering…' : 'Register'}
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={() => handlePay(ev)}
+                                    disabled={joining === ev.id}
+                                    className="w-full py-2 bg-amber-500 text-white text-sm font-bold rounded-xl hover:bg-amber-600 transition-all disabled:opacity-50 shadow-sm flex items-center justify-center gap-2"
+                                >
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
+                                    {joining === ev.id ? 'Processing…' : `Pay & Register — €${parseFloat(ev.price!).toFixed(2)}`}
+                                </button>
+                            )
                         )
                     )}
                 </div>
             </div>
         );
     };
+
 
     return (
         <AuthenticatedLayout

@@ -6,6 +6,20 @@ import { FormEventHandler, useRef, useState } from 'react';
 interface Group { id: number; name: string }
 interface Coach { id: number; name: string }
 
+interface Category {
+    id: number;
+    name: string;
+    points: number;
+}
+
+interface Group {
+    id: number;
+    name: string;
+    can_join?: boolean;
+}
+
+interface Coach { id: number; name: string }
+
 interface Event {
     id: number;
     name: string;
@@ -18,6 +32,9 @@ interface Event {
     points: number;
     pdf_path: string | null;
     pdf_url: string | null;
+    image_path: string | null;
+    image_url: string | null;
+    event_category_id: number | null;
     groups: Group[];
     coaches: Coach[];
     registrations_count: number;
@@ -80,10 +97,11 @@ const SALARY_BADGE: Record<string, { label: string; cls: string }> = {
 };
 
 // ── Component ──────────────────────────────────────────────────────────────
-export default function EventsIndex({ events, groups, coaches }: {
+export default function EventsIndex({ events, groups, coaches, categories = [] }: {
     events: Event[];
     groups: Group[];
     coaches: Coach[];
+    categories?: Category[];
 }) {
     const [isCreating, setIsCreating]     = useState(false);
     const [editingEvent, setEditingEvent] = useState<Event | null>(null);
@@ -97,8 +115,11 @@ export default function EventsIndex({ events, groups, coaches }: {
         name: '', description: '', location: '',
         start_date: '', end_date: '', price: '',
         stripe_payment_link: '', points: '0',
-        group_ids: [] as string[], coach_ids: [] as string[],
+        group_ids: [] as string[], join_group_ids: [] as string[],
+        coach_ids: [] as string[],
         pdf: null as File | null, remove_pdf: '0',
+        image: null as File | null, remove_image: '0',
+        event_category_id: '' as string,
         coach_salary_type: '' as string,
         coach_salary_rate: '',
     });
@@ -107,10 +128,12 @@ export default function EventsIndex({ events, groups, coaches }: {
         e.preventDefault();
         const fd = new FormData();
         Object.entries(createForm.data).forEach(([k, v]) => {
-            if (k === 'group_ids' || k === 'coach_ids') {
+            if (k === 'group_ids' || k === 'coach_ids' || k === 'join_group_ids') {
                 (v as string[]).forEach(id => fd.append(`${k}[]`, id));
             } else if (k === 'pdf' && v instanceof File) {
                 fd.append('pdf', v);
+            } else if (k === 'image' && v instanceof File) {
+                fd.append('image', v);
             } else if (v !== null) {
                 fd.append(k, String(v));
             }
@@ -130,8 +153,11 @@ export default function EventsIndex({ events, groups, coaches }: {
         name: '', description: '', location: '',
         start_date: '', end_date: '', price: '',
         stripe_payment_link: '', points: '0',
-        group_ids: [] as string[], coach_ids: [] as string[],
+        group_ids: [] as string[], join_group_ids: [] as string[],
+        coach_ids: [] as string[],
         pdf: null as File | null, remove_pdf: '0',
+        image: null as File | null, remove_image: '0',
+        event_category_id: '' as string,
         coach_salary_type: '' as string,
         coach_salary_rate: '',
     });
@@ -147,9 +173,13 @@ export default function EventsIndex({ events, groups, coaches }: {
             stripe_payment_link: ev.stripe_payment_link ?? '',
             points:              String(ev.points),
             group_ids:           ev.groups.map(g => String(g.id)),
+            join_group_ids:      ev.groups.filter(g => g.can_join).map(g => String(g.id)),
             coach_ids:           ev.coaches.map(c => String(c.id)),
             pdf:                 null,
             remove_pdf:          '0',
+            image:               null,
+            remove_image:        '0',
+            event_category_id:   ev.event_category_id ? String(ev.event_category_id) : '',
             coach_salary_type:   ev.coach_salary_type ?? '',
             coach_salary_rate:   ev.coach_salary_rate ?? '',
         });
@@ -163,10 +193,12 @@ export default function EventsIndex({ events, groups, coaches }: {
         if (!editingEvent) return;
         const fd = new FormData();
         Object.entries(editForm.data).forEach(([k, v]) => {
-            if (k === 'group_ids' || k === 'coach_ids') {
+            if (k === 'group_ids' || k === 'coach_ids' || k === 'join_group_ids') {
                 (v as string[]).forEach(id => fd.append(`${k}[]`, id));
             } else if (k === 'pdf' && v instanceof File) {
                 fd.append('pdf', v);
+            } else if (k === 'image' && v instanceof File) {
+                fd.append('image', v);
             } else if (v !== null) {
                 fd.append(k, String(v));
             }
@@ -190,12 +222,13 @@ export default function EventsIndex({ events, groups, coaches }: {
     };
 
     // ── Render helpers ─────────────────────────────────────────────────────
+
     const GroupToggle = ({ id, form }: { id: number; form: typeof createForm | typeof editForm }) => {
         const active = (form.data.group_ids).includes(String(id));
-        const g = groups.find(x => x.id === id)!;
+        const g = groups.find((x: Group) => x.id === id)!;
         const toggle = () => {
             const cur = form.data.group_ids;
-            form.setData({ ...form.data, group_ids: active ? cur.filter(x => x !== String(id)) : [...cur, String(id)] });
+            form.setData({ ...form.data, group_ids: active ? cur.filter((x: string) => x !== String(id)) : [...cur, String(id)] });
         };
         return (
             <button type="button" onClick={toggle}
@@ -207,10 +240,10 @@ export default function EventsIndex({ events, groups, coaches }: {
 
     const CoachToggle = ({ id, form }: { id: number; form: typeof createForm | typeof editForm }) => {
         const active = (form.data.coach_ids).includes(String(id));
-        const c = coaches.find(x => x.id === id)!;
+        const c = coaches.find((x: Coach) => x.id === id)!;
         const toggle = () => {
             const cur = form.data.coach_ids;
-            form.setData({ ...form.data, coach_ids: active ? cur.filter(x => x !== String(id)) : [...cur, String(id)] });
+            form.setData({ ...form.data, coach_ids: active ? cur.filter((x: string) => x !== String(id)) : [...cur, String(id)] });
         };
         return (
             <button type="button" onClick={toggle}
@@ -385,6 +418,35 @@ export default function EventsIndex({ events, groups, coaches }: {
                     </div>
                 </div>
 
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                        <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Event Category</label>
+                        <select
+                            value={form.data.event_category_id}
+                            onChange={(e) => {
+                                const catId = e.target.value;
+                                const selectedCat = categories.find(c => String(c.id) === catId);
+                                form.setData({
+                                    ...form.data,
+                                    event_category_id: catId,
+                                    points: selectedCat ? String(selectedCat.points) : form.data.points
+                                });
+                            }}
+                            className={inputClass}
+                        >
+                            <option value="">Custom / Manual Points</option>
+                            {categories.map(c => (
+                                <option key={c.id} value={c.id}>{c.name} ({c.points} pts)</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Points Awarded *</label>
+                        <input type="number" min="0" value={form.data.points} onChange={e => form.setData({ ...form.data, points: e.target.value })} placeholder="10" className={inputClass} />
+                        {form.errors.points && <p className="mt-1 text-xs text-red-600">{form.errors.points}</p>}
+                    </div>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                     <div>
                         <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Price (€) — blank = free</label>
@@ -397,11 +459,6 @@ export default function EventsIndex({ events, groups, coaches }: {
                             {form.errors.stripe_payment_link && <p className="mt-1 text-xs text-red-600">{form.errors.stripe_payment_link}</p>}
                         </div>
                     )}
-                    <div>
-                        <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Points Awarded *</label>
-                        <input type="number" min="0" value={form.data.points} onChange={e => form.setData({ ...form.data, points: e.target.value })} placeholder="10" className={inputClass} />
-                        {form.errors.points && <p className="mt-1 text-xs text-red-600">{form.errors.points}</p>}
-                    </div>
                 </div>
 
                 <div>
@@ -409,35 +466,115 @@ export default function EventsIndex({ events, groups, coaches }: {
                     <textarea value={form.data.description} onChange={e => form.setData({ ...form.data, description: e.target.value })} rows={3} placeholder="Event details, rules, schedule…" className={inputClass} />
                 </div>
 
-                {/* PDF */}
-                <div>
-                    <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Event PDF (optional)</label>
-                    {editing?.pdf_url && form.data.remove_pdf !== '1' && (
-                        <div className="flex items-center gap-3 mb-2 p-3 bg-amber-50 border border-amber-100 rounded-xl">
-                            <svg className="w-5 h-5 text-amber-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
-                            <a href={editing.pdf_url} target="_blank" rel="noopener" className="text-xs font-semibold text-amber-700 hover:underline truncate">Current PDF attached</a>
-                            <button type="button" onClick={() => form.setData({ ...form.data, remove_pdf: '1' })} className="ml-auto text-xs text-red-500 hover:text-red-700 font-semibold">Remove</button>
-                        </div>
-                    )}
-                    <input
-                        ref={fileRef}
-                        type="file"
-                        accept=".pdf"
-                        onChange={e => form.setData({ ...form.data, pdf: e.target.files?.[0] ?? null })}
-                        className="w-full text-sm text-gray-600 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-indigo-50 file:text-indigo-700 file:text-xs file:font-semibold hover:file:bg-indigo-100 transition-all"
-                    />
+                {/* PDF & Poster */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                        <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Event PDF (optional)</label>
+                        {editing?.pdf_url && form.data.remove_pdf !== '1' && (
+                            <div className="flex items-center gap-3 mb-2 p-3 bg-amber-50 border border-amber-100 rounded-xl">
+                                <svg className="w-5 h-5 text-amber-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+                                <a href={editing.pdf_url} target="_blank" rel="noopener" className="text-xs font-semibold text-amber-700 hover:underline truncate">Current PDF attached</a>
+                                <button type="button" onClick={() => form.setData({ ...form.data, remove_pdf: '1' })} className="ml-auto text-xs text-red-500 hover:text-red-700 font-semibold">Remove</button>
+                            </div>
+                        )}
+                        <input
+                            ref={fileRef}
+                            type="file"
+                            accept=".pdf"
+                            onChange={e => form.setData({ ...form.data, pdf: e.target.files?.[0] ?? null })}
+                            className="w-full text-sm text-gray-600 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-indigo-50 file:text-indigo-700 file:text-xs file:font-semibold hover:file:bg-indigo-100 transition-all"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Event Poster / Picture (optional)</label>
+                        {editing?.image_url && form.data.remove_image !== '1' && (
+                            <div className="flex items-center gap-3 mb-2 p-3 bg-amber-50 border border-amber-100 rounded-xl">
+                                <img src={editing.image_url} alt="Event poster" className="w-10 h-10 object-cover rounded-lg border border-amber-200 shrink-0" />
+                                <span className="text-xs font-semibold text-amber-700">Current Poster attached</span>
+                                <button type="button" onClick={() => form.setData({ ...form.data, remove_image: '1' })} className="ml-auto text-xs text-red-500 hover:text-red-700 font-semibold">Remove</button>
+                            </div>
+                        )}
+                        <input
+                            type="file"
+                            accept="image/*"
+                            onChange={e => form.setData({ ...form.data, image: e.target.files?.[0] ?? null })}
+                            className="w-full text-sm text-gray-600 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-indigo-50 file:text-indigo-700 file:text-xs file:font-semibold hover:file:bg-indigo-100 transition-all"
+                        />
+                        {form.errors.image && <p className="mt-1 text-xs text-red-600">{form.errors.image}</p>}
+                    </div>
                 </div>
 
-                {/* Groups */}
+                {/* Groups Access (See & Join) */}
                 <div>
-                    <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">
-                        Visible to Groups * <span className="text-gray-400 font-normal normal-case">(select at least one)</span>
-                    </label>
+                    <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">Group Access Permissions *</label>
                     {groups.length === 0 ? (
                         <p className="text-xs text-gray-400 italic">No groups yet — create groups first.</p>
                     ) : (
-                        <div className="flex flex-wrap gap-2">
-                            {groups.map(g => <GroupToggle key={g.id} id={g.id} form={form} />)}
+                        <div className="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                            {groups.map(g => {
+                                const isVisible = form.data.group_ids.includes(String(g.id));
+                                const canJoin = form.data.join_group_ids.includes(String(g.id));
+
+                                const toggleVisible = () => {
+                                    const curGroupIds = form.data.group_ids;
+                                    const curJoinIds = form.data.join_group_ids;
+                                    if (isVisible) {
+                                        form.setData({
+                                            ...form.data,
+                                            group_ids: curGroupIds.filter(x => x !== String(g.id)),
+                                            join_group_ids: curJoinIds.filter(x => x !== String(g.id))
+                                        });
+                                    } else {
+                                        form.setData({
+                                            ...form.data,
+                                            group_ids: [...curGroupIds, String(g.id)],
+                                            join_group_ids: [...curJoinIds, String(g.id)]
+                                        });
+                                    }
+                                };
+
+                                const toggleJoin = () => {
+                                    const curJoinIds = form.data.join_group_ids;
+                                    if (canJoin) {
+                                        form.setData({
+                                            ...form.data,
+                                            join_group_ids: curJoinIds.filter(x => x !== String(g.id))
+                                        });
+                                    } else {
+                                        form.setData({
+                                            ...form.data,
+                                            join_group_ids: [...curJoinIds, String(g.id)]
+                                        });
+                                    }
+                                };
+
+                                return (
+                                    <div key={g.id} className="flex items-center justify-between bg-white px-4 py-2.5 rounded-lg border border-slate-100 hover:border-indigo-100 transition-colors">
+                                        <span className="text-xs font-bold text-gray-800">{g.name}</span>
+                                        <div className="flex items-center gap-6">
+                                            <label className="inline-flex items-center gap-1.5 cursor-pointer">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={isVisible}
+                                                    onChange={toggleVisible}
+                                                    className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4"
+                                                />
+                                                <span className="text-xs font-semibold text-gray-500">Visible</span>
+                                            </label>
+                                            <label className={`inline-flex items-center gap-1.5 ${isVisible ? 'cursor-pointer' : 'opacity-40 cursor-not-allowed'}`}>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={canJoin && isVisible}
+                                                    disabled={!isVisible}
+                                                    onChange={toggleJoin}
+                                                    className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4"
+                                                />
+                                                <span className="text-xs font-semibold text-gray-500">Can Join</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                );
+                            })}
                         </div>
                     )}
                     {form.errors.group_ids && <p className="mt-1 text-xs text-red-600">{(form.errors as Record<string, string>).group_ids}</p>}
@@ -454,6 +591,7 @@ export default function EventsIndex({ events, groups, coaches }: {
                         </div>
                     )}
                 </div>
+
 
                 {/* ── Coach Salary Section ── */}
                 <CoachSalarySection form={form} />

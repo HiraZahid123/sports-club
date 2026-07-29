@@ -32,9 +32,21 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $user = $request->user();
+        if ($user && $user->club_id) {
+            $club = $user->club;
+            if ($club && isset($club->settings['points_reset_date'])) {
+                $resetDate = $club->settings['points_reset_date'];
+                if (now()->toDateString() >= $resetDate) {
+                    $club->resetPointsSystem($resetDate);
+                }
+            }
+        }
+
         return [
             ...parent::share($request),
             'auth' => [
+
                 'user' => $request->user() ? [
                     ...$request->user()->toArray(),
                     'profile_photo' => $request->user()->profile_photo ? asset($request->user()->profile_photo) : null,
