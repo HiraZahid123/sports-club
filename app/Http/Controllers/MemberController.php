@@ -168,4 +168,22 @@ class MemberController extends Controller
 
         return redirect()->back()->with('status', 'member-deleted');
     }
+
+    public function toggleActive(Request $request, User $user)
+    {
+        if ($user->club_id !== $request->user()->club_id) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        if ($user->id === $request->user()->id) {
+            return redirect()->back()->with('error', 'You cannot deactivate yourself.');
+        }
+
+        $user->is_active = !$user->is_active;
+        $user->save();
+
+        $status = $user->is_active ? 'profile-activated' : 'profile-deactivated';
+
+        return redirect()->back()->with('status', $status);
+    }
 }

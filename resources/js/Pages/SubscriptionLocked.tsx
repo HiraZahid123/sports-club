@@ -23,6 +23,7 @@ interface Props {
     subscriptions: LockedSubscription[];
     club: Club | null;
     userRole: string;
+    isProfileInactive?: boolean;
 }
 
 const STATUS_LABEL: Record<string, { label: string; color: string }> = {
@@ -57,12 +58,12 @@ const formatDate = (dateStr: string | null | undefined) => {
     }
 };
 
-export default function SubscriptionLocked({ subscriptions, club, userRole }: Props) {
+export default function SubscriptionLocked({ subscriptions, club, userRole, isProfileInactive }: Props) {
     const isParent = userRole === 'Parent';
 
     return (
         <>
-            <Head title="Account On Hold" />
+            <Head title="Your profile is not active" />
 
             <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center px-4 py-12">
 
@@ -76,9 +77,11 @@ export default function SubscriptionLocked({ subscriptions, club, userRole }: Pr
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
                             </svg>
                         </div>
-                        <h1 className="text-2xl font-black text-white mb-1">Account On Hold</h1>
+                        <h1 className="text-2xl font-black text-white mb-1">Your profile is not active</h1>
                         <p className="text-red-100 text-sm">
-                            {isParent
+                            {isProfileInactive
+                                ? 'Your profile has been deactivated by the club manager.'
+                                : isParent
                                 ? "One or more of your children's memberships require payment."
                                 : 'Your membership payment is overdue or unpaid.'}
                         </p>
@@ -89,7 +92,7 @@ export default function SubscriptionLocked({ subscriptions, club, userRole }: Pr
                         {/* Notice text */}
                         <p className="text-gray-600 text-sm leading-relaxed text-center">
                             Access to your {isParent ? "children's" : ''} profile and club features has been
-                            temporarily suspended until the subscription is renewed.
+                            temporarily suspended.
                             Please contact your club manager to resolve this.
                         </p>
 
@@ -177,13 +180,22 @@ export default function SubscriptionLocked({ subscriptions, club, userRole }: Pr
 
                         {/* Actions */}
                         <div className="flex flex-col gap-2 pt-1">
-                            {isParent && (
+                            {isParent ? (
                                 <Link
                                     href={route('parent.billing')}
                                     className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-xl text-center transition-all shadow-sm shadow-indigo-200"
                                 >
                                     View Billing & Pay
                                 </Link>
+                            ) : (
+                                !isProfileInactive && userRole === 'Athlete' && (
+                                    <Link
+                                        href={route('athlete.billing')}
+                                        className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-xl text-center transition-all shadow-sm shadow-indigo-200"
+                                    >
+                                        View Billing & Payments
+                                    </Link>
+                                )
                             )}
                             <Link
                                 href={route('logout')}

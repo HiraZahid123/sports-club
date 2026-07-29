@@ -156,6 +156,9 @@ export default function Authenticated({
                                         <NavLink href={route('athlete.schedule')} active={route().current('athlete.schedule')}>
                                             Schedule
                                         </NavLink>
+                                        <NavLink href={route('athlete.billing')} active={route().current('athlete.billing')}>
+                                            Billing
+                                        </NavLink>
                                         <NavLink href={route('leaderboard')} active={route().current('leaderboard')}>
                                             Leaderboard
                                         </NavLink>
@@ -301,6 +304,7 @@ export default function Authenticated({
                             <>
                                 <ResponsiveNavLink href={route('athlete.events.index')} active={route().current('athlete.events.index')}>Events</ResponsiveNavLink>
                                 <ResponsiveNavLink href={route('athlete.schedule')} active={route().current('athlete.schedule')}>Schedule</ResponsiveNavLink>
+                                <ResponsiveNavLink href={route('athlete.billing')} active={route().current('athlete.billing')}>Billing</ResponsiveNavLink>
                                 <ResponsiveNavLink href={route('leaderboard')} active={route().current('leaderboard')}>Leaderboard</ResponsiveNavLink>
                             </>
                         )}

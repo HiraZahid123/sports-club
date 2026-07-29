@@ -20,6 +20,14 @@ class CheckSubscription
         if (Auth::check()) {
             $user = Auth::user();
 
+            // Check if profile is active
+            if (isset($user->is_active) && !$user->is_active) {
+                if ($request->routeIs(['subscription.locked', 'logout'])) {
+                    return $next($request);
+                }
+                return redirect()->route('subscription.locked');
+            }
+
             if (env('BYPASS_SUBSCRIPTION_CHECK', false)) {
                 return $next($request);
             }

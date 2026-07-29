@@ -1,5 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, useForm, Link } from '@inertiajs/react';
 import { FormEventHandler, useState } from 'react';
 
 interface CoachProfile {
@@ -37,6 +37,7 @@ interface Coach {
     id: number;
     name: string;
     email: string;
+    is_active?: boolean;
     phone?: string | null;
     city?: string | null;
     coach_profile?: CoachProfile | null;
@@ -210,7 +211,14 @@ export default function CoachesIndex({ coaches }: { coaches: Coach[] }) {
                                                             {coach.name.charAt(0).toUpperCase()}
                                                         </div>
                                                         <div>
-                                                            <p className="font-semibold text-gray-900 text-sm">{coach.name}</p>
+                                                            <div className="flex items-center gap-2">
+                                                                <p className="font-semibold text-gray-900 text-sm">{coach.name}</p>
+                                                                {!coach.is_active && (
+                                                                    <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-medium bg-red-100 text-red-800">
+                                                                        Deactivated
+                                                                    </span>
+                                                                )}
+                                                            </div>
                                                             <p className="text-xs text-gray-400">{coach.email}</p>
                                                             {coach.phone && <p className="text-xs text-gray-400">{coach.phone}</p>}
                                                         </div>
@@ -246,12 +254,26 @@ export default function CoachesIndex({ coaches }: { coaches: Coach[] }) {
                                                     )}
                                                 </td>
                                                 <td className="px-6 py-4 text-right">
-                                                    <button
-                                                        onClick={() => openEdit(coach)}
-                                                        className="px-4 py-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors"
-                                                    >
-                                                        Edit
-                                                    </button>
+                                                    <div className="flex items-center justify-end gap-2">
+                                                        <button
+                                                            onClick={() => openEdit(coach)}
+                                                            className="px-4 py-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors"
+                                                        >
+                                                            Edit
+                                                        </button>
+                                                        <Link
+                                                            href={route('manager.users.toggle-active', coach.id)}
+                                                            method="post"
+                                                            as="button"
+                                                            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
+                                                                !coach.is_active
+                                                                    ? 'text-emerald-600 bg-emerald-50 hover:bg-emerald-100'
+                                                                    : 'text-rose-600 bg-rose-50 hover:bg-rose-100'
+                                                            }`}
+                                                        >
+                                                            {!coach.is_active ? 'Activate' : 'Deactivate'}
+                                                        </Link>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         );

@@ -32,6 +32,7 @@ interface Member {
     id: number;
     name: string;
     email: string;
+    is_active?: boolean;
     id_code?: string | null;
     phone?: string | null;
     city?: string | null;
@@ -548,7 +549,14 @@ export default function MembersIndex({ members }: { members: Member[] }) {
                                                             {member.name.charAt(0).toUpperCase()}
                                                         </div>
                                                         <div>
-                                                            <p className="font-semibold text-gray-900 text-sm">{member.name}</p>
+                                                            <div className="flex items-center gap-2">
+                                                                <p className="font-semibold text-gray-900 text-sm">{member.name}</p>
+                                                                {!member.is_active && (
+                                                                    <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-medium bg-red-100 text-red-800">
+                                                                        Deactivated
+                                                                    </span>
+                                                                )}
+                                                            </div>
                                                             <p className="text-xs text-gray-400">
                                                                 {member.id_code
                                                                     ? <span className="font-mono">{member.id_code}</span>
@@ -604,6 +612,18 @@ export default function MembersIndex({ members }: { members: Member[] }) {
                                                         >
                                                             Edit
                                                         </button>
+                                                        <Link
+                                                            href={route('manager.users.toggle-active', member.id)}
+                                                            method="post"
+                                                            as="button"
+                                                            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
+                                                                !member.is_active
+                                                                    ? 'text-emerald-600 bg-emerald-50 hover:bg-emerald-100'
+                                                                    : 'text-rose-600 bg-rose-50 hover:bg-rose-100'
+                                                            }`}
+                                                        >
+                                                            {!member.is_active ? 'Activate' : 'Deactivate'}
+                                                        </Link>
                                                         <Link
                                                             href={route('manager.members.destroy', member.id)}
                                                             method="delete"

@@ -196,6 +196,7 @@ Route::middleware(['auth', 'verified', 'role:Manager|Super Admin'])->prefix('man
     Route::post('/members', [\App\Http\Controllers\MemberController::class, 'store'])->name('members.store');
     Route::put('/members/{user}', [\App\Http\Controllers\MemberController::class, 'update'])->name('members.update');
     Route::delete('/members/{user}', [\App\Http\Controllers\MemberController::class, 'destroy'])->name('members.destroy');
+    Route::post('/users/{user}/toggle-active', [\App\Http\Controllers\MemberController::class, 'toggleActive'])->name('users.toggle-active');
 
     Route::get('/groups', [\App\Http\Controllers\TrainingGroupController::class, 'index'])->name('groups.index');
     Route::post('/groups', [\App\Http\Controllers\TrainingGroupController::class, 'store'])->name('groups.store');
@@ -380,6 +381,7 @@ Route::middleware(['auth', 'verified', 'role:Athlete', \App\Http\Middleware\Chec
     Route::post('/events/{event}/join', [\App\Http\Controllers\EventController::class, 'join'])->name('events.join');
     Route::post('/checkout/{subscription}', [\App\Http\Controllers\BillingController::class, 'createCheckoutSession'])->name('checkout');
     Route::post('/profile/join-group', [\App\Http\Controllers\AthleteProfileController::class, 'joinGroup'])->name('profile.join-group');
+    Route::get('/billing', [\App\Http\Controllers\BillingController::class, 'athleteBilling'])->name('billing');
     Route::get('/billing/success', [\App\Http\Controllers\BillingController::class, 'paymentSuccess'])->name('billing.success');
 });
 

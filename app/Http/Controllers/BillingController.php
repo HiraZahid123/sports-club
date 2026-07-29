@@ -156,6 +156,7 @@ class BillingController extends Controller
                 'phone' => $club->phone,
             ] : null,
             'userRole' => $user->getRoleNames()->first(),
+            'isProfileInactive' => $user->is_active === false,
         ]);
     }
 
@@ -174,6 +175,17 @@ class BillingController extends Controller
         ]);
     }
 
+    public function athleteBilling(Request $request)
+    {
+        $subscriptions = $request->user()->subscriptions()
+            ->with(['payments', 'plan', 'trainingGroup'])
+            ->get();
+
+        return Inertia::render('Athlete/Billing/Index', [
+            'subscriptions' => $subscriptions,
+        ]);
+    }
+
     public function createCheckoutSession(Request $request, Subscription $subscription, \App\Services\StripeService $stripeService)
     {
         $user = $request->user();
@@ -189,7 +201,7 @@ class BillingController extends Controller
             // Choose the correct success URL based on who is paying
             if ($user->hasRole('Athlete')) {
                 $successUrl = route('athlete.billing.success') . '?session_id={CHECKOUT_SESSION_ID}';
-                $cancelUrl  = route('profile.edit');
+                $cancelUrl  = route('athlete.billing');
             } else {
                 $successUrl = route('parent.billing.success') . '?session_id={CHECKOUT_SESSION_ID}';
                 $cancelUrl  = route('parent.billing');
@@ -205,7 +217,7 @@ class BillingController extends Controller
     public function paymentSuccess(Request $request, \App\Services\StripeService $stripeService)
     {
         $user = $request->user();
-        $redirectRoute = $user->hasRole('Athlete') ? 'profile.edit' : 'parent.billing';
+        $redirectRoute = $user->hasRole('Athlete') ? 'athlete.billing' : 'parent.billing';
 
         $sessionId = $request->query('session_id');
         if (!$sessionId) {

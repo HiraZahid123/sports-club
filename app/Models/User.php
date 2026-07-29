@@ -38,6 +38,7 @@ class User extends Authenticatable
         'emergency_contact_name',
         'emergency_contact_phone',
         'profile_photo',
+        'is_active',
     ];
 
     /**
@@ -59,6 +60,7 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'is_active' => 'boolean',
         ];
     }
 
