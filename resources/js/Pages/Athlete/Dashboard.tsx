@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 import { getBeltStyle, getBeltCardGradient, getNextBelt } from '@/beltHelpers';
-import { getDateForDayOfWeek } from '@/dateHelpers';
+import { getDateForDayOfWeek, formatDate } from '@/dateHelpers';
 
 
 interface AthleteProfile {
@@ -170,22 +170,9 @@ export default function AthleteDashboard({
                                     </h3>
                                 </div>
 
-                                <p className={`text-xs mb-5 ${cardStyle.text.includes('text-white') ? 'text-white/60' : 'text-gray-500'}`}>
+                                <p className={`text-xs mb-0 ${cardStyle.text.includes('text-white') ? 'text-white/60' : 'text-gray-500'}`}>
                                     Next: <span className={`font-bold ${cardStyle.text.includes('text-white') ? 'text-white/90' : 'text-gray-700'}`}>{getNextBelt(belt)}</span>
                                 </p>
-
-                                <div>
-                                    <div className="flex justify-between text-xs mb-1.5">
-                                        <span className={`font-semibold ${cardStyle.text.includes('text-white') ? 'text-white/70' : 'text-gray-500'}`}>Progress to Grading</span>
-                                        <span className={`font-black ${cardStyle.text.includes('text-white') ? 'text-white' : 'text-indigo-600'}`}>45%</span>
-                                    </div>
-                                    <div className={`w-full rounded-full h-2.5 ${cardStyle.text.includes('text-white') ? 'bg-white/20' : 'bg-gray-200'}`}>
-                                        <div
-                                            className={`h-2.5 rounded-full ${cardStyle.text.includes('text-white') ? 'bg-white shadow-[0_0_8px_rgba(255,255,255,0.5)]' : 'bg-indigo-600'}`}
-                                            style={{ width: '45%' }}
-                                        />
-                                    </div>
-                                </div>
                             </div>
                         </div>
 
@@ -383,7 +370,7 @@ export default function AthleteDashboard({
                                                 return (
                                                     <tr key={index} className="hover:bg-slate-50/50 transition-colors">
                                                         <td className="py-3.5 px-4 font-medium text-gray-500 font-mono">
-                                                            {log.date}
+                                                            {formatDate(log.date)}
                                                         </td>
                                                         <td className="py-3.5 px-4">
                                                             <span className={`inline-flex items-center border rounded-lg px-2 py-0.5 text-[10px] font-bold ${badgeStyle}`}>

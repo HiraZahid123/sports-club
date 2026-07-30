@@ -45,6 +45,25 @@ interface Coach {
     coach_payouts?: Payout[];
 }
 
+const formatDate = (dateStr: string | null | undefined) => {
+    if (!dateStr) return '—';
+    try {
+        const dateOnly = dateStr.split('T')[0];
+        const parts = dateOnly.split('-');
+        if (parts.length === 3) {
+            return `${parts[2].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[0]}`;
+        }
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return dateStr;
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}/${month}/${year}`;
+    } catch {
+        return dateStr;
+    }
+};
+
 const OPTION_META = {
     athlete: { icon: '👤', label: 'Per Athlete',          color: 'bg-blue-50 text-blue-700 border-blue-100' },
     hourly:  { icon: '⏱️', label: 'Per Hour (Schedule)',  color: 'bg-emerald-50 text-emerald-700 border-emerald-100' },
@@ -554,7 +573,7 @@ export default function CoachesIndex({ coaches }: { coaches: Coach[] }) {
                                                             )}
                                                         </div>
                                                         <p className="text-xs text-gray-400 mt-0.5">
-                                                            {new Date(payout.payout_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                                            {formatDate(payout.payout_date)}
                                                             {payout.tip && parseFloat(payout.tip.toString()) > 0 && (
                                                                 <span className="text-amber-600 font-semibold ml-2">
                                                                     (incl. €{parseFloat(payout.tip.toString()).toFixed(2)} tip)

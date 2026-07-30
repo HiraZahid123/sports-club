@@ -8,21 +8,14 @@ const formatDate = (dateStr: string | null | undefined) => {
         const dateOnly = dateStr.split('T')[0];
         const parts = dateOnly.split('-');
         if (parts.length === 3) {
-            const year = parseInt(parts[0], 10);
-            const month = parseInt(parts[1], 10) - 1;
-            const day = parseInt(parts[2], 10);
-            const date = new Date(year, month, day);
-            return date.toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric',
-            });
+            return `${parts[2].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[0]}`;
         }
-        return new Date(dateStr).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-        });
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return dateStr;
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}/${month}/${year}`;
     } catch {
         return dateStr;
     }
@@ -197,7 +190,7 @@ export default function AthleteBilling({ subscriptions }: { subscriptions: any[]
                                                 <div>
                                                     <p className="text-sm font-semibold text-gray-900">{payment.plan_name}</p>
                                                     <p className="text-xs text-gray-400 mt-0.5">
-                                                        {new Date(payment.payment_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                                        {formatDate(payment.payment_date)}
                                                     </p>
                                                 </div>
                                                 <div className="flex items-center gap-3">

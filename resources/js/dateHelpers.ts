@@ -16,3 +16,27 @@ export function getDateForDayOfWeek(dayName: string): string {
 
     return targetDate.toISOString().split('T')[0];
 }
+
+/**
+ * Formats a date string (YYYY-MM-DD or ISO string) to DD/MM/YYYY.
+ */
+export function formatDate(dateStr: string | null | undefined): string {
+    if (!dateStr) return '';
+    try {
+        const dateOnly = dateStr.split('T')[0];
+        const parts = dateOnly.split('-');
+        if (parts.length === 3) {
+            // YYYY-MM-DD format -> DD/MM/YYYY
+            return `${parts[2].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[0]}`;
+        }
+        // Fallback for other formats
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return dateStr;
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}/${month}/${year}`;
+    } catch {
+        return dateStr;
+    }
+}

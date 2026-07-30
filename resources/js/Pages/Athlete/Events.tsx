@@ -33,8 +33,24 @@ interface Event {
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────
-const fmtDate = (d: string | null) =>
-    d ? new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '';
+const fmtDate = (d: string | null) => {
+    if (!d) return '';
+    try {
+        const dateOnly = d.split('T')[0];
+        const parts = dateOnly.split('-');
+        if (parts.length === 3) {
+            return `${parts[2].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[0]}`;
+        }
+        const date = new Date(d);
+        if (isNaN(date.getTime())) return d;
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}/${month}/${year}`;
+    } catch {
+        return d;
+    }
+};
 
 const STATUS_CONFIG: Record<string, { label: string; bg: string; text: string }> = {
     pending_approval: { label: 'Pending Approval', bg: 'bg-amber-50', text: 'text-amber-700' },

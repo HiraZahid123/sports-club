@@ -55,28 +55,20 @@ interface Props {
 const EMPTY_PLAN = { name: '', training_group_id: '', monthly_price: '', yearly_price: '', description: '' };
 const EMPTY_SUB  = { user_id: '', subscription_plan_id: '', billing_cycle: 'monthly', starts_at: new Date().toISOString().split('T')[0] };
 
-const formatDate = (dateStr: string | null) => {
+const formatDate = (dateStr: string | null | undefined) => {
     if (!dateStr) return '—';
     try {
         const dateOnly = dateStr.split('T')[0];
         const parts = dateOnly.split('-');
         if (parts.length === 3) {
-            const year = parseInt(parts[0], 10);
-            const month = parseInt(parts[1], 10) - 1;
-            const day = parseInt(parts[2], 10);
-            const date = new Date(year, month, day);
-            return date.toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric',
-            });
+            return `${parts[2].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[0]}`;
         }
         const date = new Date(dateStr);
-        return date.toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-        });
+        if (isNaN(date.getTime())) return dateStr;
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}/${month}/${year}`;
     } catch (e) {
         return dateStr;
     }

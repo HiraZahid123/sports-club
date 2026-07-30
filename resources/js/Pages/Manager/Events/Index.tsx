@@ -45,7 +45,24 @@ interface Event {
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 const inputClass = "w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all";
-const fmtDate   = (d: string | null) => d ? new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '';
+const fmtDate   = (d: string | null) => {
+    if (!d) return '';
+    try {
+        const dateOnly = d.split('T')[0];
+        const parts = dateOnly.split('-');
+        if (parts.length === 3) {
+            return `${parts[2].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[0]}`;
+        }
+        const date = new Date(d);
+        if (isNaN(date.getTime())) return d;
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}/${month}/${year}`;
+    } catch {
+        return d;
+    }
+};
 const isFree    = (e: Event) => !e.price || parseFloat(e.price) === 0;
 
 const SALARY_OPTIONS = [
