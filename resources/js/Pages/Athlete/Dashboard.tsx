@@ -1,5 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import { getBeltStyle, getBeltCardGradient, getNextBelt } from '@/beltHelpers';
 import { getDateForDayOfWeek, formatDate } from '@/dateHelpers';
 
@@ -113,17 +113,18 @@ export default function AthleteDashboard({
     birthdays = [],
 }: {
     athleteProfile?: AthleteProfile | null;
-    stats?: { classes: number; sparring: number; events: number; points: number };
+    stats?: { classes: number; sparring?: number; events: number; points: number };
     upcomingSchedules?: UpcomingScheduleSlot[];
     leaderboard?: Array<{ id: number; name: string; points: number; belt_rank: string }>;
     pointHistory?: PointLog[];
     birthdays?: BirthdayAthlete[];
 }) {
+    const { auth } = usePage().props as any;
+    const user = auth.user;
     const belt = athleteProfile?.belt_rank || '10. WHITE';
     const cardStyle = getBeltCardGradient(belt);
     const progressStats = [
         { label: 'Classes', val: String(stats.classes), icon: '📚', color: 'bg-blue-50 border-blue-100 text-blue-600' },
-        { label: 'Sparring', val: String(stats.sparring), icon: '🥊', color: 'bg-rose-50 border-rose-100 text-rose-600' },
         { label: 'Events', val: String(stats.events), icon: '🏅', color: 'bg-amber-50 border-amber-100 text-amber-600' },
         { label: 'Points', val: String(stats.points), icon: '⭐', color: 'bg-indigo-50 border-indigo-100 text-indigo-600' },
     ];
@@ -150,8 +151,38 @@ export default function AthleteDashboard({
                             <div className="absolute bottom-0 left-0 w-20 h-20 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2"></div>
 
                             <div className="relative">
-                                <div className={`w-16 h-16 ${cardStyle.text.includes('text-white') ? 'bg-white/20 border-white/30' : 'bg-black/10 border-black/15'} backdrop-blur-sm rounded-2xl flex items-center justify-center text-3xl mb-4 border shadow-inner`}>
-                                    🥋
+                                <div className="flex items-center gap-4 mb-5">
+                                    <div className={`w-16 h-16 rounded-2xl overflow-hidden border shadow-inner shrink-0 ${
+                                        cardStyle.text.includes('text-white') ? 'bg-white/20 border-white/30' : 'bg-black/10 border-black/15'
+                                    } backdrop-blur-sm flex items-center justify-center`}>
+                                        {user.profile_photo ? (
+                                            <img
+                                                src={user.profile_photo.startsWith('http') || user.profile_photo.startsWith('blob:') || user.profile_photo.startsWith('data:') ? user.profile_photo : (user.profile_photo.startsWith('/') ? user.profile_photo : '/' + user.profile_photo)}
+                                                alt={user.name}
+                                                className="w-full h-full object-cover"
+                                            />
+                                        ) : (
+                                            <div className={`w-full h-full flex items-center justify-center font-black text-2xl ${
+                                                cardStyle.text.includes('text-white') ? 'text-white' : 'text-gray-700'
+                                            }`}>
+                                                {user.name.charAt(0).toUpperCase()}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="min-w-0">
+                                        <h4 className={`text-base font-bold truncate leading-snug ${
+                                            cardStyle.text.includes('text-white') ? 'text-white' : 'text-gray-900'
+                                        }`}>
+                                            {user.name}
+                                        </h4>
+                                        {user.club && (
+                                            <p className={`text-xs truncate font-medium ${
+                                                cardStyle.text.includes('text-white') ? 'text-white/80' : 'text-gray-500'
+                                            }`}>
+                                                {user.club.name}
+                                            </p>
+                                        )}
+                                    </div>
                                 </div>
 
                                 {/* Label */}
@@ -182,7 +213,7 @@ export default function AthleteDashboard({
                                 <h3 className="text-base font-bold text-gray-900">My Progress</h3>
                                 <span className="text-xs text-gray-400 font-medium">This month</span>
                             </div>
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                 {progressStats.map((stat, i) => (
                                     <div key={i} className={`border rounded-xl p-4 text-center ${stat.color.split(' ').slice(0, 2).join(' ')}`}>
                                         <div className="text-2xl mb-2">{stat.icon}</div>

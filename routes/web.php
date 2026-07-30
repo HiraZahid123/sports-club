@@ -327,9 +327,8 @@ Route::middleware(['auth', 'verified', 'role:Athlete', \App\Http\Middleware\Chec
             ->where('status', 'attended')
             ->count();
 
-        // Classes and Sparring are not tracked in DB yet, so they default to 0
+        // Classes are not tracked in DB yet, so they default to 0
         $classesCount = 0;
-        $sparringCount = 0;
         $points = $profile ? ($profile->event_points ?? 0) : 0;
 
         // Fetch upcoming schedule slots
@@ -484,7 +483,6 @@ Route::middleware(['auth', 'verified', 'role:Athlete', \App\Http\Middleware\Chec
             'athleteProfile' => $profile,
             'stats' => [
                 'classes' => $classesCount,
-                'sparring' => $sparringCount,
                 'events' => $eventsCount,
                 'points' => $points,
             ],
