@@ -174,6 +174,9 @@ export default function Authenticated({
                                         <NavLink href={route('coach.events.index')} active={route().current('coach.events.index')}>
                                             Events
                                         </NavLink>
+                                        <NavLink href={route('coach.schedule')} active={route().current('coach.schedule')}>
+                                            Schedule
+                                        </NavLink>
                                         <NavLink href={route('coach.dashboard') + '?tab=attendance'} active={route().current('coach.dashboard') && typeof window !== 'undefined' && window.location.search.includes('tab=attendance')}>
                                             Attendance
                                         </NavLink>
@@ -316,6 +319,7 @@ export default function Authenticated({
                         {!isManager && !isParent && (user as any).roles?.includes('Coach') && (
                             <>
                                 <ResponsiveNavLink href={route('coach.events.index')} active={route().current('coach.events.index')}>Events</ResponsiveNavLink>
+                                <ResponsiveNavLink href={route('coach.schedule')} active={route().current('coach.schedule')}>Schedule</ResponsiveNavLink>
                                 <ResponsiveNavLink href={route('coach.dashboard') + '?tab=attendance'} active={route().current('coach.dashboard') && typeof window !== 'undefined' && window.location.search.includes('tab=attendance')}>Attendance</ResponsiveNavLink>
                                 <ResponsiveNavLink href={route('leaderboard')} active={route().current('leaderboard')}>Leaderboard</ResponsiveNavLink>
                             </>
