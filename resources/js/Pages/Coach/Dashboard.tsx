@@ -1,8 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link, useForm } from '@inertiajs/react';
-import { useState, useEffect } from 'react';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { useState } from 'react';
 import { getBeltBadgeStyle, getBeltStyle } from '@/beltHelpers';
-import axios from 'axios';
 import { getDateForDayOfWeek } from '@/dateHelpers';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -19,12 +18,14 @@ interface AthleteProfile {
     kyorugi: number | null;
     poomsae: number | null;
     coach_tip: string | null;
+    event_points: number | null;
 }
 
 interface Athlete {
     id: number;
     name: string;
     email: string;
+    profile_photo?: string | null;
     athlete_profile: AthleteProfile | null;
 }
 
@@ -67,19 +68,7 @@ interface Payout {
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
-const skillColors: Record<string, string> = {
-    Beginner:     'bg-emerald-50 text-emerald-700 border-emerald-100',
-    Intermediate: 'bg-blue-50 text-blue-700 border-blue-100',
-    Advanced:     'bg-indigo-50 text-indigo-700 border-indigo-100',
-    Elite:        'bg-amber-50 text-amber-700 border-amber-100',
-};
-
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-
-const DAY_SHORT: Record<string, string> = {
-    Monday: 'Mon', Tuesday: 'Tue', Wednesday: 'Wed',
-    Thursday: 'Thu', Friday: 'Fri', Saturday: 'Sat', Sunday: 'Sun',
-};
 
 const DAY_COLOR: Record<string, string> = {
     Monday:    'bg-indigo-50 text-indigo-700 border-indigo-100',
@@ -96,8 +85,6 @@ const fmtTime = (t: string) => {
     const parts = t.split(':');
     return `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}`;
 };
-
-type Section = 'overview' | 'athletes' | 'groups' | 'earnings' | 'attendance';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -133,7 +120,7 @@ function daysUntil(dateStr: string) {
     return Math.ceil((new Date(dateStr).setHours(0,0,0,0) - new Date().setHours(0,0,0,0)) / 86400000);
 }
 
-// ── Athlete Skills Panel ──────────────────────────────────────────────────────
+// ── Metrics ──────────────────────────────────────────────────────────────────
 
 const METRICS = [
     { key: 'speed',       label: 'Speed',       color: 'from-blue-400 to-blue-600',    track: 'bg-blue-100',    fill: 'bg-blue-500',    icon: '⚡' },
@@ -142,6 +129,110 @@ const METRICS = [
     { key: 'kyorugi',     label: 'Kyorugi',     color: 'from-rose-400 to-rose-600',    track: 'bg-rose-100',    fill: 'bg-rose-500',    icon: '🥊' },
     { key: 'poomsae',     label: 'Poomsae',     color: 'from-purple-400 to-purple-600', track: 'bg-purple-100', fill: 'bg-purple-500',  icon: '🎽' },
 ] as const;
+
+// ── Point Adjustment Panel ────────────────────────────────────────────────────
+
+function PointAdjustPanel({ athlete }: { athlete: Athlete }) {
+    const { data, setData, post, processing, reset } = useForm({
+        points: '' as string | number,
+        comment: '',
+    });
+    const [saved, setSaved] = useState(false);
+    const [error, setError] = useState('');
+
+    const submit = (e: React.FormEvent) => {
+        e.preventDefault();
+        const pts = Number(data.points);
+        if (isNaN(pts) || pts === 0) {
+            setError('Points must be a non-zero number (e.g. -10 or +15).');
+            return;
+        }
+        setError('');
+        post(route('coach.athletes.adjust-points', athlete.id), {
+            preserveScroll: true,
+            onSuccess: () => {
+                setSaved(true);
+                reset();
+                setTimeout(() => setSaved(false), 2500);
+            },
+        });
+    };
+
+    const pts = Number(data.points);
+    const isNegative = pts < 0;
+    const isPositive = pts > 0;
+
+    return (
+        <div className="border-t border-gray-100 pt-4">
+            <div className="flex items-center justify-between mb-3">
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-wide flex items-center gap-1.5">
+                    <span className="text-sm">⚖️</span> Point Adjustment
+                </p>
+                {saved && (
+                    <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg flex items-center gap-1">
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                        Applied!
+                    </span>
+                )}
+            </div>
+
+            {/* Current points display */}
+            <div className="flex items-center gap-2 mb-3 p-2.5 bg-indigo-50 rounded-xl border border-indigo-100">
+                <span className="text-sm">⭐</span>
+                <span className="text-xs font-semibold text-indigo-700">
+                    Current Points: <strong>{athlete.athlete_profile?.event_points ?? 0}</strong>
+                </span>
+            </div>
+
+            <form onSubmit={submit} className="space-y-3">
+                <div className="flex gap-2">
+                    <div className="flex-1 relative">
+                        <input
+                            type="number"
+                            value={data.points}
+                            onChange={e => setData('points', e.target.value)}
+                            placeholder="e.g. -10 or +15"
+                            className={`w-full rounded-xl border px-3 py-2 text-sm font-bold text-center transition-all focus:outline-none focus:ring-2 ${
+                                isNegative
+                                    ? 'border-rose-300 bg-rose-50 text-rose-700 focus:ring-rose-300/30 focus:border-rose-400'
+                                    : isPositive
+                                    ? 'border-emerald-300 bg-emerald-50 text-emerald-700 focus:ring-emerald-300/30 focus:border-emerald-400'
+                                    : 'border-gray-200 bg-gray-50 text-gray-700 focus:ring-indigo-300/30 focus:border-indigo-400'
+                            }`}
+                        />
+                        {data.points !== '' && (
+                            <span className={`absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-extrabold ${isNegative ? 'text-rose-400' : 'text-emerald-400'}`}>
+                                {isNegative ? '−' : '+'}pts
+                            </span>
+                        )}
+                    </div>
+                </div>
+                <textarea
+                    value={data.comment}
+                    onChange={e => setData('comment', e.target.value)}
+                    placeholder="Reason / comment (optional)…"
+                    rows={2}
+                    maxLength={500}
+                    className="w-full text-xs rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-300/30 focus:border-indigo-400 resize-none transition-all"
+                />
+                {error && <p className="text-[10px] text-rose-600 font-semibold">{error}</p>}
+                <button
+                    type="submit"
+                    disabled={processing || data.points === '' || data.points === 0}
+                    className={`w-full py-2 text-white text-xs font-bold rounded-xl transition-all disabled:opacity-50 shadow-sm ${
+                        isNegative
+                            ? 'bg-rose-500 hover:bg-rose-600'
+                            : 'bg-emerald-600 hover:bg-emerald-700'
+                    }`}
+                >
+                    {processing ? 'Applying…' : isNegative ? `Deduct ${Math.abs(pts)} Points` : `Award ${pts || 0} Points`}
+                </button>
+            </form>
+        </div>
+    );
+}
+
+// ── Athlete Skills Panel ──────────────────────────────────────────────────────
 
 function AthleteSkillsPanel({ athlete }: { athlete: Athlete }) {
     const profile = athlete.athlete_profile;
@@ -263,11 +354,14 @@ function AthleteSkillsPanel({ athlete }: { athlete: Athlete }) {
                     </div>
                 </form>
             </div>
+
+            {/* Point Adjustment */}
+            <PointAdjustPanel athlete={athlete} />
         </div>
     );
 }
 
-// ── Athlete Row (used in both groups view and flat list) ──────────────────────
+// ── Athlete Row ────────────────────────────────────────────────────────────────
 function AthleteRow({
     athlete,
     expandedAthleteId,
@@ -293,8 +387,16 @@ function AthleteRow({
                 onClick={() => setExpandedAthleteId(isExpanded ? null : athlete.id)}
             >
                 <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-sm shrink-0">
-                        {athlete.name.charAt(0).toUpperCase()}
+                    <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-sm shrink-0 overflow-hidden">
+                        {athlete.profile_photo ? (
+                            <img
+                                src={athlete.profile_photo.startsWith('http') ? athlete.profile_photo : '/' + athlete.profile_photo}
+                                alt={athlete.name}
+                                className="w-full h-full object-cover"
+                            />
+                        ) : (
+                            athlete.name.charAt(0).toUpperCase()
+                        )}
                     </div>
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
@@ -310,6 +412,10 @@ function AthleteRow({
                                     {groupName}
                                 </span>
                             )}
+                            {/* Points badge */}
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 text-amber-600 border border-amber-100">
+                                ⭐ {profile?.event_points ?? 0} pts
+                            </span>
                         </div>
                         <p className="text-xs text-gray-400 mt-0.5 truncate">{athlete.email}</p>
                         <div className="flex items-center gap-4 mt-1.5 flex-wrap">
@@ -330,16 +436,6 @@ function AthleteRow({
                                     🤸 {profile.flexibility}
                                 </span>
                             )}
-                            {profile?.kyorugi != null && (
-                                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-rose-50 text-rose-600">
-                                    🥊 {profile.kyorugi}
-                                </span>
-                            )}
-                            {profile?.poomsae != null && (
-                                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-purple-50 text-purple-600">
-                                    🎽 {profile.poomsae}
-                                </span>
-                            )}
                         </div>
                     </div>
                     <svg className={`w-4 h-4 text-gray-400 shrink-0 mt-1 transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -353,34 +449,88 @@ function AthleteRow({
     );
 }
 
-// ── Section Nav Bar ────────────────────────────────────────────────────────────
-function SectionNav({ active, setActive }: { active: Section; setActive: (s: Section) => void }) {
-    const tabs: { id: Section; label: string; icon: string }[] = [
-        { id: 'overview',   label: 'Overview',   icon: '📊' },
-        { id: 'athletes',   label: 'Athletes',   icon: '🥋' },
-        { id: 'groups',     label: 'Groups',     icon: '🏆' },
-        { id: 'attendance', label: 'Attendance', icon: '📝' },
-        { id: 'earnings',   label: 'Earnings',   icon: '💰' },
-    ];
+// ── Coach Profile Card ────────────────────────────────────────────────────────
+
+function CoachProfileCard({
+    user,
+    coachProfile,
+    groups,
+}: {
+    user: any;
+    coachProfile: CoachProfile | null;
+    groups: Group[];
+}) {
+    const totalAthletes = groups.reduce((sum, g) => sum + (g.athletes?.length || 0), 0);
+
     return (
-        <div className="flex gap-1 bg-slate-100 rounded-2xl p-1">
-            {tabs.map(t => (
-                <button
-                    key={t.id}
-                    onClick={() => setActive(t.id)}
-                    className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all ${
-                        active === t.id
-                            ? 'bg-white text-gray-900 shadow-sm'
-                            : 'text-gray-500 hover:text-gray-700'
-                    }`}
-                >
-                    <span className="text-sm">{t.icon}</span>
-                    <span className="hidden sm:inline">{t.label}</span>
-                </button>
-            ))}
+        <div className="relative bg-gradient-to-br from-indigo-600 via-blue-700 to-indigo-800 rounded-2xl p-8 overflow-hidden text-white">
+            {/* Decorative circles */}
+            <div className="absolute top-0 right-0 w-36 h-36 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
+            <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
+            <div className="absolute top-1/2 right-6 w-16 h-16 bg-white/5 rounded-full" />
+
+            <div className="relative">
+                {/* Avatar + name row */}
+                <div className="flex items-center gap-4 mb-6">
+                    <div className="w-16 h-16 rounded-2xl overflow-hidden border-2 border-white/30 bg-white/20 backdrop-blur-sm flex items-center justify-center shrink-0 shadow-inner">
+                        {user.profile_photo ? (
+                            <img
+                                src={user.profile_photo.startsWith('http') || user.profile_photo.startsWith('blob:') || user.profile_photo.startsWith('data:')
+                                    ? user.profile_photo
+                                    : (user.profile_photo.startsWith('/') ? user.profile_photo : '/' + user.profile_photo)}
+                                alt={user.name}
+                                className="w-full h-full object-cover"
+                            />
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-center font-black text-2xl text-white">
+                                {user.name.charAt(0).toUpperCase()}
+                            </div>
+                        )}
+                    </div>
+                    <div className="min-w-0">
+                        <h4 className="text-base font-bold text-white truncate leading-snug">{user.name}</h4>
+                        {user.club && (
+                            <p className="text-xs text-white/70 font-medium truncate mt-0.5">{user.club.name}</p>
+                        )}
+                    </div>
+                </div>
+
+                {/* COACH position badge */}
+                <p className="text-[11px] font-extrabold uppercase tracking-widest mb-2 text-white/60">
+                    Position
+                </p>
+                <div className="flex items-center gap-3 mb-4">
+                    <div className="flex items-center gap-2 bg-white/15 backdrop-blur-sm border border-white/20 rounded-xl px-4 py-2">
+                        <span className="text-xl">🎽</span>
+                        <h3 className="text-xl font-black text-white tracking-wide">COACH</h3>
+                    </div>
+                </div>
+
+                {/* Specialization */}
+                {coachProfile?.specialization && (
+                    <p className="text-xs text-white/70 mb-4 font-medium">
+                        📌 {coachProfile.specialization}
+                    </p>
+                )}
+
+                {/* Stats row */}
+                <div className="grid grid-cols-2 gap-3 mt-2">
+                    <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/15">
+                        <p className="text-[10px] font-bold text-white/60 uppercase tracking-wide">Groups</p>
+                        <p className="text-2xl font-black text-white">{groups.length}</p>
+                    </div>
+                    <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/15">
+                        <p className="text-[10px] font-bold text-white/60 uppercase tracking-wide">Athletes</p>
+                        <p className="text-2xl font-black text-white">{totalAthletes}</p>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 }
+
+// ── Section type ──────────────────────────────────────────────────────────────
+type Section = 'athletes' | 'groups';
 
 // ── Main Component ────────────────────────────────────────────────────────────
 
@@ -399,27 +549,10 @@ export default function CoachDashboard({
     coachProfile: CoachProfile | null;
     leaderboard?: Array<{ id: number; name: string; points: number; belt_rank: string }>;
 }) {
-    const [activeSection, setActiveSection]     = useState<Section>(() => {
-        if (typeof window !== 'undefined') {
-            const params = new URLSearchParams(window.location.search);
-            const tabParam = params.get('tab') as Section;
-            if (['overview', 'athletes', 'groups', 'attendance', 'earnings'].includes(tabParam)) {
-                return tabParam;
-            }
-        }
-        return 'overview';
-    });
+    const { auth } = usePage().props as any;
+    const user = auth.user;
 
-    useEffect(() => {
-        if (typeof window !== 'undefined') {
-            const params = new URLSearchParams(window.location.search);
-            const tabParam = params.get('tab') as Section;
-            if (['overview', 'athletes', 'groups', 'attendance', 'earnings'].includes(tabParam)) {
-                setActiveSection(tabParam);
-            }
-        }
-    }, [window.location.search]);
-
+    const [activeSection, setActiveSection] = useState<Section | null>(null);
     const [selectedGroupIdx, setSelectedGroupIdx] = useState(0);
     const [expandedAthleteId, setExpandedAthleteId] = useState<number | null>(null);
 
@@ -464,7 +597,7 @@ export default function CoachDashboard({
             hint: 'View your groups →',
         },
         {
-            id: null,   // navigate to schedule
+            id: null,
             label: 'Sessions This Week',
             value: totalSessions,
             sub: 'scheduled',
@@ -476,7 +609,7 @@ export default function CoachDashboard({
             hint: 'View schedule →',
         },
         {
-            id: 'earnings' as Section,
+            id: null,
             label: 'Total Earned',
             value: fmtCurrency(totalEarned),
             sub: 'all time',
@@ -485,7 +618,7 @@ export default function CoachDashboard({
             ring: 'ring-amber-400',
             icon: '💰',
             iconBg: 'bg-amber-50',
-            hint: 'View earnings →',
+            hint: '',
         },
     ];
 
@@ -503,222 +636,96 @@ export default function CoachDashboard({
             <div className="py-8">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
 
-                    {/* ── Clickable Stat Cards ──────────────────────────── */}
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
-                        {statCards.map((card) => {
-                            const isActive = card.id !== null && activeSection === card.id;
-                            const CardTag = card.id === null ? Link : 'button';
-                            const cardProps = card.id === null
-                                ? { href: route('coach.schedule') }
-                                : { onClick: () => setActiveSection(card.id!) };
+                    {/* ── Hero Row: Profile Card + Stat Cards ────────────────── */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {/* Coach Profile Card */}
+                        <CoachProfileCard user={user} coachProfile={coachProfile} groups={groups} />
 
-                            return (
-                                <CardTag
-                                    key={card.label}
-                                    {...(cardProps as any)}
-                                    className={`group bg-white rounded-2xl border shadow-sm p-6 text-left cursor-pointer transition-all hover:shadow-md hover:-translate-y-0.5 ${
-                                        isActive
-                                            ? `${card.border} ring-2 ${card.ring}/40 shadow-md -translate-y-0.5`
-                                            : `${card.border} hover:${card.ring}/20`
-                                    }`}
-                                >
-                                    <div className="flex items-start justify-between mb-3">
-                                        <div className={`w-9 h-9 ${card.iconBg} rounded-xl flex items-center justify-center text-lg transition-transform group-hover:scale-110`}>
-                                            {card.icon}
-                                        </div>
-                                        {isActive && (
-                                            <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
-                                        )}
-                                    </div>
-                                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">{card.label}</p>
-                                    <p className={`text-3xl font-black ${card.valueColor}`}>{card.value}</p>
-                                    <p className="text-xs text-gray-400 mt-1">{card.sub}</p>
-                                    <p className={`text-[10px] font-semibold mt-2 transition-opacity ${isActive ? 'opacity-100 text-indigo-500' : 'opacity-0 group-hover:opacity-60 text-gray-400'}`}>
-                                        {card.hint}
-                                    </p>
-                                </CardTag>
-                            );
-                        })}
-                    </div>
+                        {/* Stat cards (2-col right side) */}
+                        <div className="md:col-span-2 grid grid-cols-2 gap-4">
+                            {statCards.map((card) => {
+                                const isActive = card.id !== null && activeSection === card.id;
+                                const CardTag = card.id === null ? Link : 'button';
+                                const cardProps = card.id === null
+                                    ? { href: route('coach.schedule') }
+                                    : { onClick: () => setActiveSection(activeSection === card.id ? null : card.id!) };
 
-                    {/* ── Section Nav ───────────────────────────────────── */}
-                    <SectionNav active={activeSection} setActive={setActiveSection} />
-
-                    {/* ══════════════════════════════════════════════════════
-                        SECTION: OVERVIEW
-                    ══════════════════════════════════════════════════════ */}
-                    {activeSection === 'overview' && (
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-                            {/* Next Payout */}
-                            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                                <div className="bg-gradient-to-r from-emerald-50 to-teal-50 px-6 py-4 border-b border-emerald-100 flex items-center justify-between">
-                                    <div>
-                                        <h3 className="text-sm font-bold text-emerald-900">Next Salary / Payout</h3>
-                                        <p className="text-xs text-emerald-600 mt-0.5">Your upcoming scheduled payment</p>
-                                    </div>
-                                    <div className="w-9 h-9 bg-emerald-100 rounded-xl flex items-center justify-center text-lg">💰</div>
-                                </div>
-                                <div className="p-6">
-                                    {nextPayout ? (
-                                        <div className="space-y-4">
-                                            <div className="flex items-end justify-between">
-                                                <div>
-                                                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">Amount</p>
-                                                    <p className="text-4xl font-black text-emerald-600">{fmtCurrency(nextPayout.amount)}</p>
-                                                </div>
-                                                {days !== null && (
-                                                    <div className={`text-right px-3 py-2 rounded-xl ${days <= 3 ? 'bg-emerald-100' : days <= 7 ? 'bg-amber-50' : 'bg-gray-50'}`}>
-                                                        <p className={`text-2xl font-black ${days <= 3 ? 'text-emerald-600' : days <= 7 ? 'text-amber-600' : 'text-gray-600'}`}>
-                                                            {days <= 0 ? 'Today' : `${days}d`}
-                                                        </p>
-                                                        <p className="text-xs text-gray-400 font-medium">{days <= 0 ? 'due' : 'away'}</p>
-                                                    </div>
-                                                )}
+                                return (
+                                    <CardTag
+                                        key={card.label}
+                                        {...(cardProps as any)}
+                                        className={`group bg-white rounded-2xl border shadow-sm p-5 text-left cursor-pointer transition-all hover:shadow-md hover:-translate-y-0.5 ${
+                                            isActive
+                                                ? `${card.border} ring-2 ${card.ring}/40 shadow-md -translate-y-0.5`
+                                                : `${card.border}`
+                                        }`}
+                                    >
+                                        <div className="flex items-start justify-between mb-2">
+                                            <div className={`w-9 h-9 ${card.iconBg} rounded-xl flex items-center justify-center text-lg transition-transform group-hover:scale-110`}>
+                                                {card.icon}
                                             </div>
-                                            <div className="grid grid-cols-3 gap-3">
-                                                <div className="bg-slate-50 rounded-xl p-3">
-                                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Payout Date</p>
-                                                    <p className="text-sm font-bold text-gray-800">{fmt(nextPayout.payout_date)}</p>
-                                                </div>
-                                                <div className="bg-slate-50 rounded-xl p-3">
-                                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Type</p>
-                                                    <span className="inline-flex items-center text-xs font-extrabold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-lg border border-indigo-100">
-                                                        {nextPayout.payment_type ?? 'Monthly Salary'}
-                                                    </span>
-                                                </div>
-                                                <div className="bg-slate-50 rounded-xl p-3">
-                                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Status</p>
-                                                    <span className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-lg">
-                                                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>Pending
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            {nextPayout.notes && (
-                                                <div className="bg-indigo-50 border border-indigo-100 rounded-xl px-3 py-2.5">
-                                                    <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-wide mb-1">Note from Manager</p>
-                                                    <p className="text-sm text-indigo-800">{nextPayout.notes}</p>
-                                                </div>
+                                            {isActive && (
+                                                <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
                                             )}
                                         </div>
-                                    ) : (
-                                        <div className="flex flex-col items-center justify-center py-8 text-center">
-                                            <div className="w-14 h-14 bg-gray-100 rounded-2xl flex items-center justify-center text-2xl mb-4">📭</div>
-                                            <p className="font-semibold text-gray-700 mb-1">No pending payout</p>
-                                            <p className="text-sm text-gray-400">Your manager hasn't scheduled a payout yet.</p>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
+                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">{card.label}</p>
+                                        <p className={`text-2xl font-black ${card.valueColor}`}>{card.value}</p>
+                                        <p className="text-xs text-gray-400 mt-0.5">{card.sub}</p>
+                                        <p className={`text-[10px] font-semibold mt-1.5 transition-opacity ${isActive ? 'opacity-100 text-indigo-500' : 'opacity-0 group-hover:opacity-60 text-gray-400'}`}>
+                                            {card.hint}
+                                        </p>
+                                    </CardTag>
+                                );
+                            })}
+                        </div>
+                    </div>
 
-                            {/* My Profile & Compensation */}
-                            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
-                                <div className="bg-gradient-to-r from-indigo-50 to-blue-50 px-6 py-4 border-b border-indigo-100 flex items-center justify-between">
-                                    <div>
-                                        <h3 className="text-sm font-bold text-indigo-900">My Profile & Compensation</h3>
-                                        <p className="text-xs text-indigo-600 mt-0.5">Your specialization and pay settings</p>
-                                    </div>
-                                    <div className="w-9 h-9 bg-indigo-100 rounded-xl flex items-center justify-center text-lg">👤</div>
-                                </div>
-                                <div className="p-6 space-y-4 flex-1">
-                                    <div>
-                                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">Specialization</p>
-                                        <p className="text-sm font-bold text-gray-800">{coachProfile?.specialization || 'Not specified'}</p>
-                                    </div>
-                                    <div>
-                                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">Compensation Plan</p>
-                                        {coachProfile?.payment_option ? (
-                                            <div className="flex items-center gap-2">
-                                                <span className="inline-flex items-center text-xs font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-lg">
-                                                    {coachProfile.payment_option === 'athlete' ? 'Per Athlete' : 
-                                                     coachProfile.payment_option === 'hourly' ? 'Hourly Rate' : 'Fixed Amount'}
-                                                </span>
-                                                <span className="text-sm font-black text-gray-900">
-                                                    €{Number(coachProfile.payment_rate || 0).toFixed(2)}
-                                                    {coachProfile.payment_option === 'hourly' ? '/hr' : 
-                                                     coachProfile.payment_option === 'athlete' ? '/athlete' : ''}
-                                                </span>
-                                            </div>
-                                        ) : (
-                                            <p className="text-xs text-gray-400 italic">No payment details set by manager yet.</p>
+                    {/* ── Next Payout Banner ──────────────────────────────────── */}
+                    {nextPayout && (
+                        <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-5 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center text-xl">💰</div>
+                                <div>
+                                    <p className="text-sm font-bold text-amber-900">Next Payout</p>
+                                    <p className="text-xs text-amber-600 mt-0.5">
+                                        {fmt(nextPayout.payout_date)}
+                                        {days !== null && (
+                                            <span className="ml-2 font-bold">
+                                                {days === 0 ? '— Today!' : days > 0 ? `— in ${days} day${days !== 1 ? 's' : ''}` : `— ${Math.abs(days)} day${Math.abs(days) !== 1 ? 's' : ''} ago`}
+                                            </span>
                                         )}
-                                    </div>
-                                    {coachProfile?.bio && (
-                                        <div className="bg-slate-50 border border-gray-100 rounded-xl px-3 py-2">
-                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">My Biography</p>
-                                            <p className="text-xs text-gray-600 line-clamp-3 leading-relaxed">{coachProfile.bio}</p>
-                                        </div>
-                                    )}
+                                    </p>
                                 </div>
                             </div>
-                            {/* Quick access to sections */}
-                            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col">
-                                <div className="border-b border-gray-50 pb-3 mb-4 flex items-center justify-between">
-                                    <div>
-                                        <h3 className="text-sm font-bold text-gray-900">Quick Actions</h3>
-                                        <p className="text-xs text-gray-500 mt-0.5">Fast navigation options</p>
-                                    </div>
-                                    <div className="w-8 h-8 bg-indigo-50 rounded-xl flex items-center justify-center text-sm">⚡</div>
-                                </div>
-                                <div className="space-y-3">
-                                    {[
-                                        { label: 'Mark Attendance', section: 'attendance' as Section, icon: '📝', sub: 'Log athlete attendance', color: 'bg-indigo-50 border-indigo-100 hover:bg-indigo-100' },
-                                        { label: 'View Athlete List', section: 'athletes' as Section, icon: '🥋', sub: 'Manage athlete skills', color: 'bg-emerald-50 border-emerald-100 hover:bg-emerald-100' },
-                                        { label: 'Manage Groups', section: 'groups' as Section, icon: '🏆', sub: 'View group schedules', color: 'bg-purple-50 border-purple-100 hover:bg-purple-100' },
-                                    ].map((item) => (
-                                        <button
-                                            key={item.section}
-                                            onClick={() => setActiveSection(item.section)}
-                                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition-all text-left ${item.color}`}
-                                        >
-                                            <span className="text-xl">{item.icon}</span>
-                                            <div>
-                                                <p className="text-sm font-bold text-gray-900">{item.label}</p>
-                                                <p className="text-xs text-gray-500">{item.sub}</p>
-                                            </div>
-                                            <svg className="w-4 h-4 text-gray-400 ml-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                            </svg>
-                                        </button>
-                                    ))}
-                                        <Link
-                                            href={route('coach.schedule')}
-                                            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition-all text-left bg-blue-50 hover:bg-blue-100 border-blue-100"
-                                        >
-                                            <span className="text-xl">📅</span>
-                                            <div>
-                                                <p className="text-sm font-bold text-gray-900">Weekly Schedule</p>
-                                                <p className="text-xs text-gray-500">View your training sessions</p>
-                                            </div>
-                                            <svg className="w-4 h-4 text-gray-400 ml-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                            </svg>
-                                        </Link>
-                                    </div>
-                                </div>
+                            <div className="text-right">
+                                <p className="text-2xl font-black text-amber-700">{fmtCurrency(nextPayout.amount)}</p>
+                                {nextPayout.tip && Number(nextPayout.tip) > 0 && (
+                                    <p className="text-xs text-amber-500 font-semibold">+{fmtCurrency(nextPayout.tip)} bonus</p>
+                                )}
                             </div>
-                        )}
+                        </div>
+                    )}
 
-                    {/* ══════════════════════════════════════════════════════
-                        SECTION: ALL ATHLETES
-                    ══════════════════════════════════════════════════════ */}
+                    {/* ── Active Section Content ──────────────────────────────── */}
                     {activeSection === 'athletes' && (
                         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                             <div className="px-6 py-4 border-b border-gray-50 flex items-center justify-between">
                                 <div>
                                     <h3 className="text-base font-bold text-gray-900">All Athletes</h3>
-                                    <p className="text-xs text-gray-500 mt-0.5">{totalAthletes} athletes across {groups.length} groups · click to edit metrics</p>
+                                    <p className="text-xs text-gray-500 mt-0.5">{allAthletes.length} athletes across your groups</p>
                                 </div>
-                                <div className="w-9 h-9 bg-emerald-50 rounded-xl flex items-center justify-center text-lg">🥋</div>
+                                <button
+                                    onClick={() => setActiveSection(null)}
+                                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                                >
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
                             </div>
-
-                            {allAthletes.length === 0 ? (
-                                <div className="py-16 text-center">
-                                    <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center text-xl mx-auto mb-3">👤</div>
-                                    <p className="text-sm font-medium text-gray-500">No athletes assigned to your groups yet</p>
-                                </div>
-                            ) : (
-                                <div className="divide-y divide-gray-50 max-h-[600px] overflow-y-auto">
-                                    {allAthletes.map(({ athlete, groupName }) => (
+                            <div className="divide-y divide-gray-50">
+                                {allAthletes.length > 0 ? (
+                                    allAthletes.map(({ athlete, groupName }) => (
                                         <AthleteRow
                                             key={athlete.id}
                                             athlete={athlete}
@@ -727,506 +734,195 @@ export default function CoachDashboard({
                                             showGroup
                                             groupName={groupName}
                                         />
+                                    ))
+                                ) : (
+                                    <div className="py-12 text-center text-gray-400 text-sm italic">No athletes in your groups yet.</div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {activeSection === 'groups' && (
+                        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                            <div className="px-6 py-4 border-b border-gray-50 flex items-center justify-between">
+                                <div>
+                                    <h3 className="text-base font-bold text-gray-900">My Groups</h3>
+                                    <p className="text-xs text-gray-500 mt-0.5">{groups.length} group{groups.length !== 1 ? 's' : ''} assigned</p>
+                                </div>
+                                <button
+                                    onClick={() => setActiveSection(null)}
+                                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                                >
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+
+                            {/* Group tabs */}
+                            {groups.length > 0 && (
+                                <div className="flex border-b border-gray-100 overflow-x-auto">
+                                    {groups.map((g, idx) => (
+                                        <button
+                                            key={g.id}
+                                            onClick={() => { setSelectedGroupIdx(idx); setExpandedAthleteId(null); }}
+                                            className={`flex-shrink-0 px-5 py-3 text-sm font-bold transition-colors ${
+                                                selectedGroupIdx === idx
+                                                    ? 'text-indigo-600 border-b-2 border-indigo-600'
+                                                    : 'text-gray-500 hover:text-gray-700'
+                                            }`}
+                                        >
+                                            {g.name}
+                                            <span className={`ml-1.5 text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${
+                                                selectedGroupIdx === idx ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-500'
+                                            }`}>
+                                                {g.athletes.length}
+                                            </span>
+                                        </button>
                                     ))}
                                 </div>
+                            )}
+
+                            {selectedGroup && (
+                                <>
+                                    {/* Group info row */}
+                                    <div className="px-6 py-3 bg-slate-50 border-b border-gray-100 flex flex-wrap gap-3">
+                                        <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-600">
+                                            🎯 {selectedGroup.skill_level}
+                                        </span>
+                                        {selectedGroup.age_range && (
+                                            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-600">
+                                                👥 Ages: {selectedGroup.age_range}
+                                            </span>
+                                        )}
+                                        {(selectedGroup.schedules?.length ?? 0) > 0 && (
+                                            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-600">
+                                                📅 {selectedGroup.schedules!.length} session{selectedGroup.schedules!.length !== 1 ? 's' : ''}/wk
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    {/* Athletes in group */}
+                                    <div className="divide-y divide-gray-50">
+                                        {selectedGroup.athletes.length > 0 ? (
+                                            selectedGroup.athletes.map(athlete => (
+                                                <AthleteRow
+                                                    key={athlete.id}
+                                                    athlete={athlete}
+                                                    expandedAthleteId={expandedAthleteId}
+                                                    setExpandedAthleteId={setExpandedAthleteId}
+                                                />
+                                            ))
+                                        ) : (
+                                            <div className="py-10 text-center text-gray-400 text-sm italic">No athletes in this group yet.</div>
+                                        )}
+                                    </div>
+
+                                    {/* Schedule rows */}
+                                    {(selectedGroup.schedules?.length ?? 0) > 0 && (
+                                        <div className="border-t border-gray-100">
+                                            <div className="px-6 py-3 bg-slate-50">
+                                                <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Weekly Schedule</p>
+                                            </div>
+                                            <div className="divide-y divide-gray-50">
+                                                {selectedGroup.schedules!.map((s, idx) => {
+                                                    const dateNum = new Date(getDateForDayOfWeek(s.day_of_week)).getDate();
+                                                    return (
+                                                        <div key={idx} className={`flex items-center gap-4 px-6 py-3 border-l-4 ${DAY_COLOR[s.day_of_week] || 'border-gray-200'}`}>
+                                                            <div className="text-center w-12 shrink-0">
+                                                                <p className="text-[10px] font-extrabold uppercase tracking-wide text-gray-400">{s.day_of_week.substring(0,3)}</p>
+                                                                <p className="text-lg font-black text-gray-800 leading-none mt-0.5">{dateNum}</p>
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <p className="text-sm font-semibold text-gray-800">{fmtTime(s.start_time)} – {fmtTime(s.end_time)}</p>
+                                                                {s.facility?.name && <p className="text-xs text-gray-400 mt-0.5">{s.facility.name}</p>}
+                                                                {s.notes && <p className="text-xs text-gray-400 mt-0.5 italic">{s.notes}</p>}
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    )}
+                                </>
                             )}
                         </div>
                     )}
 
-                    {/* ══════════════════════════════════════════════════════
-                        SECTION: GROUPS (with athlete drill-down)
-                    ══════════════════════════════════════════════════════ */}
-                    {activeSection === 'groups' && (
-                        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-                            {/* Groups list */}
-                            <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                                <div className="px-6 py-4 border-b border-gray-50 flex items-center justify-between">
-                                    <div>
-                                        <h3 className="text-base font-bold text-gray-900">My Training Groups</h3>
-                                        <p className="text-xs text-gray-500 mt-0.5">{groups.length} groups assigned to you</p>
-                                    </div>
-                                    <div className="w-9 h-9 bg-emerald-50 rounded-xl flex items-center justify-center text-lg">🏆</div>
+                    {/* ── Leaderboard + Payout History row ───────────────────── */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {/* Leaderboard */}
+                        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                            <div className="bg-gradient-to-r from-yellow-50 to-amber-50 px-5 py-4 border-b border-amber-100 flex items-center justify-between">
+                                <div>
+                                    <h3 className="text-sm font-bold text-amber-900">Top Athletes (Points)</h3>
+                                    <p className="text-xs text-amber-600 mt-0.5">Club-wide ranking</p>
                                 </div>
-                                <div className="divide-y divide-gray-50">
-                                    {groups.map((group, idx) => {
-                                        const skillStyle = skillColors[group.skill_level] || 'bg-gray-50 text-gray-700 border-gray-100';
-                                        const isSelected = idx === selectedGroupIdx;
-                                        return (
-                                            <button
-                                                key={idx}
-                                                onClick={() => { setSelectedGroupIdx(idx); setExpandedAthleteId(null); }}
-                                                className={`w-full text-left flex items-center justify-between px-6 py-4 transition-colors ${isSelected ? 'bg-indigo-50' : 'hover:bg-slate-50'}`}
-                                            >
-                                                <div className="flex items-center gap-3">
-                                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm border ${isSelected ? 'bg-indigo-100 text-indigo-700 border-indigo-200' : 'bg-emerald-50 text-emerald-600 border-emerald-100'}`}>
-                                                        {group.name.charAt(0)}
-                                                    </div>
-                                                    <div>
-                                                        <p className={`font-semibold text-sm ${isSelected ? 'text-indigo-900' : 'text-gray-900'}`}>{group.name}</p>
-                                                        <div className="flex items-center gap-2 mt-0.5">
-                                                            <span className={`inline-block px-2 py-0.5 rounded-md text-[10px] font-semibold border ${skillStyle}`}>{group.skill_level}</span>
-                                                            {group.age_range && <span className="text-[10px] text-gray-400">{group.age_range}</span>}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div className="text-right shrink-0">
-                                                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">Athletes</p>
-                                                    <p className={`text-lg font-black ${isSelected ? 'text-indigo-700' : 'text-gray-900'}`}>{group.athletes?.length || 0}</p>
-                                                </div>
-                                            </button>
-                                        );
-                                    })}
-                                    {groups.length === 0 && (
-                                        <div className="py-12 text-center">
-                                            <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center text-xl mx-auto mb-3">📋</div>
-                                            <p className="text-sm font-medium text-gray-500">No groups assigned yet</p>
-                                        </div>
-                                    )}
-                                </div>
-                                {groups.length > 0 && (
-                                    <div className="px-6 py-4 bg-slate-50 border-t border-gray-100">
-                                        <Link href={route('coach.schedule')} className="w-full inline-block text-center py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl transition-all shadow-sm">
-                                            View Full Schedule
-                                        </Link>
-                                    </div>
-                                )}
+                                <div className="w-8 h-8 bg-amber-100 rounded-xl flex items-center justify-center text-sm">🏆</div>
                             </div>
-
-                            {/* Athletes panel for selected group */}
-                            <div className="lg:col-span-3 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                                {selectedGroup ? (
-                                    <>
-                                        <div className="px-6 py-4 border-b border-gray-50 flex items-center justify-between">
-                                            <div>
-                                                <h3 className="text-base font-bold text-gray-900">Athletes — {selectedGroup.name}</h3>
-                                                <p className="text-xs text-gray-500 mt-0.5">{selectedGroup.athletes.length} athletes · click to edit metrics</p>
+                            <div className="p-4 divide-y divide-gray-50">
+                                {leaderboard.length > 0 ? (
+                                    leaderboard.slice(0, 5).map((ath, idx) => (
+                                        <div key={ath.id} className="flex items-center justify-between py-2.5 first:pt-0 last:pb-0">
+                                            <div className="flex items-center gap-2.5">
+                                                <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${
+                                                    idx === 0 ? 'bg-amber-500 text-white' :
+                                                    idx === 1 ? 'bg-slate-300 text-slate-800' :
+                                                    idx === 2 ? 'bg-amber-600 text-white' :
+                                                    'bg-gray-100 text-gray-500'
+                                                }`}>
+                                                    {idx + 1}
+                                                </span>
+                                                <div>
+                                                    <p className="text-xs font-bold text-gray-800">{ath.name}</p>
+                                                    <span className="inline-block text-[8px] font-bold text-gray-400 uppercase">{ath.belt_rank}</span>
+                                                </div>
                                             </div>
-                                            <div className="w-9 h-9 bg-indigo-50 rounded-xl flex items-center justify-center text-lg">🥋</div>
+                                            <span className="inline-flex items-center gap-1 bg-amber-50 border border-amber-100 rounded-lg px-2 py-0.5 text-[10px] font-extrabold text-amber-700">
+                                                ⭐ {ath.points} pts
+                                            </span>
                                         </div>
-
-                                        {/* Weekly Schedule Section */}
-                                        <div className="px-6 py-4 border-b border-gray-50 bg-slate-50/50">
-                                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2 flex items-center gap-1.5">
-                                                <span>📅</span> Weekly Schedule
-                                            </p>
-                                            {!selectedGroup.schedules || selectedGroup.schedules.length === 0 ? (
-                                                <p className="text-xs text-gray-400 italic">No schedule set for this group.</p>
-                                            ) : (
-                                                <div className="flex flex-wrap gap-2">
-                                                    {selectedGroup.schedules.map((s, i) => {
-                                                        const targetDate = getDateForDayOfWeek(s.day_of_week);
-                                                        const dateNum = new Date(targetDate).getDate();
-                                                        return (
-                                                            <Link
-                                                                key={i}
-                                                                href={route('coach.dashboard', {
-                                                                    tab: 'attendance',
-                                                                    group_id: selectedGroup.id,
-                                                                    date: targetDate
-                                                                })}
-                                                                className={`inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-lg border transition-all hover:scale-105 active:scale-95 ${DAY_COLOR[s.day_of_week] ?? 'bg-gray-100 text-gray-600 border-gray-100'}`}
-                                                            >
-                                                                <span>{DAY_SHORT[s.day_of_week]} ({dateNum})</span>
-                                                                <span className="opacity-80">{fmtTime(s.start_time)}–{fmtTime(s.end_time)}</span>
-                                                                {(s.facility?.name || s.location) && <span className="opacity-65">· {s.facility?.name ?? s.location}</span>}
-                                                            </Link>
-                                                        );
-                                                    })}
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        <div className="divide-y divide-gray-50 max-h-[600px] overflow-y-auto">
-                                            {selectedGroup.athletes.length === 0 ? (
-                                                <div className="py-12 text-center">
-                                                    <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center text-xl mx-auto mb-3">👤</div>
-                                                    <p className="text-sm font-medium text-gray-500">No athletes in this group</p>
-                                                </div>
-                                            ) : (
-                                                selectedGroup.athletes.map(athlete => (
-                                                    <AthleteRow
-                                                        key={athlete.id}
-                                                        athlete={athlete}
-                                                        expandedAthleteId={expandedAthleteId}
-                                                        setExpandedAthleteId={setExpandedAthleteId}
-                                                    />
-                                                ))
-                                            )}
-                                        </div>
-                                    </>
+                                    ))
                                 ) : (
-                                    <div className="flex flex-col items-center justify-center h-full py-20 text-center">
-                                        <div className="w-14 h-14 bg-gray-100 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-4">🥋</div>
-                                        <p className="font-semibold text-gray-900 mb-1">No groups assigned</p>
-                                        <p className="text-sm text-gray-400">Contact your manager to be assigned to a group.</p>
-                                    </div>
+                                    <p className="text-xs text-gray-400 italic text-center py-4">No athlete points recorded yet.</p>
                                 )}
                             </div>
                         </div>
-                    )}
 
-                    {/* ══════════════════════════════════════════════════════
-                        SECTION: EARNINGS
-                    ══════════════════════════════════════════════════════ */}
-                    {activeSection === 'earnings' && (
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                            {/* Total earned summary */}
-                            <div className="bg-white rounded-2xl border border-amber-100 shadow-sm overflow-hidden">
-                                <div className="bg-gradient-to-r from-amber-50 to-orange-50 px-6 py-4 border-b border-amber-100 flex items-center justify-between">
-                                    <div>
-                                        <h3 className="text-sm font-bold text-amber-900">Total Earnings</h3>
-                                        <p className="text-xs text-amber-600 mt-0.5">All-time payouts received</p>
-                                    </div>
-                                    <div className="w-9 h-9 bg-amber-100 rounded-xl flex items-center justify-center text-lg">💰</div>
+                        {/* Payout History */}
+                        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                            <div className="px-5 py-4 border-b border-gray-50 flex items-center justify-between">
+                                <div>
+                                    <h3 className="text-sm font-bold text-gray-900">Recent Payouts</h3>
+                                    <p className="text-xs text-gray-500 mt-0.5">Last 5 paid payouts</p>
                                 </div>
-                                <div className="p-6 space-y-4">
-                                    <div>
-                                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">Total Earned (All Time)</p>
-                                        <p className="text-5xl font-black text-amber-600">{fmtCurrency(totalEarned)}</p>
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <div className="bg-slate-50 rounded-xl p-3">
-                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Paid Payouts</p>
-                                            <p className="text-xl font-black text-gray-800">{payoutHistory.length}</p>
-                                        </div>
-                                        <div className="bg-emerald-50 rounded-xl p-3">
-                                            <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wide mb-1">Pending</p>
-                                            <p className="text-xl font-black text-emerald-700">{nextPayout ? fmtCurrency(nextPayout.amount) : '—'}</p>
-                                        </div>
-                                    </div>
-                                    {nextPayout && (
-                                        <div className="bg-indigo-50 border border-indigo-100 rounded-xl px-4 py-3">
-                                            <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-wide mb-1">Next Payout</p>
-                                            <div className="flex items-center justify-between">
-                                                <p className="text-sm font-bold text-indigo-900">{fmtCurrency(nextPayout.amount)}</p>
-                                                <p className="text-xs text-indigo-600 font-semibold">{fmt(nextPayout.payout_date)}</p>
-                                            </div>
-                                            {nextPayout.notes && <p className="text-xs text-indigo-700 mt-1">{nextPayout.notes}</p>}
-                                        </div>
-                                    )}
-                                </div>
+                                <span className="text-xl">📋</span>
                             </div>
-
-                            {/* Payout History */}
-                            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                                <div className="bg-gradient-to-r from-indigo-50 to-blue-50 px-6 py-4 border-b border-indigo-100 flex items-center justify-between">
-                                    <div>
-                                        <h3 className="text-sm font-bold text-indigo-900">Payout History</h3>
-                                        <p className="text-xs text-indigo-600 mt-0.5">Your last {payoutHistory.length} payments</p>
-                                    </div>
-                                    <div className="w-9 h-9 bg-indigo-100 rounded-xl flex items-center justify-center text-lg">📋</div>
-                                </div>
-                                <div className="divide-y divide-gray-50">
-                                    {payoutHistory.length === 0 ? (
-                                        <div className="flex flex-col items-center justify-center py-10 text-center px-6">
-                                            <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center text-xl mb-3">🗂️</div>
-                                            <p className="text-sm font-medium text-gray-500">No payment history yet</p>
-                                        </div>
-                                    ) : (
-                                        payoutHistory.map(payout => (
-                                            <div key={payout.id} className="flex items-center justify-between px-6 py-4 hover:bg-slate-50 transition-colors">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 bg-emerald-100 rounded-xl flex items-center justify-center shrink-0">
-                                                        <svg className="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                                        </svg>
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-sm font-semibold text-gray-900">
-                                                            {fmtCurrency(payout.amount)}
-                                                            {payout.tip && Number(payout.tip) > 0 && (
-                                                                <span className="text-xs text-amber-600 font-medium ml-1">
-                                                                    (incl. {fmtCurrency(payout.tip)} tip)
-                                                                </span>
-                                                            )}
-                                                        </p>
-                                                        <p className="text-xs text-gray-400">{fmt(payout.payout_date)}</p>
-                                                    </div>
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-lg">
-                                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Paid
-                                                    </span>
-                                                    {payout.payment_type && (
-                                                        <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md border ${
-                                                            payout.payment_type === 'Monthly Salary' ? 'bg-indigo-50 border-indigo-100 text-indigo-700' :
-                                                            payout.payment_type === 'Hourly Rate'    ? 'bg-emerald-50 border-emerald-100 text-emerald-700' :
-                                                            payout.payment_type === 'Per Session'    ? 'bg-purple-50 border-purple-100 text-purple-700' :
-                                                            payout.payment_type === 'Commission'     ? 'bg-amber-50 border-amber-100 text-amber-700' :
-                                                            'bg-rose-50 border-rose-100 text-rose-700'
-                                                        }`}>
-                                                            {payout.payment_type}
-                                                        </span>
-                                                    )}
-                                                </div>
+                            <div className="divide-y divide-gray-50">
+                                {payoutHistory.length > 0 ? (
+                                    payoutHistory.map(p => (
+                                        <div key={p.id} className="flex items-center justify-between px-5 py-3">
+                                            <div>
+                                                <p className="text-xs font-bold text-gray-800">{fmt(p.payout_date)}</p>
+                                                {p.notes && <p className="text-[10px] text-gray-400 mt-0.5">{p.notes}</p>}
                                             </div>
-                                        ))
-                                    )}
-                                </div>
+                                            <div className="text-right">
+                                                <p className="text-sm font-black text-emerald-600">{fmtCurrency(p.amount)}</p>
+                                                {p.tip && Number(p.tip) > 0 && (
+                                                    <p className="text-[10px] text-amber-500 font-semibold">+{fmtCurrency(p.tip)} bonus</p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p className="text-xs text-gray-400 italic text-center py-8">No payout history yet.</p>
+                                )}
                             </div>
                         </div>
-                    )}
-
-                    {activeSection === 'attendance' && (
-                        <CoachAttendanceSection groups={groups} />
-                    )}
+                    </div>
 
                 </div>
             </div>
         </AuthenticatedLayout>
-    );
-}
-
-interface AttendanceRow {
-    athlete_id: number;
-    name: string;
-    status: 'present' | 'absent';
-    base_points: number;
-    extra_points: number;
-}
-
-function CoachAttendanceSection({ groups }: { groups: Group[] }) {
-    const [selectedGroupId, setSelectedGroupId] = useState<string>(() => {
-        if (typeof window !== 'undefined') {
-            const params = new URLSearchParams(window.location.search);
-            const gp = params.get('group_id');
-            if (gp) return gp;
-        }
-        return '';
-    });
-    const [attendanceDate, setAttendanceDate] = useState<string>(() => {
-        if (typeof window !== 'undefined') {
-            const params = new URLSearchParams(window.location.search);
-            const dt = params.get('date');
-            if (dt) return dt;
-        }
-        return new Date().toISOString().split('T')[0];
-    });
-    const [attendanceList, setAttendanceList] = useState<AttendanceRow[]>([]);
-    const [loading, setLoading] = useState<boolean>(false);
-    const [submitting, setSubmitting] = useState<boolean>(false);
-    const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-
-    useEffect(() => {
-        if (groups.length > 0 && !selectedGroupId) {
-            const params = new URLSearchParams(window.location.search);
-            const gp = params.get('group_id');
-            if (!gp) {
-                setSelectedGroupId(String(groups[0].id));
-            }
-        }
-    }, [groups]);
-
-    useEffect(() => {
-        if (typeof window !== 'undefined') {
-            const params = new URLSearchParams(window.location.search);
-            const gp = params.get('group_id');
-            const dt = params.get('date');
-            if (gp) {
-                setSelectedGroupId(gp);
-            }
-            if (dt) {
-                setAttendanceDate(dt);
-            }
-        }
-    }, [window.location.search]);
-
-    const loadAttendance = () => {
-        if (!selectedGroupId || !attendanceDate) return;
-        setLoading(true);
-        setMessage(null);
-        axios.get(route('coach.attendance.load'), {
-            params: {
-                group_id: selectedGroupId,
-                date: attendanceDate
-            }
-        })
-        .then(res => {
-            setAttendanceList(res.data.attendance);
-        })
-        .catch(err => {
-            console.error(err);
-            setMessage({ type: 'error', text: 'Failed to load attendance.' });
-        })
-        .finally(() => {
-            setLoading(false);
-        });
-    };
-
-    useEffect(() => {
-        loadAttendance();
-    }, [selectedGroupId, attendanceDate]);
-
-    const handleStatusChange = (athleteId: number, status: 'present' | 'absent') => {
-        setAttendanceList(prev => prev.map(item => 
-            item.athlete_id === athleteId ? { ...item, status } : item
-        ));
-    };
-
-    const handlePointsChange = (athleteId: number, field: 'base_points' | 'extra_points', value: number) => {
-        setAttendanceList(prev => prev.map(item => 
-            item.athlete_id === athleteId ? { ...item, [field]: value } : item
-        ));
-    };
-
-    const submitAttendance = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (attendanceList.length === 0) return;
-        setSubmitting(true);
-        setMessage(null);
-        axios.post(route('coach.attendance.save'), {
-            training_group_id: Number(selectedGroupId),
-            attendance_date: attendanceDate,
-            attendance_data: attendanceList
-        })
-        .then(res => {
-            setMessage({ type: 'success', text: 'Attendance logged and points synchronized successfully!' });
-        })
-        .catch(err => {
-            console.error(err);
-            setMessage({ type: 'error', text: 'Failed to save attendance logs. Please check all values.' });
-        })
-        .finally(() => {
-            setSubmitting(false);
-        });
-    };
-
-    return (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-            <div className="bg-gradient-to-r from-indigo-50 to-blue-50 px-6 py-4 border-b border-indigo-100 flex items-center justify-between">
-                <div>
-                    <h3 className="text-sm font-bold text-indigo-900">Mark Training Attendance</h3>
-                    <p className="text-xs text-indigo-600 mt-0.5">Select a group and log athlete attendance and point rewards</p>
-                </div>
-                <div className="w-9 h-9 bg-indigo-100 rounded-xl flex items-center justify-center text-lg">📝</div>
-            </div>
-
-            <div className="p-6 space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Training Group</label>
-                        <select
-                            value={selectedGroupId}
-                            onChange={e => setSelectedGroupId(e.target.value)}
-                            className="w-full rounded-xl border border-gray-200 text-sm py-2.5 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                        >
-                            {groups.map(g => (
-                                <option key={g.id} value={g.id}>{g.name} ({g.skill_level})</option>
-                            ))}
-                        </select>
-                    </div>
-                    <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Attendance Date</label>
-                        <input
-                            type="date"
-                            value={attendanceDate}
-                            onChange={e => setAttendanceDate(e.target.value)}
-                            max={new Date().toISOString().split('T')[0]}
-                            className="w-full rounded-xl border border-gray-200 text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                        />
-                    </div>
-                </div>
-
-                {message && (
-                    <div className={`p-4 rounded-xl text-sm font-semibold border ${
-                        message.type === 'success' ? 'bg-emerald-50 border-emerald-100 text-emerald-800' : 'bg-red-50 border-red-100 text-red-800'
-                    }`}>
-                        {message.text}
-                    </div>
-                )}
-
-                {loading ? (
-                    <div className="flex flex-col items-center justify-center py-20 text-center">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mb-3"></div>
-                        <p className="text-sm text-gray-500">Loading group athletes list...</p>
-                    </div>
-                ) : (
-                    <form onSubmit={submitAttendance} className="space-y-4">
-                        {attendanceList.length === 0 ? (
-                            <div className="text-center py-10 text-gray-400 italic text-sm border-2 border-dashed border-gray-100 rounded-xl">
-                                No athletes found in this group.
-                            </div>
-                        ) : (
-                            <div className="overflow-x-auto rounded-xl border border-gray-100">
-                                <table className="min-w-full divide-y divide-gray-100 text-sm text-left">
-                                    <thead className="bg-slate-50 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                                        <tr>
-                                            <th className="px-6 py-3">Athlete</th>
-                                            <th className="px-6 py-3 text-center">Status</th>
-                                            <th className="px-6 py-3 text-center">Base Points</th>
-                                            <th className="px-6 py-3 text-center">Extra Points</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-50 bg-white">
-                                        {attendanceList.map((row) => (
-                                            <tr key={row.athlete_id} className="hover:bg-slate-50/50 transition-colors">
-                                                <td className="px-6 py-4 font-bold text-gray-900">{row.name}</td>
-                                                <td className="px-6 py-4 text-center">
-                                                    <div className="inline-flex rounded-xl p-1 bg-slate-100 border border-slate-200/50">
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => handleStatusChange(row.athlete_id, 'present')}
-                                                            className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${
-                                                                row.status === 'present'
-                                                                    ? 'bg-emerald-600 text-white shadow-sm'
-                                                                    : 'text-gray-500 hover:text-gray-700'
-                                                            }`}
-                                                        >
-                                                            Present
-                                                        </button>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => handleStatusChange(row.athlete_id, 'absent')}
-                                                            className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${
-                                                                row.status === 'absent'
-                                                                    ? 'bg-rose-600 text-white shadow-sm'
-                                                                    : 'text-gray-500 hover:text-gray-700'
-                                                            }`}
-                                                        >
-                                                            Absent
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4 text-center">
-                                                    <input
-                                                        type="number"
-                                                        min="0"
-                                                        value={row.base_points}
-                                                        onChange={e => handlePointsChange(row.athlete_id, 'base_points', Math.max(0, parseInt(e.target.value) || 0))}
-                                                        disabled={row.status === 'absent'}
-                                                        className="w-16 rounded-lg border border-gray-200 text-center py-1 px-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-xs font-semibold disabled:opacity-40 disabled:bg-slate-50"
-                                                    />
-                                                </td>
-                                                <td className="px-6 py-4 text-center">
-                                                    <input
-                                                        type="number"
-                                                        value={row.extra_points}
-                                                        onChange={e => handlePointsChange(row.athlete_id, 'extra_points', parseInt(e.target.value) || 0)}
-                                                        disabled={row.status === 'absent'}
-                                                        className="w-16 rounded-lg border border-gray-200 text-center py-1 px-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-xs font-semibold disabled:opacity-40 disabled:bg-slate-50"
-                                                    />
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
-
-                        {attendanceList.length > 0 && (
-                            <div className="flex justify-end pt-3">
-                                <button
-                                    type="submit"
-                                    disabled={submitting}
-                                    className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition-all shadow-sm disabled:opacity-50"
-                                >
-                                    {submitting ? 'Saving...' : 'Save Attendance Logs'}
-                                </button>
-                            </div>
-                        )}
-                    </form>
-                )}
-            </div>
-        </div>
     );
 }

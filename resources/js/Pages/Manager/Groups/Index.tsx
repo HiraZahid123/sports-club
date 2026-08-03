@@ -273,6 +273,62 @@ export default function GroupsIndex({ groups, coaches, athletes, ageCategories, 
         );
     };
 
+    // ── Export Groups to CSV ──────────────────────────────────────────────
+    const exportGroupsToCSV = () => {
+        const headers = [
+            'ID',
+            'Name',
+            'Description',
+            'Monthly Price',
+            'Capacity',
+            'Skill Level',
+            'Age Category',
+            'Athletes Count',
+            'Coaches',
+            'Schedule Slots'
+        ];
+
+        const rows = groups.map(g => {
+            const ageCatName = g.age_category?.name || 'None';
+            const coachNames = (g.coaches || []).map(c => c.name).join('; ');
+            const scheduleStr = (g.schedules || []).map(s => {
+                const facilityName = s.facility?.name || s.location || '';
+                return `${s.day_of_week} ${s.start_time.substring(0, 5)}-${s.end_time.substring(0, 5)} (${facilityName})`;
+            }).join('; ');
+
+            return [
+                g.id,
+                g.name,
+                g.description || '',
+                g.monthly_price,
+                g.capacity,
+                g.skill_level,
+                ageCatName,
+                g.athletes_count || 0,
+                coachNames,
+                scheduleStr
+            ];
+        });
+
+        const csvContent = [
+            headers.join(','),
+            ...rows.map(row => row.map(val => {
+                const stringVal = String(val).replace(/"/g, '""');
+                return `"${stringVal}"`;
+            }).join(','))
+        ].join('\n');
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', `groups_export_${new Date().toISOString().slice(0, 10)}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
     // ──────────────────────────────────────────────────────────────────────
     return (
         <AuthenticatedLayout
@@ -283,6 +339,13 @@ export default function GroupsIndex({ groups, coaches, athletes, ageCategories, 
                         <p className="text-sm text-gray-500 mt-0.5">{groups.length} groups active</p>
                     </div>
                     <div className="flex items-center gap-3">
+                        <button
+                            type="button"
+                            onClick={exportGroupsToCSV}
+                            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold bg-amber-50 border border-amber-200 text-amber-700 hover:bg-amber-100 transition-all shadow-sm"
+                        >
+                            <span>📥</span> Export Groups
+                        </button>
                         <button
                             type="button"
                             onClick={() => setIsManagingFacilities(true)}

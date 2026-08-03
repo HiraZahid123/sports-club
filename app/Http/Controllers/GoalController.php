@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\TrainingGoal;
 use App\Models\User;
+use App\Models\ManualPointAdjustment;
 use Illuminate\Http\Request;
 
 class GoalController extends Controller
@@ -113,4 +114,38 @@ class GoalController extends Controller
 
         return back()->with('status', 'tip-saved');
     }
+
+    public function adjustPoints(Request $request, User $user)
+    {
+        $validated = $request->validate([
+            'points'  => 'required|integer|min:-10000|max:10000',
+            'comment' => 'nullable|string|max:500',
+        ]);
+
+        $coach = $request->user();
+
+        // Ensure the athlete is in one of the coach's groups
+        $athleteInCoachGroup = $coach->trainingGroups()
+            ->whereHas('athletes', fn($q) => $q->where('users.id', $user->id))
+            ->exists();
+
+        abort_if(!$athleteInCoachGroup, 403, 'Athlete is not in your group.');
+
+        // Log the adjustment
+        ManualPointAdjustment::create([
+            'athlete_id'  => $user->id,
+            'adjusted_by' => $coach->id,
+            'points'      => $validated['points'],
+            'comment'     => $validated['comment'] ?? null,
+            'date'        => now()->toDateString(),
+        ]);
+
+        // Apply the adjustment to the athlete's event_points total
+        $profile = $user->athleteProfile()->firstOrCreate(['user_id' => $user->id]);
+        $newPoints = max(0, ($profile->event_points ?? 0) + $validated['points']);
+        $profile->update(['event_points' => $newPoints]);
+
+        return back()->with('status', 'points-adjusted');
+    }
 }
+

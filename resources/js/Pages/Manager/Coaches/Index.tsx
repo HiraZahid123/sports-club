@@ -43,6 +43,7 @@ interface Coach {
     coach_profile?: CoachProfile | null;
     training_groups: TrainingGroup[];
     coach_payouts?: Payout[];
+    titles?: string[] | null;
 }
 
 const formatDate = (dateStr: string | null | undefined) => {
@@ -127,7 +128,26 @@ export default function CoachesIndex({ coaches }: { coaches: Coach[] }) {
         bio: '',
         payment_option: 'manual' as 'athlete' | 'hourly' | 'manual',
         payment_rate: '0',
+        titles: [] as string[],
     });
+
+    const [titleInput, setTitleInput] = useState('');
+
+    const TITLE_SUGGESTIONS = [
+        'Head Coach', 'Assistant Coach', 'Senior Coach', 'Lead Instructor',
+        'Strength Coach', 'Conditioning Coach', 'Youth Coach',
+    ];
+
+    const addCoachTitle = (title: string) => {
+        const t = title.trim();
+        if (!t || data.titles.includes(t)) return;
+        setData('titles', [...data.titles, t]);
+        setTitleInput('');
+    };
+
+    const removeCoachTitle = (title: string) => {
+        setData('titles', data.titles.filter(t => t !== title));
+    };
 
     const openEdit = (coach: Coach) => {
         const p = coach.coach_profile;
@@ -140,7 +160,9 @@ export default function CoachesIndex({ coaches }: { coaches: Coach[] }) {
             bio:             p?.bio ?? '',
             payment_option:  (p?.payment_option as any) ?? 'manual',
             payment_rate:    (p?.payment_rate ?? 0).toString(),
+            titles:          coach.titles ?? [],
         });
+        setTitleInput('');
         clearErrors();
         setEditing(coach);
         setActiveTab('info');
@@ -150,6 +172,7 @@ export default function CoachesIndex({ coaches }: { coaches: Coach[] }) {
         setEditing(null);
         reset();
         clearErrors();
+        setTitleInput('');
     };
 
     const submit: FormEventHandler = (e) => {
@@ -240,6 +263,16 @@ export default function CoachesIndex({ coaches }: { coaches: Coach[] }) {
                                                             </div>
                                                             <p className="text-xs text-gray-400">{coach.email}</p>
                                                             {coach.phone && <p className="text-xs text-gray-400">{coach.phone}</p>}
+                                                            {/* Titles */}
+                                                            {coach.titles && coach.titles.length > 0 && (
+                                                                <div className="flex flex-wrap gap-1 mt-1">
+                                                                    {coach.titles.map(t => (
+                                                                        <span key={t} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-bold bg-violet-50 text-violet-600 border border-violet-100">
+                                                                            🏅 {t}
+                                                                        </span>
+                                                                    ))}
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 </td>
@@ -399,6 +432,44 @@ export default function CoachesIndex({ coaches }: { coaches: Coach[] }) {
                                                 placeholder="Short bio about the coach..."
                                             />
                                             {errors.bio && <p className="mt-1 text-xs text-red-600">{errors.bio}</p>}
+                                        </div>
+
+                                        {/* Titles */}
+                                        <div>
+                                            <label className={labelClass}>Titles &amp; Honours</label>
+                                            {data.titles.length > 0 && (
+                                                <div className="flex flex-wrap gap-2 mb-2">
+                                                    {data.titles.map(t => (
+                                                        <span key={t} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold bg-violet-50 text-violet-700 border border-violet-200">
+                                                            🏅 {t}
+                                                            <button type="button" onClick={() => removeCoachTitle(t)} className="text-violet-400 hover:text-violet-700 ml-0.5 leading-none">×</button>
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            )}
+                                            <div className="flex gap-2">
+                                                <div className="flex-1 relative">
+                                                    <input
+                                                        type="text"
+                                                        value={titleInput}
+                                                        onChange={e => setTitleInput(e.target.value)}
+                                                        onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addCoachTitle(titleInput); } }}
+                                                        placeholder="Type a title and press Enter…"
+                                                        className={inputClass}
+                                                        list="coach-title-suggestions"
+                                                    />
+                                                    <datalist id="coach-title-suggestions">
+                                                        {TITLE_SUGGESTIONS.map(s => <option key={s} value={s} />)}
+                                                    </datalist>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => addCoachTitle(titleInput)}
+                                                    className="px-4 py-2.5 bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold rounded-xl transition-all"
+                                                >
+                                                    + Add
+                                                </button>
+                                            </div>
                                         </div>
                                     </>
                                 )}

@@ -44,6 +44,8 @@ class MemberController extends Controller
             'date_of_birth'           => 'nullable|date',
             'belt_rank'               => 'nullable|string|max:100',
             'event_points'            => 'nullable|integer|min:0',
+            'titles'                  => 'nullable|array',
+            'titles.*'                => 'string|max:100',
         ]);
 
         $user = User::create([
@@ -56,6 +58,7 @@ class MemberController extends Controller
             'city'                    => $validated['city'] ?? null,
             'emergency_contact_name'  => $validated['emergency_contact_name'] ?? null,
             'emergency_contact_phone' => $validated['emergency_contact_phone'] ?? null,
+            'titles'                  => $validated['titles'] ?? null,
         ]);
 
         $user->assignRole($validated['roles']);
@@ -97,6 +100,8 @@ class MemberController extends Controller
             'date_of_birth'           => 'nullable|date',
             'belt_rank'               => 'nullable|string|max:100',
             'event_points'            => 'nullable|integer|min:0',
+            'titles'                  => 'nullable|array',
+            'titles.*'                => 'string|max:100',
         ]);
 
         $user->update([
@@ -107,6 +112,7 @@ class MemberController extends Controller
             'city'                    => $validated['city'] ?? null,
             'emergency_contact_name'  => $validated['emergency_contact_name'] ?? null,
             'emergency_contact_phone' => $validated['emergency_contact_phone'] ?? null,
+            'titles'                  => $validated['titles'] ?? null,
         ]);
 
         $roles = $validated['roles'];

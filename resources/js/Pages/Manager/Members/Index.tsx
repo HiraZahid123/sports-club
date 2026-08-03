@@ -39,6 +39,7 @@ interface Member {
     emergency_contact_name?: string | null;
     emergency_contact_phone?: string | null;
     roles: { name: string }[];
+    titles?: string[] | null;
     athlete_profile?: AthleteProfile | null;
     parent_profile?: any;
     subscriptions?: Subscription[];
@@ -111,13 +112,35 @@ export default function MembersIndex({ members }: { members: Member[] }) {
         date_of_birth: '',
         belt_rank: '',
         event_points: 0,
+        titles: [] as string[],
     });
+
+    const [titleInput, setTitleInput] = useState('');
+
+    const TITLE_SUGGESTIONS = [
+        'Head Coach', 'Assistant Coach', 'PRO Athlete', 'MVP', 'Club Captain',
+        'Team Leader', 'Sparring Champion', 'Black Belt', 'National Champion',
+        'Youth Coach', 'Strength Coach', 'Conditioning Coach',
+    ];
+
+    const addTitle = (title: string) => {
+        const t = title.trim();
+        if (!t || data.titles.includes(t)) return;
+        setData('titles', [...data.titles, t]);
+        setTitleInput('');
+    };
+
+    const removeTitle = (title: string) => {
+        setData('titles', data.titles.filter(t => t !== title));
+    };
 
     const openAddForm = () => {
         setEditingMember(null);
         reset();
         clearErrors();
         setData('roles', ['Athlete']);
+        setData('titles', []);
+        setTitleInput('');
         setIsFormOpen(true);
     };
 
@@ -136,7 +159,9 @@ export default function MembersIndex({ members }: { members: Member[] }) {
             date_of_birth: member.athlete_profile?.date_of_birth ?? '',
             belt_rank: member.athlete_profile?.belt_rank ?? '',
             event_points: member.athlete_profile?.event_points ?? 0,
+            titles: member.titles ?? [],
         });
+        setTitleInput('');
         clearErrors();
         setIsFormOpen(true);
     };
@@ -145,6 +170,7 @@ export default function MembersIndex({ members }: { members: Member[] }) {
         setIsFormOpen(false);
         setEditingMember(null);
         setShowBeltDropdown(false);
+        setTitleInput('');
         reset();
         clearErrors();
     };
@@ -365,6 +391,53 @@ export default function MembersIndex({ members }: { members: Member[] }) {
                                     </div>
                                 </div>
 
+                                {/* Titles Section */}
+                                <div>
+                                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Titles &amp; Honours</p>
+                                    {/* Chip display */}
+                                    {data.titles.length > 0 && (
+                                        <div className="flex flex-wrap gap-2 mb-3">
+                                            {data.titles.map(t => (
+                                                <span key={t} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold bg-violet-50 text-violet-700 border border-violet-200">
+                                                    🏅 {t}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeTitle(t)}
+                                                        className="text-violet-400 hover:text-violet-700 ml-0.5 leading-none"
+                                                    >
+                                                        ×
+                                                    </button>
+                                                </span>
+                                            ))}
+                                        </div>
+                                    )}
+                                    {/* Input row */}
+                                    <div className="flex gap-2">
+                                        <div className="flex-1 relative">
+                                            <input
+                                                type="text"
+                                                value={titleInput}
+                                                onChange={e => setTitleInput(e.target.value)}
+                                                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addTitle(titleInput); } }}
+                                                placeholder="Type a title and press Enter…"
+                                                className={inputClass}
+                                                list="title-suggestions"
+                                            />
+                                            <datalist id="title-suggestions">
+                                                {TITLE_SUGGESTIONS.map(s => <option key={s} value={s} />)}
+                                            </datalist>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => addTitle(titleInput)}
+                                            className="px-4 py-2.5 bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold rounded-xl transition-all"
+                                        >
+                                            + Add
+                                        </button>
+                                    </div>
+                                    <p className="text-[10px] text-gray-400 mt-1.5">Suggestions: {TITLE_SUGGESTIONS.slice(0, 5).join(', ')}…</p>
+                                </div>
+
                                 {/* Athlete-only fields */}
                                 {data.roles.includes('Athlete') && (
                                     <div>
@@ -524,7 +597,7 @@ export default function MembersIndex({ members }: { members: Member[] }) {
                                 <thead>
                                     <tr className="bg-slate-50 border-b border-gray-100">
                                         <th className="px-6 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wide">Member</th>
-                                        <th className="px-6 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wide">Role</th>
+                                        <th className="px-6 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wide">Role &amp; Titles</th>
                                         <th className="px-6 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wide">Phone</th>
                                         <th className="px-6 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wide">City</th>
                                         <th className="px-6 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wide">Belt</th>
@@ -575,6 +648,16 @@ export default function MembersIndex({ members }: { members: Member[] }) {
                                                             <span className="text-gray-300 italic text-xs">—</span>
                                                         )}
                                                     </div>
+                                                    {/* Titles */}
+                                                    {member.titles && member.titles.length > 0 && (
+                                                        <div className="flex flex-wrap gap-1 mt-1.5">
+                                                            {member.titles.map(t => (
+                                                                <span key={t} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-bold bg-violet-50 text-violet-600 border border-violet-100">
+                                                                    🏅 {t}
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                    )}
                                                 </td>
                                                 <td className="px-6 py-4 text-sm text-gray-600">
                                                     {member.phone || <span className="text-gray-300">—</span>}

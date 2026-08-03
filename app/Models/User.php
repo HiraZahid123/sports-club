@@ -39,6 +39,7 @@ class User extends Authenticatable
         'emergency_contact_phone',
         'profile_photo',
         'is_active',
+        'titles',
     ];
 
     /**
@@ -60,7 +61,8 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
-            'is_active' => 'boolean',
+            'is_active'        => 'boolean',
+            'titles'           => 'array',
         ];
     }
 
@@ -186,5 +188,10 @@ class User extends Authenticatable
     public function trainingGoals()
     {
         return $this->hasMany(TrainingGoal::class, 'athlete_id')->orderBy('created_at', 'desc');
+    }
+
+    public function manualPointAdjustments()
+    {
+        return $this->hasMany(\App\Models\ManualPointAdjustment::class, 'athlete_id');
     }
 }

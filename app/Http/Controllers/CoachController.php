@@ -44,13 +44,16 @@ class CoachController extends Controller
             'payment_rate'   => 'required|numeric|min:0',
             'specialization' => 'nullable|string|max:255',
             'bio'            => 'nullable|string|max:1000',
+            'titles'         => 'nullable|array',
+            'titles.*'       => 'string|max:100',
         ]);
 
         $user->update([
-            'name'  => $validated['name'],
-            'email' => $validated['email'],
-            'phone' => $validated['phone'] ?? null,
-            'city'  => $validated['city'] ?? null,
+            'name'   => $validated['name'],
+            'email'  => $validated['email'],
+            'phone'  => $validated['phone'] ?? null,
+            'city'   => $validated['city'] ?? null,
+            'titles' => $validated['titles'] ?? null,
         ]);
 
         $user->coachProfile()->updateOrCreate(

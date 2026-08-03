@@ -307,6 +307,7 @@ Route::middleware(['auth', 'verified', 'role:Coach', \App\Http\Middleware\CheckS
     Route::delete('/goals/{goal}', [\App\Http\Controllers\GoalController::class, 'destroy'])->name('goals.destroy');
     Route::post('/athletes/{user}/skills', [\App\Http\Controllers\GoalController::class, 'updateSkills'])->name('athletes.skills');
     Route::post('/athletes/{user}/tip', [\App\Http\Controllers\GoalController::class, 'saveTip'])->name('athletes.tip');
+    Route::post('/athletes/{user}/adjust-points', [\App\Http\Controllers\GoalController::class, 'adjustPoints'])->name('athletes.adjust-points');
 
     Route::get('/events', [\App\Http\Controllers\EventController::class, 'coachIndex'])->name('events.index');
     Route::post('/events/{event}/registrations/{registration}/accept', [\App\Http\Controllers\EventController::class, 'acceptAttendance'])->name('events.attendance.accept');
