@@ -92,9 +92,10 @@ interface UpcomingScheduleSlot {
 
 interface PointLog {
     date: string;
-    type: 'training' | 'event' | 'reset';
+    type: 'training' | 'event' | 'reset' | 'adjustment';
     description: string;
     points: number;
+    comment?: string;
 }
 
 interface BirthdayAthlete {
@@ -111,6 +112,7 @@ export default function AthleteDashboard({
     leaderboard = [],
     pointHistory = [],
     birthdays = [],
+    myPosition = null,
 }: {
     athleteProfile?: AthleteProfile | null;
     stats?: { classes: number; sparring?: number; events: number; points: number };
@@ -118,6 +120,7 @@ export default function AthleteDashboard({
     leaderboard?: Array<{ id: number; name: string; points: number; belt_rank: string }>;
     pointHistory?: PointLog[];
     birthdays?: BirthdayAthlete[];
+    myPosition?: number | null;
 }) {
     const { auth } = usePage().props as any;
     const user = auth.user;
@@ -204,6 +207,15 @@ export default function AthleteDashboard({
                                 <p className={`text-xs mb-0 ${cardStyle.text.includes('text-white') ? 'text-white/60' : 'text-gray-500'}`}>
                                     Next: <span className={`font-bold ${cardStyle.text.includes('text-white') ? 'text-white/90' : 'text-gray-700'}`}>{getNextBelt(belt)}</span>
                                 </p>
+
+                                {/* Position badge */}
+                                {myPosition && (
+                                    <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/20 backdrop-blur-sm border border-white/25">
+                                        <span className={`text-[10px] font-extrabold uppercase tracking-widest ${cardStyle.text.includes('text-white') ? 'text-white/70' : 'text-gray-500'}`}>Position</span>
+                                        <span className={`text-sm font-black ${cardStyle.text.includes('text-white') ? 'text-white' : 'text-gray-900'}`}>#{myPosition}</span>
+                                        <span className={`text-[10px] font-medium ${cardStyle.text.includes('text-white') ? 'text-white/60' : 'text-gray-500'}`}>in club</span>
+                                    </div>
+                                )}
                             </div>
                         </div>
 
@@ -380,26 +392,45 @@ export default function AthleteDashboard({
                                             <tr className="border-b border-gray-100 text-gray-400 uppercase tracking-wider font-extrabold">
                                                 <th className="py-3 px-4">Date</th>
                                                 <th className="py-3 px-4">Type</th>
-                                                <th className="py-3 px-4">Description</th>
+                                                <th className="py-3 px-4">Description / Comment</th>
                                                 <th className="py-3 px-4 text-right">Points</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-gray-50">
                                             {pointHistory.map((log, index) => {
+                                                const isAdjustment = log.type === 'adjustment';
+                                                const isNeg = log.points < 0;
+                                                const isReset = log.type === 'reset';
+
                                                 const badgeStyle = {
-                                                    training: 'bg-emerald-50 text-emerald-700 border-emerald-100',
-                                                    event: 'bg-indigo-50 text-indigo-700 border-indigo-100',
-                                                    reset: 'bg-amber-50 text-amber-700 border-amber-100'
+                                                    training:   'bg-emerald-50 text-emerald-700 border-emerald-100',
+                                                    event:      'bg-indigo-50 text-indigo-700 border-indigo-100',
+                                                    reset:      'bg-amber-50 text-amber-700 border-amber-100',
+                                                    adjustment: isNeg
+                                                        ? 'bg-rose-50 text-rose-700 border-rose-100'
+                                                        : 'bg-violet-50 text-violet-700 border-violet-100',
                                                 }[log.type];
 
                                                 const label = {
-                                                    training: 'Training Attendance',
-                                                    event: 'Event Category',
-                                                    reset: 'Period Reset Archive'
+                                                    training:   'Training Attendance',
+                                                    event:      'Event Category',
+                                                    reset:      'Period Reset Archive',
+                                                    adjustment: isNeg ? '⬇ Point Deduction' : '⬆ Point Bonus',
                                                 }[log.type];
 
+                                                const ptsColor = isReset
+                                                    ? 'text-amber-600'
+                                                    : isAdjustment && isNeg
+                                                    ? 'text-rose-600'
+                                                    : isAdjustment
+                                                    ? 'text-violet-600'
+                                                    : 'text-indigo-600';
+
+                                                const ptsPrefix = isReset ? '' : isNeg ? '−' : '+';
+                                                const ptsDisplay = `${ptsPrefix}${Math.abs(log.points)} pts`;
+
                                                 return (
-                                                    <tr key={index} className="hover:bg-slate-50/50 transition-colors">
+                                                    <tr key={index} className={`hover:bg-slate-50/50 transition-colors ${isAdjustment && isNeg ? 'bg-rose-50/30' : ''}`}>
                                                         <td className="py-3.5 px-4 font-medium text-gray-500 font-mono">
                                                             {formatDate(log.date)}
                                                         </td>
@@ -409,10 +440,19 @@ export default function AthleteDashboard({
                                                             </span>
                                                         </td>
                                                         <td className="py-3.5 px-4 text-gray-700 font-semibold">
-                                                            {log.description}
+                                                            {isAdjustment ? (
+                                                                <span className={`flex items-start gap-1 text-[11px] italic font-medium ${
+                                                                    isNeg ? 'text-rose-600' : 'text-violet-600'
+                                                                }`}>
+                                                                    <span>💬</span>
+                                                                    <span>{log.description}</span>
+                                                                </span>
+                                                            ) : (
+                                                                <span>{log.description}</span>
+                                                            )}
                                                         </td>
-                                                        <td className={`py-3.5 px-4 text-right font-black text-sm ${log.type === 'reset' ? 'text-amber-600' : 'text-indigo-600'}`}>
-                                                            {log.type === 'reset' ? `${log.points} pts` : `+${log.points} pts`}
+                                                        <td className={`py-3.5 px-4 text-right font-black text-sm ${ptsColor}`}>
+                                                            {ptsDisplay}
                                                         </td>
                                                     </tr>
                                                 );

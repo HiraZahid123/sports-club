@@ -134,7 +134,7 @@ const METRICS = [
 
 function PointAdjustPanel({ athlete }: { athlete: Athlete }) {
     const { data, setData, post, processing, reset } = useForm({
-        points: '' as string | number,
+        points: 0 as number,
         comment: '',
     });
     const [saved, setSaved] = useState(false);
@@ -144,7 +144,7 @@ function PointAdjustPanel({ athlete }: { athlete: Athlete }) {
         e.preventDefault();
         const pts = Number(data.points);
         if (isNaN(pts) || pts === 0) {
-            setError('Points must be a non-zero number (e.g. -10 or +15).');
+            setError('Points must be a non-zero number.');
             return;
         }
         setError('');
@@ -162,6 +162,13 @@ function PointAdjustPanel({ athlete }: { athlete: Athlete }) {
     const isNegative = pts < 0;
     const isPositive = pts > 0;
 
+    const adjustBy = (delta: number) => {
+        setData('points', Math.max(-9999, Math.min(9999, pts + delta)));
+        setError('');
+    };
+
+    const STEPS = [1, 5, 10];
+
     return (
         <div className="border-t border-gray-100 pt-4">
             <div className="flex items-center justify-between mb-3">
@@ -177,36 +184,74 @@ function PointAdjustPanel({ athlete }: { athlete: Athlete }) {
             </div>
 
             {/* Current points display */}
-            <div className="flex items-center gap-2 mb-3 p-2.5 bg-indigo-50 rounded-xl border border-indigo-100">
+            <div className="flex items-center gap-2 mb-4 p-2.5 bg-indigo-50 rounded-xl border border-indigo-100">
                 <span className="text-sm">⭐</span>
                 <span className="text-xs font-semibold text-indigo-700">
                     Current Points: <strong>{athlete.athlete_profile?.event_points ?? 0}</strong>
                 </span>
             </div>
 
-            <form onSubmit={submit} className="space-y-3">
-                <div className="flex gap-2">
-                    <div className="flex-1 relative">
-                        <input
-                            type="number"
-                            value={data.points}
-                            onChange={e => setData('points', e.target.value)}
-                            placeholder="e.g. -10 or +15"
-                            className={`w-full rounded-xl border px-3 py-2 text-sm font-bold text-center transition-all focus:outline-none focus:ring-2 ${
-                                isNegative
-                                    ? 'border-rose-300 bg-rose-50 text-rose-700 focus:ring-rose-300/30 focus:border-rose-400'
-                                    : isPositive
-                                    ? 'border-emerald-300 bg-emerald-50 text-emerald-700 focus:ring-emerald-300/30 focus:border-emerald-400'
-                                    : 'border-gray-200 bg-gray-50 text-gray-700 focus:ring-indigo-300/30 focus:border-indigo-400'
-                            }`}
-                        />
-                        {data.points !== '' && (
-                            <span className={`absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-extrabold ${isNegative ? 'text-rose-400' : 'text-emerald-400'}`}>
-                                {isNegative ? '−' : '+'}pts
-                            </span>
-                        )}
+            <form onSubmit={submit} className="space-y-4">
+                {/* Big points display + scroll buttons */}
+                <div className="flex flex-col items-center gap-3">
+                    {/* Point value display */}
+                    <div className={`w-full text-center py-3 rounded-2xl font-black text-3xl transition-all border-2 ${
+                        isNegative
+                            ? 'bg-rose-50 border-rose-200 text-rose-600'
+                            : isPositive
+                            ? 'bg-emerald-50 border-emerald-200 text-emerald-600'
+                            : 'bg-gray-50 border-gray-200 text-gray-400'
+                    }`}>
+                        {isNegative ? '−' : isPositive ? '+' : ''}{Math.abs(pts)}
+                        <span className="text-sm font-semibold ml-1 opacity-60">pts</span>
                     </div>
+
+                    {/* Step buttons row — positive */}
+                    <div className="w-full">
+                        <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wide mb-1.5 text-center">Add Points</p>
+                        <div className="grid grid-cols-3 gap-2">
+                            {STEPS.map(step => (
+                                <button
+                                    key={`+${step}`}
+                                    type="button"
+                                    onClick={() => adjustBy(+step)}
+                                    className="py-3 rounded-xl bg-emerald-100 hover:bg-emerald-200 text-emerald-700 font-black text-sm transition-all active:scale-95 shadow-sm border border-emerald-200"
+                                >
+                                    +{step}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Step buttons row — negative */}
+                    <div className="w-full">
+                        <p className="text-[10px] font-bold text-rose-500 uppercase tracking-wide mb-1.5 text-center">Remove Points</p>
+                        <div className="grid grid-cols-3 gap-2">
+                            {STEPS.map(step => (
+                                <button
+                                    key={`-${step}`}
+                                    type="button"
+                                    onClick={() => adjustBy(-step)}
+                                    className="py-3 rounded-xl bg-rose-100 hover:bg-rose-200 text-rose-700 font-black text-sm transition-all active:scale-95 shadow-sm border border-rose-200"
+                                >
+                                    −{step}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Reset */}
+                    {pts !== 0 && (
+                        <button
+                            type="button"
+                            onClick={() => { setData('points', 0); setError(''); }}
+                            className="text-[10px] font-bold text-gray-400 hover:text-gray-600 underline transition-colors"
+                        >
+                            Reset to 0
+                        </button>
+                    )}
                 </div>
+
                 <textarea
                     value={data.comment}
                     onChange={e => setData('comment', e.target.value)}
@@ -218,8 +263,8 @@ function PointAdjustPanel({ athlete }: { athlete: Athlete }) {
                 {error && <p className="text-[10px] text-rose-600 font-semibold">{error}</p>}
                 <button
                     type="submit"
-                    disabled={processing || data.points === '' || data.points === 0}
-                    className={`w-full py-2 text-white text-xs font-bold rounded-xl transition-all disabled:opacity-50 shadow-sm ${
+                    disabled={processing || pts === 0}
+                    className={`w-full py-3 text-white text-sm font-black rounded-xl transition-all disabled:opacity-40 shadow-sm ${
                         isNegative
                             ? 'bg-rose-500 hover:bg-rose-600'
                             : 'bg-emerald-600 hover:bg-emerald-700'
@@ -496,9 +541,6 @@ function CoachProfileCard({
                 </div>
 
                 {/* COACH position badge */}
-                <p className="text-[11px] font-extrabold uppercase tracking-widest mb-2 text-white/60">
-                    Position
-                </p>
                 <div className="flex items-center gap-3 mb-4">
                     <div className="flex items-center gap-2 bg-white/15 backdrop-blur-sm border border-white/20 rounded-xl px-4 py-2">
                         <span className="text-xl">🎽</span>

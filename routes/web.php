@@ -385,7 +385,7 @@ Route::middleware(['auth', 'verified', 'role:Athlete', \App\Http\Middleware\Chec
         })->take(3)->values()->toArray();
 
 
-        $leaderboard = \App\Models\User::role('Athlete')
+        $allAthletesForRank = \App\Models\User::role('Athlete')
             ->where('club_id', $user->club_id)
             ->with('athleteProfile')
             ->get()
@@ -398,9 +398,13 @@ Route::middleware(['auth', 'verified', 'role:Athlete', \App\Http\Middleware\Chec
                 ];
             })
             ->sortByDesc('points')
-            ->take(10)
-            ->values()
-            ->toArray();
+            ->values();
+
+        $leaderboard = $allAthletesForRank->take(10)->toArray();
+
+        // Compute athlete's position (rank) in the club
+        $myPosition = $allAthletesForRank->search(fn($a) => $a['id'] === $user->id);
+        $myPosition = $myPosition !== false ? $myPosition + 1 : null;
 
         // Consolidate point history
         $trainingLogs = \App\Models\TrainingAttendance::where('athlete_id', $user->id)
@@ -443,10 +447,24 @@ Route::middleware(['auth', 'verified', 'role:Athlete', \App\Http\Middleware\Chec
                 ];
             });
 
+        $adjustmentLogs = \App\Models\ManualPointAdjustment::where('athlete_id', $user->id)
+            ->with('adjustedBy')
+            ->latest('date')
+            ->get()
+            ->map(function ($adj) {
+                return [
+                    'date'        => $adj->date instanceof \Carbon\Carbon ? $adj->date->toDateString() : (string) $adj->date,
+                    'type'        => 'adjustment',
+                    'description' => $adj->comment ?? ($adj->points >= 0 ? 'Point bonus awarded by coach' : 'Point deduction by coach'),
+                    'points'      => $adj->points,
+                ];
+            });
+
         $pointHistory = collect()
             ->concat($trainingLogs)
             ->concat($eventLogs)
             ->concat($resetLogs)
+            ->concat($adjustmentLogs)
             ->sortByDesc('date')
             ->values()
             ->toArray();
@@ -491,6 +509,7 @@ Route::middleware(['auth', 'verified', 'role:Athlete', \App\Http\Middleware\Chec
             'leaderboard' => $leaderboard,
             'pointHistory' => $pointHistory,
             'birthdays' => $birthdays,
+            'myPosition' => $myPosition,
         ]);
     })->name('dashboard');
 
