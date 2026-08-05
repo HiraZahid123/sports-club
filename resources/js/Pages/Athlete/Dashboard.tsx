@@ -172,7 +172,7 @@ export default function AthleteDashboard({
                                             </div>
                                         )}
                                     </div>
-                                    <div className="min-w-0">
+                                    <div className="min-w-0 flex-1">
                                         <h4 className={`text-base font-bold truncate leading-snug ${
                                             cardStyle.text.includes('text-white') ? 'text-white' : 'text-gray-900'
                                         }`}>
@@ -180,13 +180,44 @@ export default function AthleteDashboard({
                                         </h4>
                                         {user.club && (
                                             <p className={`text-xs truncate font-medium ${
-                                                cardStyle.text.includes('text-white') ? 'text-white/80' : 'text-gray-500'
+                                                cardStyle.text.includes('text-white') ? 'text-white/70' : 'text-gray-500'
                                             }`}>
                                                 {user.club.name}
                                             </p>
                                         )}
+                                        {/* ATHLETE role label */}
+                                        <span className={`inline-flex items-center gap-1 mt-1.5 text-[10px] font-extrabold uppercase tracking-widest px-2.5 py-0.5 rounded-lg ${
+                                            cardStyle.text.includes('text-white')
+                                                ? 'bg-white/20 text-white border border-white/25'
+                                                : 'bg-black/10 text-gray-700 border border-black/10'
+                                        }`}>
+                                            🥋 Athlete
+                                        </span>
                                     </div>
                                 </div>
+
+                                {/* Manager-assigned position/titles — business card style */}
+                                {user.titles && Array.isArray(user.titles) && user.titles.length > 0 && (
+                                    <div className="mb-4">
+                                        <p className={`text-[10px] font-extrabold uppercase tracking-widest mb-2 ${
+                                            cardStyle.text.includes('text-white') ? 'text-white/50' : 'text-gray-400'
+                                        }`}>Position</p>
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {(user.titles as string[]).map((title: string, i: number) => (
+                                                <span
+                                                    key={i}
+                                                    className={`inline-flex items-center text-xs font-bold px-3 py-1 rounded-xl backdrop-blur-sm border ${
+                                                        cardStyle.text.includes('text-white')
+                                                            ? 'bg-white/15 border-white/25 text-white'
+                                                            : 'bg-white/60 border-gray-200 text-gray-800'
+                                                    }`}
+                                                >
+                                                    {title}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
 
                                 {/* Label */}
                                 <p className={`text-[11px] font-extrabold uppercase tracking-widest mb-2 ${cardStyle.text.includes('text-white') ? 'text-white/70' : 'text-gray-500'}`}>
@@ -211,7 +242,7 @@ export default function AthleteDashboard({
                                 {/* Position badge */}
                                 {myPosition && (
                                     <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/20 backdrop-blur-sm border border-white/25">
-                                        <span className={`text-[10px] font-extrabold uppercase tracking-widest ${cardStyle.text.includes('text-white') ? 'text-white/70' : 'text-gray-500'}`}>Position</span>
+                                        <span className={`text-[10px] font-extrabold uppercase tracking-widest ${cardStyle.text.includes('text-white') ? 'text-white/70' : 'text-gray-500'}`}>Rank</span>
                                         <span className={`text-sm font-black ${cardStyle.text.includes('text-white') ? 'text-white' : 'text-gray-900'}`}>#{myPosition}</span>
                                         <span className={`text-[10px] font-medium ${cardStyle.text.includes('text-white') ? 'text-white/60' : 'text-gray-500'}`}>in club</span>
                                     </div>

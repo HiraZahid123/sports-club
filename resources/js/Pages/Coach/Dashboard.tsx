@@ -532,15 +532,36 @@ function CoachProfileCard({
                             </div>
                         )}
                     </div>
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                         <h4 className="text-base font-bold text-white truncate leading-snug">{user.name}</h4>
                         {user.club && (
                             <p className="text-xs text-white/70 font-medium truncate mt-0.5">{user.club.name}</p>
                         )}
+                        {/* COACH role badge */}
+                        <span className="inline-flex items-center gap-1 mt-1.5 text-[10px] font-extrabold uppercase tracking-widest px-2.5 py-0.5 rounded-lg bg-white/20 text-white border border-white/25">
+                            🎽 Coach
+                        </span>
                     </div>
                 </div>
 
-                {/* COACH position badge */}
+                {/* Manager-assigned position/titles — business card style */}
+                {user.titles && Array.isArray(user.titles) && user.titles.length > 0 && (
+                    <div className="mb-4">
+                        <p className="text-[10px] font-extrabold uppercase tracking-widest mb-2 text-white/50">Position</p>
+                        <div className="flex flex-wrap gap-1.5">
+                            {(user.titles as string[]).map((title: string, i: number) => (
+                                <span
+                                    key={i}
+                                    className="inline-flex items-center text-xs font-bold px-3 py-1 rounded-xl backdrop-blur-sm border bg-white/15 border-white/25 text-white"
+                                >
+                                    {title}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* COACH role display */}
                 <div className="flex items-center gap-3 mb-4">
                     <div className="flex items-center gap-2 bg-white/15 backdrop-blur-sm border border-white/20 rounded-xl px-4 py-2">
                         <span className="text-xl">🎽</span>
