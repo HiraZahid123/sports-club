@@ -342,6 +342,7 @@ class EventController extends Controller
             ->get()
             ->map(fn($event) => array_merge($event->toArray(), [
                 'pdf_url' => $event->pdf_path ? asset($event->pdf_path) : null,
+                'image_url' => $event->image_path ? asset($event->image_path) : null,
                 'is_free' => $event->isFree(),
             ]));
 

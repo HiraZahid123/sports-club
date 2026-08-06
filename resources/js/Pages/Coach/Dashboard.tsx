@@ -1,8 +1,9 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { getBeltBadgeStyle, getBeltStyle } from '@/beltHelpers';
 import { getDateForDayOfWeek } from '@/dateHelpers';
+import axios from 'axios';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -561,14 +562,6 @@ function CoachProfileCard({
                     </div>
                 )}
 
-                {/* COACH role display */}
-                <div className="flex items-center gap-3 mb-4">
-                    <div className="flex items-center gap-2 bg-white/15 backdrop-blur-sm border border-white/20 rounded-xl px-4 py-2">
-                        <span className="text-xl">🎽</span>
-                        <h3 className="text-xl font-black text-white tracking-wide">COACH</h3>
-                    </div>
-                </div>
-
                 {/* Specialization */}
                 {coachProfile?.specialization && (
                     <p className="text-xs text-white/70 mb-4 font-medium">
@@ -595,6 +588,189 @@ function CoachProfileCard({
 // ── Section type ──────────────────────────────────────────────────────────────
 type Section = 'athletes' | 'groups';
 
+// ── Attendance Row ─────────────────────────────────────────────────────────────
+interface AttRow { athlete_id: number; name: string; status: 'present' | 'absent'; base_points: number; extra_points: number; }
+
+function AttendancePanel({ groups }: { groups: Group[] }) {
+    const params = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
+    const initGroup = params.get('group_id') ? Number(params.get('group_id')) : (groups[0]?.id ?? null);
+    const initDate = params.get('date') || new Date().toISOString().split('T')[0];
+
+    const [selectedGroupId, setSelectedGroupId] = useState<number | null>(initGroup);
+    const [attendanceDate, setAttendanceDate] = useState(initDate);
+    const [rows, setRows] = useState<AttRow[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+    const load = (groupId: number | null, date: string) => {
+        if (!groupId) return;
+        setLoading(true);
+        setRows([]);
+        axios.get(route('coach.attendance.load'), { params: { group_id: groupId, date } })
+            .then(res => setRows(res.data.attendance))
+            .catch(() => setMessage({ type: 'error', text: 'Failed to load attendance.' }))
+            .finally(() => setLoading(false));
+    };
+
+    useEffect(() => { load(selectedGroupId, attendanceDate); }, [selectedGroupId, attendanceDate]);
+
+    const toggleStatus = (id: number) => {
+        setRows(prev => prev.map(r => r.athlete_id === id ? { ...r, status: r.status === 'present' ? 'absent' : 'present' } : r));
+    };
+
+    const setPoints = (id: number, field: 'base_points' | 'extra_points', val: number) => {
+        setRows(prev => prev.map(r => r.athlete_id === id ? { ...r, [field]: val } : r));
+    };
+
+    const save = () => {
+        if (!selectedGroupId || rows.length === 0) return;
+        setSaving(true);
+        axios.post(route('coach.attendance.save'), {
+            training_group_id: selectedGroupId,
+            attendance_date: attendanceDate,
+            attendance_data: rows,
+        })
+            .then(() => setMessage({ type: 'success', text: 'Attendance saved successfully!' }))
+            .catch(() => setMessage({ type: 'error', text: 'Failed to save attendance.' }))
+            .finally(() => setSaving(false));
+    };
+
+    const presentCount = rows.filter(r => r.status === 'present').length;
+
+    return (
+        <div className="space-y-5">
+            {/* Header card */}
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                <div className="flex items-center gap-3 mb-5">
+                    <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center text-xl">📋</div>
+                    <div>
+                        <h3 className="text-base font-bold text-gray-900">Mark Attendance</h3>
+                        <p className="text-xs text-gray-500 mt-0.5">Track your athletes' attendance for training sessions</p>
+                    </div>
+                </div>
+
+                {/* Controls */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
+                    <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Group</label>
+                        <select
+                            value={selectedGroupId ?? ''}
+                            onChange={e => setSelectedGroupId(Number(e.target.value))}
+                            className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-300/30 focus:border-indigo-400"
+                        >
+                            {groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Date</label>
+                        <input
+                            type="date"
+                            value={attendanceDate}
+                            onChange={e => setAttendanceDate(e.target.value)}
+                            className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-300/30 focus:border-indigo-400"
+                        />
+                    </div>
+                </div>
+
+                {/* Message */}
+                {message && (
+                    <div className={`mb-4 px-4 py-3 rounded-xl text-sm font-semibold flex items-center gap-2 ${
+                        message.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-red-50 text-red-600 border border-red-100'
+                    }`}>
+                        {message.type === 'success' ? '✅' : '❌'} {message.text}
+                    </div>
+                )}
+
+                {/* Summary badge */}
+                {rows.length > 0 && (
+                    <div className="flex items-center gap-3 mb-4">
+                        <span className="inline-flex items-center gap-1.5 bg-emerald-50 border border-emerald-100 rounded-xl px-3 py-1.5 text-xs font-bold text-emerald-700">
+                            ✅ {presentCount} Present
+                        </span>
+                        <span className="inline-flex items-center gap-1.5 bg-rose-50 border border-rose-100 rounded-xl px-3 py-1.5 text-xs font-bold text-rose-600">
+                            ❌ {rows.length - presentCount} Absent
+                        </span>
+                    </div>
+                )}
+
+                {/* Athlete rows */}
+                {loading ? (
+                    <div className="py-10 text-center text-gray-400 text-sm">Loading athletes…</div>
+                ) : rows.length === 0 ? (
+                    <div className="py-10 text-center">
+                        <p className="text-sm text-gray-500 font-medium">No athletes in this group.</p>
+                    </div>
+                ) : (
+                    <div className="space-y-2">
+                        {rows.map(row => (
+                            <div key={row.athlete_id} className={`flex items-center gap-4 rounded-xl px-4 py-3 border transition-all ${
+                                row.status === 'present'
+                                    ? 'bg-emerald-50 border-emerald-100'
+                                    : 'bg-gray-50 border-gray-100'
+                            }`}>
+                                <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-xs shrink-0">
+                                    {row.name.charAt(0).toUpperCase()}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-semibold text-gray-900 truncate">{row.name}</p>
+                                </div>
+                                <div className="flex items-center gap-3 shrink-0">
+                                    {/* Base points */}
+                                    <div className="flex items-center gap-1">
+                                        <span className="text-[10px] font-bold text-gray-400 uppercase">Pts</span>
+                                        <input
+                                            type="number"
+                                            value={row.base_points}
+                                            onChange={e => setPoints(row.athlete_id, 'base_points', Number(e.target.value))}
+                                            min={0}
+                                            className="w-14 text-center text-xs font-bold rounded-lg border border-gray-200 bg-white px-1.5 py-1 focus:outline-none focus:ring-2 focus:ring-indigo-300/30"
+                                        />
+                                    </div>
+                                    {/* Extra points */}
+                                    <div className="flex items-center gap-1">
+                                        <span className="text-[10px] font-bold text-gray-400 uppercase">+Bonus</span>
+                                        <input
+                                            type="number"
+                                            value={row.extra_points}
+                                            onChange={e => setPoints(row.athlete_id, 'extra_points', Number(e.target.value))}
+                                            className="w-14 text-center text-xs font-bold rounded-lg border border-gray-200 bg-white px-1.5 py-1 focus:outline-none focus:ring-2 focus:ring-indigo-300/30"
+                                        />
+                                    </div>
+                                    {/* Toggle */}
+                                    <button
+                                        onClick={() => toggleStatus(row.athlete_id)}
+                                        className={`px-4 py-1.5 rounded-xl text-xs font-black transition-all ${
+                                            row.status === 'present'
+                                                ? 'bg-emerald-600 text-white hover:bg-emerald-700'
+                                                : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                                        }`}
+                                    >
+                                        {row.status === 'present' ? '✓ Present' : 'Absent'}
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+
+                {/* Save button */}
+                {rows.length > 0 && (
+                    <div className="mt-5">
+                        <button
+                            onClick={save}
+                            disabled={saving}
+                            className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-black rounded-xl transition-all disabled:opacity-50 shadow-sm"
+                        >
+                            {saving ? 'Saving…' : 'Save Attendance'}
+                        </button>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
+
 // ── Main Component ────────────────────────────────────────────────────────────
 
 export default function CoachDashboard({
@@ -614,6 +790,9 @@ export default function CoachDashboard({
 }) {
     const { auth } = usePage().props as any;
     const user = auth.user;
+
+    // Check if attendance tab is requested
+    const isAttendanceTab = typeof window !== 'undefined' && window.location.search.includes('tab=attendance');
 
     const [activeSection, setActiveSection] = useState<Section | null>(null);
     const [selectedGroupIdx, setSelectedGroupIdx] = useState(0);
@@ -698,6 +877,13 @@ export default function CoachDashboard({
 
             <div className="py-8">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+
+                    {/* ── Attendance Tab Content ─────────────────────────────── */}
+                    {isAttendanceTab && (
+                        <AttendancePanel groups={groups} />
+                    )}
+
+                    {isAttendanceTab ? null : (<>
 
                     {/* ── Hero Row: Profile Card + Stat Cards ────────────────── */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -983,9 +1169,10 @@ export default function CoachDashboard({
                             </div>
                         </div>
                     </div>
+                </>)}
 
-                </div>
             </div>
-        </AuthenticatedLayout>
-    );
+        </div>
+    </AuthenticatedLayout>
+);
 }
