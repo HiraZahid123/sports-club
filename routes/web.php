@@ -302,6 +302,15 @@ Route::middleware(['auth', 'verified', 'role:Coach', \App\Http\Middleware\CheckS
         ]);
     })->name('schedule');
 
+    Route::get('/my-team', function () {
+        $coach = auth()->user();
+        $groups = $coach->trainingGroups()->with(['athletes.athleteProfile', 'schedules.facility'])->get();
+
+        return Inertia::render('Coach/MyTeam', [
+            'groups' => $groups,
+        ]);
+    })->name('my-team');
+
     Route::post('/goals', [\App\Http\Controllers\GoalController::class, 'store'])->name('goals.store');
     Route::put('/goals/{goal}', [\App\Http\Controllers\GoalController::class, 'update'])->name('goals.update');
     Route::delete('/goals/{goal}', [\App\Http\Controllers\GoalController::class, 'destroy'])->name('goals.destroy');

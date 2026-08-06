@@ -1,6 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm, router } from '@inertiajs/react';
 import { FormEventHandler, useState } from 'react';
+import Modal from '@/Components/Modal';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 interface ScheduleSlot {
@@ -98,6 +99,8 @@ export default function GroupsIndex({ groups, coaches, athletes, ageCategories, 
     const [isCreating, setIsCreating]     = useState(false);
     const [editingGroup, setEditingGroup] = useState<Group | null>(null);
     const [isManagingFacilities, setIsManagingFacilities] = useState(false);
+    const [isExportOpen, setIsExportOpen] = useState(false);
+    const [selectedGroupIdForExport, setSelectedGroupIdForExport] = useState<number | ''>('');
 
     // local draft of schedule while editing
     const [scheduleSlots, setScheduleSlots] = useState<ScheduleSlot[]>([]);
@@ -329,6 +332,61 @@ export default function GroupsIndex({ groups, coaches, athletes, ageCategories, 
         document.body.removeChild(link);
     };
 
+    // ── Export Group Members to CSV ───────────────────────────────────────────
+    const exportGroupMembersToCSV = (groupId: number) => {
+        const group = groups.find(g => g.id === groupId);
+        if (!group) return;
+
+        const headers = [
+            'Athlete ID',
+            'Name',
+            'Email',
+            'Phone',
+            'City',
+            'Emergency Contact Name',
+            'Emergency Contact Phone',
+            'Belt Rank',
+            'Event Points',
+            'Date of Birth',
+            'Joined Date'
+        ];
+
+        const rows = (group.athletes || []).map(athlete => {
+            const profile = athlete.athlete_profile || {};
+            return [
+                athlete.id,
+                athlete.name,
+                athlete.email,
+                athlete.phone || '',
+                athlete.city || '',
+                athlete.emergency_contact_name || '',
+                athlete.emergency_contact_phone || '',
+                profile.belt_rank || '10. WHITE',
+                profile.event_points || 0,
+                profile.date_of_birth || '',
+                athlete.created_at ? athlete.created_at.substring(0, 10) : ''
+            ];
+        });
+
+        const csvContent = [
+            headers.join(','),
+            ...rows.map(row => row.map(val => {
+                const stringVal = String(val).replace(/"/g, '""');
+                return `"${stringVal}"`;
+            }).join(','))
+        ].join('\n');
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', `${group.name.replace(/\s+/g, '_')}_members_export_${new Date().toISOString().slice(0, 10)}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
     // ──────────────────────────────────────────────────────────────────────
     return (
         <AuthenticatedLayout
@@ -345,6 +403,18 @@ export default function GroupsIndex({ groups, coaches, athletes, ageCategories, 
                             className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold bg-amber-50 border border-amber-200 text-amber-700 hover:bg-amber-100 transition-all shadow-sm"
                         >
                             <span>📥</span> Export Groups
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                if (groups.length > 0) {
+                                    setSelectedGroupIdForExport(groups[0].id);
+                                }
+                                setIsExportOpen(true);
+                            }}
+                            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100 transition-all shadow-sm"
+                        >
+                            <span>📥</span> Export Members
                         </button>
                         <button
                             type="button"
@@ -873,13 +943,20 @@ export default function GroupsIndex({ groups, coaches, athletes, ageCategories, 
                                         </div>
 
                                         {/* Card Footer */}
-                                        <div className="px-6 py-3.5 bg-slate-50 border-t border-gray-100 flex items-center justify-between">
+                                        <div className="px-6 py-3.5 bg-slate-50 border-t border-gray-100 flex items-center justify-between gap-3">
                                             <button
                                                 onClick={() => openEdit(group)}
-                                                className="inline-flex items-center gap-1.5 text-sm font-semibold text-amber-600 hover:text-amber-700 transition-colors"
+                                                className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-600 hover:text-amber-700 transition-colors"
                                             >
                                                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                                                 Edit Group
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => exportGroupMembersToCSV(group.id)}
+                                                className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-700 transition-colors"
+                                            >
+                                                <span>📥</span> Export Members
                                             </button>
                                             <span className="text-xs text-gray-300 font-medium">ID #{group.id}</span>
                                         </div>
@@ -902,6 +979,53 @@ export default function GroupsIndex({ groups, coaches, athletes, ageCategories, 
                 onClose={() => setIsManagingFacilities(false)}
                 facilities={facilities}
             />
+
+            {/* Export Members Modal */}
+            <Modal show={isExportOpen} onClose={() => setIsExportOpen(false)} maxWidth="md">
+                <div className="p-6">
+                    <h3 className="text-lg font-bold text-gray-900 mb-2">Export Group Members</h3>
+                    <p className="text-xs text-gray-500 mb-5">Select a training group below to export its full athlete list as a CSV file.</p>
+                    
+                    <div className="space-y-4">
+                        <div>
+                            <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Select Group</label>
+                            <select
+                                value={selectedGroupIdForExport}
+                                onChange={e => setSelectedGroupIdForExport(Number(e.target.value))}
+                                className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-900 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                            >
+                                <option value="" disabled>— Select a Group —</option>
+                                {groups.map(g => (
+                                    <option key={g.id} value={g.id}>{g.name} ({g.athletes_count} athletes)</option>
+                                ))}
+                            </select>
+                        </div>
+                        
+                        <div className="flex justify-end gap-3 pt-4">
+                            <button
+                                type="button"
+                                onClick={() => setIsExportOpen(false)}
+                                className="px-5 py-2 bg-gray-100 text-gray-700 text-sm font-semibold rounded-xl hover:bg-gray-200 transition-all"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    if (selectedGroupIdForExport !== '') {
+                                        exportGroupMembersToCSV(selectedGroupIdForExport);
+                                        setIsExportOpen(false);
+                                    }
+                                }}
+                                disabled={selectedGroupIdForExport === ''}
+                                className="px-6 py-2 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 transition-all disabled:opacity-50 shadow-sm"
+                            >
+                                Export CSV
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </Modal>
         </AuthenticatedLayout>
     );
 }

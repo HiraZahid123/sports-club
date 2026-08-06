@@ -860,7 +860,7 @@ export default function CoachDashboard({
             ring: 'ring-amber-400',
             icon: '💰',
             iconBg: 'bg-amber-50',
-            hint: '',
+            hint: 'View schedule →',
         },
     ];
 

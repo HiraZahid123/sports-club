@@ -18,7 +18,7 @@ class TrainingGroupController extends Controller
         $clubId = $request->user()->club_id;
 
         $groups = TrainingGroup::where('club_id', $clubId)
-            ->with(['coaches', 'athletes', 'schedules.facility', 'ageCategory'])
+            ->with(['coaches', 'athletes.athleteProfile', 'schedules.facility', 'ageCategory'])
             ->withCount('athletes')
             ->get();
 
