@@ -89,6 +89,54 @@ export default function MembersIndex({ members }: { members: Member[] }) {
     const beltDropdownRef = useRef<HTMLDivElement>(null);
     const [showBeltDropdown, setShowBeltDropdown] = useState(false);
 
+    // ── Export Members to CSV ─────────────────────────────────────────────
+    const exportMembersToCSV = () => {
+        const headers = [
+            'ID', 'Name', 'Email', 'Roles', 'Status',
+            'ID Code', 'Phone', 'City',
+            'Belt Rank', 'Event Points', 'Date of Birth',
+            'Emergency Contact Name', 'Emergency Contact Phone',
+            'Titles',
+        ];
+
+        const rows = members.map(m => [
+            m.id,
+            m.name,
+            m.email,
+            m.roles.map(r => r.name).join('; '),
+            m.is_active === false ? 'Deactivated' : 'Active',
+            m.id_code || '',
+            m.phone || '',
+            m.city || '',
+            m.athlete_profile?.belt_rank || '',
+            m.athlete_profile?.event_points ?? '',
+            m.athlete_profile?.date_of_birth || '',
+            m.emergency_contact_name || '',
+            m.emergency_contact_phone || '',
+            (m.titles || []).join('; '),
+        ]);
+
+        const csvContent = [
+            headers.join(','),
+            ...rows.map(row =>
+                row.map(val => {
+                    const s = String(val).replace(/"/g, '""');
+                    return `"${s}"`;
+                }).join(',')
+            ),
+        ].join('\n');
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', `members_export_${new Date().toISOString().slice(0, 10)}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
             if (beltDropdownRef.current && !beltDropdownRef.current.contains(event.target as Node)) {
@@ -201,6 +249,13 @@ export default function MembersIndex({ members }: { members: Member[] }) {
                         <p className="text-sm text-gray-500 mt-0.5">{members.length} total members in your club</p>
                     </div>
                     <div className="flex items-center gap-2">
+                        <button
+                            type="button"
+                            onClick={exportMembersToCSV}
+                            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold bg-amber-50 border border-amber-200 text-amber-700 hover:bg-amber-100 transition-all shadow-sm"
+                        >
+                            <span>📥</span> Export Members
+                        </button>
                         <button
                             onClick={isFormOpen ? closeForm : openAddForm}
                             className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${

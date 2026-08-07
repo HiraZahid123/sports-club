@@ -839,7 +839,7 @@ export default function CoachDashboard({
             hint: 'View your groups →',
         },
         {
-            id: null,
+            id: null as Section | null,
             label: 'Sessions This Week',
             value: totalSessions,
             sub: 'scheduled',
@@ -849,9 +849,11 @@ export default function CoachDashboard({
             icon: '📅',
             iconBg: 'bg-blue-50',
             hint: 'View schedule →',
+            href: route('coach.schedule') as string | undefined,
+            noAction: false,
         },
         {
-            id: null,
+            id: null as Section | null,
             label: 'Total Earned',
             value: fmtCurrency(totalEarned),
             sub: 'all time',
@@ -860,7 +862,9 @@ export default function CoachDashboard({
             ring: 'ring-amber-400',
             icon: '💰',
             iconBg: 'bg-amber-50',
-            hint: 'View schedule →',
+            hint: 'All-time payouts',
+            href: undefined,
+            noAction: true,
         },
     ];
 
@@ -894,16 +898,29 @@ export default function CoachDashboard({
                         <div className="md:col-span-2 grid grid-cols-2 gap-4">
                             {statCards.map((card) => {
                                 const isActive = card.id !== null && activeSection === card.id;
-                                const CardTag = card.id === null ? Link : 'button';
-                                const cardProps = card.id === null
-                                    ? { href: route('coach.schedule') }
-                                    : { onClick: () => setActiveSection(activeSection === card.id ? null : card.id!) };
+                                // Determine tag & props
+                                let CardTag: any;
+                                let cardProps: Record<string, any>;
+                                if (card.noAction) {
+                                    CardTag = 'div';
+                                    cardProps = {};
+                                } else if (card.id !== null) {
+                                    CardTag = 'button';
+                                    cardProps = { onClick: () => setActiveSection(activeSection === card.id ? null : card.id!) };
+                                } else {
+                                    CardTag = Link;
+                                    cardProps = { href: card.href! };
+                                }
 
                                 return (
                                     <CardTag
                                         key={card.label}
-                                        {...(cardProps as any)}
-                                        className={`group bg-white rounded-2xl border shadow-sm p-5 text-left cursor-pointer transition-all hover:shadow-md hover:-translate-y-0.5 ${
+                                        {...cardProps}
+                                        className={`group bg-white rounded-2xl border shadow-sm p-5 text-left transition-all ${
+                                            card.noAction
+                                                ? `${card.border} cursor-default`
+                                                : `cursor-pointer hover:shadow-md hover:-translate-y-0.5`
+                                        } ${
                                             isActive
                                                 ? `${card.border} ring-2 ${card.ring}/40 shadow-md -translate-y-0.5`
                                                 : `${card.border}`
