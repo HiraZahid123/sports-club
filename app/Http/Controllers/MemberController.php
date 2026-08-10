@@ -21,7 +21,7 @@ class MemberController extends Controller
                 $q->whereIn('name', ['Athlete', 'Parent']);
             })
             ->with(['roles', 'athleteProfile', 'parentProfile', 'subscriptions.payments'])
-            ->get();
+            ->get(['id', 'name', 'email', 'profile_photo', 'is_active', 'id_code', 'phone', 'city', 'emergency_contact_name', 'emergency_contact_phone', 'titles', 'club_id']);
 
         return Inertia::render('Manager/Members/Index', [
             'members' => $members,

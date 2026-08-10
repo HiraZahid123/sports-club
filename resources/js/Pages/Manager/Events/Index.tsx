@@ -695,6 +695,35 @@ export default function EventsIndex({ events, groups, coaches, categories = [] }
                                 const salaryBadge = ev.coach_salary_type ? SALARY_BADGE[ev.coach_salary_type] : null;
                                 return (
                                     <div key={ev.id} className={`bg-white rounded-2xl border shadow-sm hover:shadow-md transition-shadow flex flex-col overflow-hidden ${isEdit ? 'border-amber-300 ring-2 ring-amber-200' : 'border-gray-100'}`}>
+                                        {/* Event Poster */}
+                                        {ev.image_url ? (
+                                            <div className="relative aspect-[16/9] w-full overflow-hidden bg-slate-100 border-b border-gray-50">
+                                                <img src={ev.image_url} alt={ev.name} className="w-full h-full object-cover transition-transform duration-500 hover:scale-105" />
+                                                {isEdit && (
+                                                    <span className="absolute top-3 right-3 bg-amber-500/90 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg">
+                                                        ✏️ Editing
+                                                    </span>
+                                                )}
+                                            </div>
+                                        ) : (
+                                            <div className="relative aspect-[16/9] w-full overflow-hidden bg-gradient-to-br from-indigo-500 via-indigo-600 to-purple-700 border-b border-gray-50 flex flex-col justify-between p-4 text-white">
+                                                <div className="flex justify-between items-start">
+                                                    <span className="bg-white/10 backdrop-blur-md border border-white/20 text-white text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md">
+                                                        Event
+                                                    </span>
+                                                    {isEdit && (
+                                                        <span className="bg-amber-500/90 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg">
+                                                            ✏️ Editing
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <h4 className="font-black text-sm leading-snug drop-shadow-sm line-clamp-2">{ev.name}</h4>
+                                                    <p className="text-[10px] text-white/80 font-medium">🏆 {ev.points} Points</p>
+                                                </div>
+                                            </div>
+                                        )}
+
                                         <div className="p-5 flex-1 space-y-3">
                                             <div className="flex items-start justify-between gap-2">
                                                 <h3 className="text-base font-bold text-gray-900 leading-tight">{ev.name}</h3>

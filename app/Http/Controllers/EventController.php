@@ -22,7 +22,7 @@ class EventController extends Controller
         $clubId = $request->user()->club_id;
 
         $events = Event::where('club_id', $clubId)
-            ->with(['groups', 'coaches:id,name', 'registrations'])
+            ->with(['groups', 'coaches:id,name,profile_photo', 'registrations.user:id,name,email,profile_photo'])
             ->orderByDesc('start_date')
             ->get()
             ->map(function ($event) {
@@ -336,7 +336,7 @@ class EventController extends Controller
             ->whereHas('coaches', fn($q) => $q->where('users.id', $user->id))
             ->with([
                 'groups:id,name',
-                'registrations.user:id,name,email',
+                'registrations.user:id,name,email,profile_photo',
             ])
             ->orderBy('start_date')
             ->get()
