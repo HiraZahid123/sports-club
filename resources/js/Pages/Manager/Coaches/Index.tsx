@@ -1,6 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm, Link } from '@inertiajs/react';
 import { FormEventHandler, useState } from 'react';
+import UserAvatar from '@/Components/UserAvatar';
 
 interface CoachProfile {
     specialization?: string | null;
@@ -249,9 +250,12 @@ export default function CoachesIndex({ coaches }: { coaches: Coach[] }) {
                                             <tr key={coach.id} className="hover:bg-slate-50/60 transition-colors">
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center gap-3">
-                                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center font-bold text-amber-700 text-sm border border-amber-100 shrink-0">
-                                                            {coach.name.charAt(0).toUpperCase()}
-                                                        </div>
+                                                        <UserAvatar
+                                                            name={coach.name}
+                                                            photo={(coach as any).profile_photo}
+                                                            className="w-10 h-10 rounded-full text-sm border border-amber-100"
+                                                            fallbackClassName="bg-gradient-to-br from-amber-100 to-orange-100 text-amber-700"
+                                                        />
                                                         <div>
                                                             <div className="flex items-center gap-2">
                                                                 <p className="font-semibold text-gray-900 text-sm">{coach.name}</p>

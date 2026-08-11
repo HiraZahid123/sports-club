@@ -2,10 +2,12 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
 import { getBeltBadgeStyle, getBeltStyle } from '@/beltHelpers';
+import UserAvatar from '@/Components/UserAvatar';
 
 interface LeaderboardAthlete {
     id: number;
     name: string;
+    profile_photo?: string | null;
     points: number;
     belt_rank: string;
 }
@@ -82,9 +84,12 @@ export default function Leaderboard({ leaderboard = [] }: { leaderboard: Leaderb
                                         </div>
 
                                         {/* Avatar */}
-                                        <div className="w-16 h-16 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 font-black text-xl mb-3 shadow-sm">
-                                            {ath.name.charAt(0).toUpperCase()}
-                                        </div>
+                                        <UserAvatar
+                                            name={ath.name}
+                                            photo={ath.profile_photo}
+                                            className="w-16 h-16 rounded-2xl border border-indigo-100 text-xl mb-3 shadow-sm"
+                                            fallbackClassName="bg-indigo-50 text-indigo-600"
+                                        />
 
                                         {/* Name */}
                                         <p className="font-bold text-gray-900 text-sm text-center truncate w-full">{ath.name}</p>
@@ -128,9 +133,12 @@ export default function Leaderboard({ leaderboard = [] }: { leaderboard: Leaderb
                                                 </span>
                                                 
                                                 {/* Icon */}
-                                                <div className="w-9 h-9 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-500 font-bold text-xs shrink-0 shadow-sm">
-                                                    {ath.name.charAt(0).toUpperCase()}
-                                                </div>
+                                                <UserAvatar
+                                                    name={ath.name}
+                                                    photo={ath.profile_photo}
+                                                    className="w-9 h-9 rounded-xl border border-slate-100 text-xs shadow-sm"
+                                                    fallbackClassName="bg-slate-50 text-slate-500"
+                                                />
 
                                                 {/* Details */}
                                                 <div className="min-w-0">

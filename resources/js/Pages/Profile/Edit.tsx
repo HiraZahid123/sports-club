@@ -7,6 +7,7 @@ import UpdatePasswordForm from './Partials/UpdatePasswordForm';
 import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm';
 import AthleteSubscriptions from './Partials/AthleteSubscriptions';
 import JoinGroupForm from './Partials/JoinGroupForm';
+import UserAvatar from '@/Components/UserAvatar';
 
 function ProfilePhotoCard({ status }: { status?: string }) {
     const user = usePage().props.auth.user as any;
@@ -38,7 +39,7 @@ function ProfilePhotoCard({ status }: { status?: string }) {
         });
     };
 
-    const currentPhoto = preview ?? (user.profile_photo ? (user.profile_photo.startsWith('http://') || user.profile_photo.startsWith('https://') || user.profile_photo.startsWith('blob:') || user.profile_photo.startsWith('data:') ? user.profile_photo : (user.profile_photo.startsWith('/') ? user.profile_photo : '/' + user.profile_photo)) : null);
+    const currentPhoto = preview ?? user.profile_photo ?? null;
 
     return (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
@@ -64,19 +65,12 @@ function ProfilePhotoCard({ status }: { status?: string }) {
             <form onSubmit={handleUpload} className="p-6">
                 <div className="flex items-center gap-6">
                     {/* Avatar */}
-                    <div className="shrink-0">
-                        {currentPhoto ? (
-                            <img
-                                src={currentPhoto}
-                                alt="Profile"
-                                className="w-24 h-24 rounded-full object-cover border-2 border-gray-100 shadow-sm"
-                            />
-                        ) : (
-                            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-indigo-100 to-blue-100 border-2 border-indigo-100 flex items-center justify-center text-indigo-600 font-black text-3xl">
-                                {user.name?.charAt(0).toUpperCase()}
-                            </div>
-                        )}
-                    </div>
+                    <UserAvatar
+                        name={user.name}
+                        photo={currentPhoto}
+                        className="w-24 h-24 rounded-full border-2 border-gray-100 shadow-sm text-3xl"
+                        fallbackClassName="bg-gradient-to-br from-indigo-100 to-blue-100 text-indigo-600"
+                    />
 
                     {/* Controls */}
                     <div className="flex-1 space-y-3">

@@ -3,6 +3,7 @@ import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import { getBeltBadgeStyle, getBeltStyle } from '@/beltHelpers';
 import { getDateForDayOfWeek } from '@/dateHelpers';
+import UserAvatar from '@/Components/UserAvatar';
 import axios from 'axios';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -433,17 +434,11 @@ function AthleteRow({
                 onClick={() => setExpandedAthleteId(isExpanded ? null : athlete.id)}
             >
                 <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-sm shrink-0 overflow-hidden">
-                        {athlete.profile_photo ? (
-                            <img
-                                src={athlete.profile_photo.startsWith('http') ? athlete.profile_photo : '/' + athlete.profile_photo}
-                                alt={athlete.name}
-                                className="w-full h-full object-cover"
-                            />
-                        ) : (
-                            athlete.name.charAt(0).toUpperCase()
-                        )}
-                    </div>
+                    <UserAvatar
+                        name={athlete.name}
+                        photo={athlete.profile_photo}
+                        className="w-10 h-10 rounded-xl text-sm"
+                    />
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                             <p className="font-semibold text-gray-900 text-sm">{athlete.name}</p>
@@ -518,21 +513,12 @@ function CoachProfileCard({
             <div className="relative">
                 {/* Avatar + name row */}
                 <div className="flex items-center gap-4 mb-6">
-                    <div className="w-16 h-16 rounded-2xl overflow-hidden border-2 border-white/30 bg-white/20 backdrop-blur-sm flex items-center justify-center shrink-0 shadow-inner">
-                        {user.profile_photo ? (
-                            <img
-                                src={user.profile_photo.startsWith('http') || user.profile_photo.startsWith('blob:') || user.profile_photo.startsWith('data:')
-                                    ? user.profile_photo
-                                    : (user.profile_photo.startsWith('/') ? user.profile_photo : '/' + user.profile_photo)}
-                                alt={user.name}
-                                className="w-full h-full object-cover"
-                            />
-                        ) : (
-                            <div className="w-full h-full flex items-center justify-center font-black text-2xl text-white">
-                                {user.name.charAt(0).toUpperCase()}
-                            </div>
-                        )}
-                    </div>
+                    <UserAvatar
+                        name={user.name}
+                        photo={user.profile_photo}
+                        className="w-16 h-16 rounded-2xl border-2 border-white/30 backdrop-blur-sm shadow-inner text-2xl"
+                        fallbackClassName="bg-white/20 text-white"
+                    />
                     <div className="min-w-0 flex-1">
                         <h4 className="text-base font-bold text-white truncate leading-snug">{user.name}</h4>
                         {user.club && (
@@ -589,7 +575,7 @@ function CoachProfileCard({
 type Section = 'athletes' | 'groups';
 
 // ── Attendance Row ─────────────────────────────────────────────────────────────
-interface AttRow { athlete_id: number; name: string; status: 'present' | 'absent'; base_points: number; extra_points: number; }
+interface AttRow { athlete_id: number; name: string; profile_photo?: string | null; status: 'present' | 'absent'; base_points: number; extra_points: number; }
 
 function AttendancePanel({ groups }: { groups: Group[] }) {
     const params = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
@@ -709,9 +695,11 @@ function AttendancePanel({ groups }: { groups: Group[] }) {
                                     ? 'bg-emerald-50 border-emerald-100'
                                     : 'bg-gray-50 border-gray-100'
                             }`}>
-                                <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-xs shrink-0">
-                                    {row.name.charAt(0).toUpperCase()}
-                                </div>
+                                <UserAvatar
+                                    name={row.name}
+                                    photo={row.profile_photo}
+                                    className="w-8 h-8 rounded-full text-xs"
+                                />
                                 <div className="flex-1 min-w-0">
                                     <p className="text-sm font-semibold text-gray-900 truncate">{row.name}</p>
                                 </div>
@@ -786,7 +774,7 @@ export default function CoachDashboard({
     payoutHistory: Payout[];
     totalEarned: number;
     coachProfile: CoachProfile | null;
-    leaderboard?: Array<{ id: number; name: string; points: number; belt_rank: string }>;
+    leaderboard?: Array<{ id: number; name: string; profile_photo?: string | null; points: number; belt_rank: string }>;
 }) {
     const { auth } = usePage().props as any;
     const user = auth.user;
@@ -1139,6 +1127,12 @@ export default function CoachDashboard({
                                                 }`}>
                                                     {idx + 1}
                                                 </span>
+                                                <UserAvatar
+                                                    name={ath.name}
+                                                    photo={ath.profile_photo}
+                                                    className="w-8 h-8 rounded-lg text-[11px]"
+                                                    fallbackClassName="bg-amber-50 text-amber-700"
+                                                />
                                                 <div>
                                                     <p className="text-xs font-bold text-gray-800">{ath.name}</p>
                                                     <span className="inline-block text-[8px] font-bold text-gray-400 uppercase">{ath.belt_rank}</span>

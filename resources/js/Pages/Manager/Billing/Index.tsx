@@ -1,6 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm, router } from '@inertiajs/react';
 import { FormEventHandler, useState } from 'react';
+import UserAvatar from '@/Components/UserAvatar';
 
 interface Plan {
     id: number;
@@ -328,9 +329,11 @@ export default function BillingIndex({ subscriptions, plans, groups, members, to
                                                 <tr key={sub.id} className="hover:bg-slate-50/60 transition-colors">
                                                     <td className="px-6 py-4">
                                                         <div className="flex items-center gap-3">
-                                                            <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-xs">
-                                                                {sub.user.name.charAt(0).toUpperCase()}
-                                                            </div>
+                                                            <UserAvatar
+                                                                name={sub.user.name}
+                                                                photo={(sub.user as any).profile_photo}
+                                                                className="w-8 h-8 rounded-full text-xs"
+                                                            />
                                                             <span className="font-semibold text-gray-900 text-sm">{sub.user.name}</span>
                                                         </div>
                                                     </td>

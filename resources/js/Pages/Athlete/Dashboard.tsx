@@ -2,6 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, usePage } from '@inertiajs/react';
 import { getBeltStyle, getBeltCardGradient, getNextBelt } from '@/beltHelpers';
 import { getDateForDayOfWeek, formatDate } from '@/dateHelpers';
+import UserAvatar from '@/Components/UserAvatar';
 
 
 interface AthleteProfile {
@@ -101,6 +102,7 @@ interface PointLog {
 interface BirthdayAthlete {
     id: number;
     name: string;
+    profile_photo?: string | null;
     groups: string[];
     age: number | null;
 }
@@ -117,7 +119,7 @@ export default function AthleteDashboard({
     athleteProfile?: AthleteProfile | null;
     stats?: { classes: number; sparring?: number; events: number; points: number };
     upcomingSchedules?: UpcomingScheduleSlot[];
-    leaderboard?: Array<{ id: number; name: string; points: number; belt_rank: string }>;
+    leaderboard?: Array<{ id: number; name: string; profile_photo?: string | null; points: number; belt_rank: string }>;
     pointHistory?: PointLog[];
     birthdays?: BirthdayAthlete[];
     myPosition?: number | null;
@@ -155,23 +157,18 @@ export default function AthleteDashboard({
 
                             <div className="relative">
                                 <div className="flex items-center gap-4 mb-5">
-                                    <div className={`w-16 h-16 rounded-2xl overflow-hidden border shadow-inner shrink-0 ${
-                                        cardStyle.text.includes('text-white') ? 'bg-white/20 border-white/30' : 'bg-black/10 border-black/15'
-                                    } backdrop-blur-sm flex items-center justify-center`}>
-                                        {user.profile_photo ? (
-                                            <img
-                                                src={user.profile_photo.startsWith('http') || user.profile_photo.startsWith('blob:') || user.profile_photo.startsWith('data:') ? user.profile_photo : (user.profile_photo.startsWith('/') ? user.profile_photo : '/' + user.profile_photo)}
-                                                alt={user.name}
-                                                className="w-full h-full object-cover"
-                                            />
-                                        ) : (
-                                            <div className={`w-full h-full flex items-center justify-center font-black text-2xl ${
-                                                cardStyle.text.includes('text-white') ? 'text-white' : 'text-gray-700'
-                                            }`}>
-                                                {user.name.charAt(0).toUpperCase()}
-                                            </div>
-                                        )}
-                                    </div>
+                                    <UserAvatar
+                                        name={user.name}
+                                        photo={user.profile_photo}
+                                        className={`w-16 h-16 rounded-2xl border shadow-inner backdrop-blur-sm text-2xl ${
+                                            cardStyle.text.includes('text-white') ? 'border-white/30' : 'border-black/15'
+                                        }`}
+                                        fallbackClassName={
+                                            cardStyle.text.includes('text-white')
+                                                ? 'bg-white/20 text-white'
+                                                : 'bg-black/10 text-gray-700'
+                                        }
+                                    />
                                     <div className="min-w-0 flex-1">
                                         <h4 className={`text-base font-bold truncate leading-snug ${
                                             cardStyle.text.includes('text-white') ? 'text-white' : 'text-gray-900'
@@ -328,9 +325,17 @@ export default function AthleteDashboard({
                                     <div className="space-y-3">
                                         {birthdays.map(b => (
                                             <div key={b.id} className="flex items-center justify-between bg-white/60 backdrop-blur-sm rounded-xl p-3 border border-indigo-100/50">
-                                                <div className="text-left">
-                                                    <p className="text-xs font-bold text-gray-800">{b.name}</p>
-                                                    <p className="text-[10px] text-gray-400 font-semibold mt-0.5">{b.groups.join(', ')}</p>
+                                                <div className="flex items-center gap-2.5 text-left min-w-0">
+                                                    <UserAvatar
+                                                        name={b.name}
+                                                        photo={b.profile_photo}
+                                                        className="w-8 h-8 rounded-lg text-[11px]"
+                                                        fallbackClassName="bg-indigo-100 text-indigo-700"
+                                                    />
+                                                    <div className="min-w-0">
+                                                        <p className="text-xs font-bold text-gray-800">{b.name}</p>
+                                                        <p className="text-[10px] text-gray-400 font-semibold mt-0.5">{b.groups.join(', ')}</p>
+                                                    </div>
                                                 </div>
                                                 {b.age !== null && (
                                                     <span className="text-[10px] font-black text-indigo-700 bg-indigo-50 border border-indigo-100 rounded-lg px-2 py-0.5 shrink-0">
@@ -382,6 +387,12 @@ export default function AthleteDashboard({
                                                     }`}>
                                                         {idx + 1}
                                                     </span>
+                                                    <UserAvatar
+                                                        name={ath.name}
+                                                        photo={ath.profile_photo}
+                                                        className="w-8 h-8 rounded-lg text-[11px]"
+                                                        fallbackClassName="bg-amber-50 text-amber-700"
+                                                    />
                                                     <div>
                                                         <p className="text-xs font-bold text-gray-800">{ath.name}</p>
                                                         <span className="inline-block text-[8px] font-bold text-gray-400 uppercase">

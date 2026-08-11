@@ -1,6 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm } from '@inertiajs/react';
 import { FormEventHandler, useState, useEffect } from 'react';
+import UserAvatar from '@/Components/UserAvatar';
 
 const paymentTypeBadges: Record<string, string> = {
     'Per Athlete':  'bg-blue-50 text-blue-700 border-blue-100',
@@ -248,9 +249,12 @@ export default function ReportsIndex({ revenueData, financials = [], coaches, re
                                 {coaches.map((coach: any) => (
                                     <div key={coach.id} className="flex items-center justify-between px-6 py-4 hover:bg-slate-50 transition-colors">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-100 to-blue-100 flex items-center justify-center font-bold text-indigo-700 text-sm border border-indigo-100">
-                                                {coach.name.charAt(0).toUpperCase()}
-                                            </div>
+                                            <UserAvatar
+                                                name={coach.name}
+                                                photo={coach.profile_photo}
+                                                className="w-10 h-10 rounded-full text-sm border border-indigo-100"
+                                                fallbackClassName="bg-gradient-to-br from-indigo-100 to-blue-100 text-indigo-700"
+                                            />
                                             <div>
                                                 <p className="font-semibold text-gray-900 text-sm">{coach.name}</p>
                                                 <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-gray-400">
@@ -305,9 +309,12 @@ export default function ReportsIndex({ revenueData, financials = [], coaches, re
                                 {recentPayouts.map((payout: any) => (
                                     <div key={payout.id} className="flex items-center justify-between px-6 py-4 hover:bg-slate-50 transition-colors">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-9 h-9 rounded-full bg-rose-50 flex items-center justify-center font-bold text-rose-600 text-sm">
-                                                {payout.user.name.charAt(0).toUpperCase()}
-                                            </div>
+                                            <UserAvatar
+                                                name={payout.user.name}
+                                                photo={payout.user.profile_photo}
+                                                className="w-9 h-9 rounded-full text-sm"
+                                                fallbackClassName="bg-rose-50 text-rose-600"
+                                            />
                                             <div>
                                                 <div className="flex items-center gap-2">
                                                     <p className="font-semibold text-gray-900 text-sm">{payout.user.name}</p>

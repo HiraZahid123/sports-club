@@ -2,6 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import { getBeltBadgeStyle, getBeltStyle } from '@/beltHelpers';
+import UserAvatar from '@/Components/UserAvatar';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -372,17 +373,11 @@ function AthleteCard({
             >
                 <div className="flex items-start gap-4">
                     {/* Photo/Initials */}
-                    <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-sm shrink-0 overflow-hidden">
-                        {athlete.profile_photo ? (
-                            <img
-                                src={athlete.profile_photo.startsWith('http') ? athlete.profile_photo : '/' + athlete.profile_photo}
-                                alt={athlete.name}
-                                className="w-full h-full object-cover"
-                            />
-                        ) : (
-                            athlete.name.charAt(0).toUpperCase()
-                        )}
-                    </div>
+                    <UserAvatar
+                        name={athlete.name}
+                        photo={athlete.profile_photo}
+                        className="w-10 h-10 rounded-xl text-sm"
+                    />
 
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">

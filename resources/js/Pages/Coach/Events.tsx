@@ -1,6 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
+import UserAvatar from '@/Components/UserAvatar';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 interface Group { id: number; name: string }
@@ -300,17 +301,11 @@ export default function CoachEvents({ events }: { events: Event[] }) {
                                                     }`}
                                                 >
                                                     <div className="flex items-center gap-3 min-w-0">
-                                                        {reg.user.profile_photo ? (
-                                                            <img
-                                                                src={reg.user.profile_photo.startsWith('http') || reg.user.profile_photo.startsWith('blob:') || reg.user.profile_photo.startsWith('data:') ? reg.user.profile_photo : (reg.user.profile_photo.startsWith('/') ? reg.user.profile_photo : '/' + reg.user.profile_photo)}
-                                                                alt={reg.user.name}
-                                                                className="w-9 h-9 rounded-xl object-cover border border-indigo-100 shrink-0"
-                                                            />
-                                                        ) : (
-                                                            <div className="w-9 h-9 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-sm shrink-0">
-                                                                {reg.user.name.charAt(0).toUpperCase()}
-                                                            </div>
-                                                        )}
+                                                        <UserAvatar
+                                                            name={reg.user.name}
+                                                            photo={reg.user.profile_photo}
+                                                            className="w-9 h-9 rounded-xl border border-indigo-100 text-sm"
+                                                        />
                                                         <div className="min-w-0">
                                                             <p className="text-sm font-semibold text-gray-900 truncate">{reg.user.name}</p>
                                                             <p className="text-xs text-gray-500 truncate">{reg.user.email}</p>

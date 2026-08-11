@@ -1,10 +1,11 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
+import UserAvatar from '@/Components/UserAvatar';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 interface Group { id: number; name: string }
-interface Coach { id: number; name: string }
+interface Coach { id: number; name: string; profile_photo?: string | null }
 
 interface Registration {
     id: number;
@@ -172,7 +173,15 @@ export default function AthleteEvents({ events, event_points }: {
                             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Coaches</p>
                             <div className="flex flex-wrap gap-1">
                                 {ev.coaches.map(c => (
-                                    <span key={c.id} className="px-2 py-0.5 bg-emerald-50 border border-emerald-100 text-emerald-700 text-[10px] font-semibold rounded-md">{c.name}</span>
+                                    <span key={c.id} className="inline-flex items-center gap-1.5 pl-1 pr-2 py-0.5 bg-emerald-50 border border-emerald-100 text-emerald-700 text-[10px] font-semibold rounded-md">
+                                        <UserAvatar
+                                            name={c.name}
+                                            photo={c.profile_photo}
+                                            className="w-4 h-4 rounded-full text-[8px]"
+                                            fallbackClassName="bg-emerald-500 text-white"
+                                        />
+                                        {c.name}
+                                    </span>
                                 ))}
                             </div>
                         </div>

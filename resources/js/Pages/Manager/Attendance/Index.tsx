@@ -2,6 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import UserAvatar from '@/Components/UserAvatar';
 
 interface Athlete {
     id: number;
@@ -18,6 +19,7 @@ interface Group {
 interface AttendanceRow {
     athlete_id: number;
     name: string;
+    profile_photo?: string | null;
     status: 'present' | 'absent';
     base_points: number;
     extra_points: number;
@@ -185,7 +187,16 @@ export default function ManagerAttendance({
                                                 <tbody className="divide-y divide-gray-100 bg-white">
                                                     {attendanceList.map((row) => (
                                                         <tr key={row.athlete_id} className="hover:bg-slate-50/50 transition-colors">
-                                                            <td className="px-6 py-4 font-bold text-gray-900">{row.name}</td>
+                                                            <td className="px-6 py-4 font-bold text-gray-900">
+                                                                <div className="flex items-center gap-3">
+                                                                    <UserAvatar
+                                                                        name={row.name}
+                                                                        photo={row.profile_photo}
+                                                                        className="w-9 h-9 rounded-full text-sm"
+                                                                    />
+                                                                    <span>{row.name}</span>
+                                                                </div>
+                                                            </td>
                                                             <td className="px-6 py-4 text-center">
                                                                 <div className="inline-flex rounded-xl p-1 bg-slate-100 border border-slate-200/50">
                                                                     <button

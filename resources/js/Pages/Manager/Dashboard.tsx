@@ -1,5 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
+import UserAvatar from '@/Components/UserAvatar';
 
 export default function ManagerDashboard({ stats, recentActivity = [], leaderboard = [] }: { stats: any; recentActivity?: any[]; leaderboard?: any[] }) {
     const statCards = [
@@ -126,9 +127,12 @@ export default function ManagerDashboard({ stats, recentActivity = [], leaderboa
                                 {recentActivity.length > 0 ? (
                                     recentActivity.map((item, i) => (
                                         <div key={i} className="flex items-center gap-4 px-6 py-4 hover:bg-slate-50 transition-colors">
-                                            <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ${item.color}`}>
-                                                {item.initial}
-                                            </div>
+                                            <UserAvatar
+                                                name={item.name}
+                                                photo={item.profile_photo}
+                                                className="w-9 h-9 rounded-full text-sm"
+                                                fallbackClassName={item.color}
+                                            />
                                             <div className="flex-1 min-w-0">
                                                 <p className="text-sm font-semibold text-gray-900 truncate">{item.name}</p>
                                                 <p className="text-xs text-gray-500 truncate">{item.action}</p>
@@ -195,6 +199,12 @@ export default function ManagerDashboard({ stats, recentActivity = [], leaderboa
                                                     }`}>
                                                         {idx + 1}
                                                     </span>
+                                                    <UserAvatar
+                                                        name={ath.name}
+                                                        photo={ath.profile_photo}
+                                                        className="w-8 h-8 rounded-lg text-[11px]"
+                                                        fallbackClassName="bg-amber-50 text-amber-700"
+                                                    />
                                                     <div>
                                                         <p className="text-xs font-bold text-gray-800">{ath.name}</p>
                                                         <span className="inline-block text-[8px] font-bold text-gray-400 uppercase">

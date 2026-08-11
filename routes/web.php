@@ -93,6 +93,7 @@ Route::middleware(['auth', 'verified', 'role:Manager|Super Admin'])->prefix('man
                 return [
                     'initial' => strtoupper(substr($user->name, 0, 1)),
                     'name' => $user->name,
+                    'profile_photo' => $user->profile_photo,
                     'action' => 'joined the club',
                     'time' => $user->created_at ? $user->created_at->diffForHumans() : 'some time ago',
                     'timestamp' => $user->created_at ? $user->created_at->timestamp : 0,
@@ -112,6 +113,7 @@ Route::middleware(['auth', 'verified', 'role:Manager|Super Admin'])->prefix('man
                 return [
                     'initial' => strtoupper(substr($userName, 0, 1)),
                     'name' => $userName,
+                    'profile_photo' => $payment->subscription->user->profile_photo ?? null,
                     'action' => "payment recorded — €{$payment->amount}",
                     'time' => $payment->created_at ? $payment->created_at->diffForHumans() : 'some time ago',
                     'timestamp' => $payment->created_at ? $payment->created_at->timestamp : 0,
@@ -133,6 +135,7 @@ Route::middleware(['auth', 'verified', 'role:Manager|Super Admin'])->prefix('man
                 return [
                     'initial' => strtoupper(substr($userName, 0, 1)),
                     'name' => $userName,
+                    'profile_photo' => $reg->user->profile_photo ?? null,
                     'action' => "{$statusStr} {$eventName}",
                     'time' => $reg->created_at ? $reg->created_at->diffForHumans() : 'some time ago',
                     'timestamp' => $reg->created_at ? $reg->created_at->timestamp : 0,
@@ -157,6 +160,7 @@ Route::middleware(['auth', 'verified', 'role:Manager|Super Admin'])->prefix('man
                 return [
                     'id' => $u->id,
                     'name' => $u->name,
+                    'profile_photo' => $u->profile_photo,
                     'points' => $u->athleteProfile ? ($u->athleteProfile->event_points ?? 0) : 0,
                     'belt_rank' => $u->athleteProfile ? ($u->athleteProfile->belt_rank ?? '10. WHITE') : '10. WHITE',
                 ];
@@ -269,6 +273,7 @@ Route::middleware(['auth', 'verified', 'role:Coach', \App\Http\Middleware\CheckS
                 return [
                     'id' => $u->id,
                     'name' => $u->name,
+                    'profile_photo' => $u->profile_photo,
                     'points' => $u->athleteProfile ? ($u->athleteProfile->event_points ?? 0) : 0,
                     'belt_rank' => $u->athleteProfile ? ($u->athleteProfile->belt_rank ?? '10. WHITE') : '10. WHITE',
                 ];
@@ -402,6 +407,7 @@ Route::middleware(['auth', 'verified', 'role:Athlete', \App\Http\Middleware\Chec
                 return [
                     'id' => $u->id,
                     'name' => $u->name,
+                    'profile_photo' => $u->profile_photo,
                     'points' => $u->athleteProfile ? ($u->athleteProfile->event_points ?? 0) : 0,
                     'belt_rank' => $u->athleteProfile ? ($u->athleteProfile->belt_rank ?? '10. WHITE') : '10. WHITE',
                 ];
@@ -500,6 +506,7 @@ Route::middleware(['auth', 'verified', 'role:Athlete', \App\Http\Middleware\Chec
                 return [
                     'id' => $member->id,
                     'name' => $member->name,
+                    'profile_photo' => $member->profile_photo,
                     'groups' => $member->trainingGroups->pluck('name')->toArray(),
                     'age' => $member->athleteProfile?->date_of_birth ? \Carbon\Carbon::parse($member->athleteProfile->date_of_birth)->age : null,
                 ];
@@ -627,6 +634,7 @@ Route::middleware(['auth', 'verified', 'role:Parent'])->prefix('parent')->name('
 
             return [
                 'name' => $child->name,
+                'profile_photo' => $child->profile_photo,
                 'group' => $group ? $group->name : 'No Group',
                 'status' => $child->isPaid() ? 'Active' : 'Overdue',
                 'belt' => $profile ? ($profile->belt_rank ?? '10. WHITE') : '10. WHITE',
@@ -663,6 +671,7 @@ Route::middleware('auth')->group(function () {
                 return [
                     'id' => $u->id,
                     'name' => $u->name,
+                    'profile_photo' => $u->profile_photo,
                     'points' => $u->athleteProfile ? ($u->athleteProfile->event_points ?? 0) : 0,
                     'belt_rank' => $u->athleteProfile ? ($u->athleteProfile->belt_rank ?? '10. WHITE') : '10. WHITE',
                 ];

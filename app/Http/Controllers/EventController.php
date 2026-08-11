@@ -44,7 +44,7 @@ class EventController extends Controller
             });
 
         $groups  = TrainingGroup::where('club_id', $clubId)->select('id', 'name')->get();
-        $coaches = User::where('club_id', $clubId)->role(['Coach', 'Coach Assistant'])->select('id', 'name')->get();
+        $coaches = User::where('club_id', $clubId)->role(['Coach', 'Coach Assistant'])->select('id', 'name', 'profile_photo')->get();
         $categories = EventCategory::where('club_id', $clubId)->orderBy('name')->get();
 
         return Inertia::render('Manager/Events/Index', [
@@ -264,7 +264,7 @@ class EventController extends Controller
 
         $events = Event::where('club_id', $user->club_id)
             ->whereHas('groups', fn($q) => $q->whereIn('training_groups.id', $groupIds))
-            ->with(['groups', 'coaches:id,name'])
+            ->with(['groups', 'coaches:id,name,profile_photo'])
             ->orderBy('start_date')
             ->get()
             ->map(function ($event) use ($user, $groupIds) {

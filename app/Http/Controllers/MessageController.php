@@ -29,7 +29,7 @@ class MessageController extends Controller
     private function managerIndex(User $user)
     {
         $sent = ClubMessage::where('sender_id', $user->id)
-            ->with(['trainingGroup:id,name', 'recipientUser:id,name', 'reads'])
+            ->with(['trainingGroup:id,name', 'recipientUser:id,name,profile_photo', 'reads'])
             ->latest()
             ->get()
             ->map(fn($msg) => [
@@ -38,7 +38,7 @@ class MessageController extends Controller
                 'body'           => $msg->body,
                 'recipient_type' => $msg->recipient_type,
                 'group'          => $msg->trainingGroup ? ['name' => $msg->trainingGroup->name] : null,
-                'recipient_user' => $msg->recipientUser ? ['name' => $msg->recipientUser->name] : null,
+                'recipient_user' => $msg->recipientUser ? ['name' => $msg->recipientUser->name, 'profile_photo' => $msg->recipientUser->profile_photo] : null,
                 'read_count'     => $msg->reads->count(),
                 'created_at'     => $msg->created_at->format('d M Y, H:i'),
                 'message_type'   => $msg->message_type,
@@ -48,11 +48,11 @@ class MessageController extends Controller
         $athletes = User::where('club_id', $user->club_id)
             ->whereHas('roles', fn($q) => $q->where('name', 'Athlete'))
             ->orderBy('name')
-            ->get(['id', 'name']);
+            ->get(['id', 'name', 'profile_photo']);
         $coaches  = User::where('club_id', $user->club_id)
             ->whereHas('roles', fn($q) => $q->where('name', 'Coach'))
             ->orderBy('name')
-            ->get(['id', 'name']);
+            ->get(['id', 'name', 'profile_photo']);
 
         return Inertia::render('Messages/Index', [
             'role'     => 'manager',
@@ -66,7 +66,7 @@ class MessageController extends Controller
     private function coachIndex(User $user)
     {
         $sent = ClubMessage::where('sender_id', $user->id)
-            ->with(['trainingGroup:id,name', 'recipientUser:id,name', 'reads'])
+            ->with(['trainingGroup:id,name', 'recipientUser:id,name,profile_photo', 'reads'])
             ->latest()
             ->get()
             ->map(fn($msg) => [
@@ -75,7 +75,7 @@ class MessageController extends Controller
                 'body'           => $msg->body,
                 'recipient_type' => $msg->recipient_type,
                 'group'          => $msg->trainingGroup ? ['name' => $msg->trainingGroup->name] : null,
-                'recipient_user' => $msg->recipientUser ? ['name' => $msg->recipientUser->name] : null,
+                'recipient_user' => $msg->recipientUser ? ['name' => $msg->recipientUser->name, 'profile_photo' => $msg->recipientUser->profile_photo] : null,
                 'read_count'     => $msg->reads->count(),
                 'created_at'     => $msg->created_at->format('d M Y, H:i'),
                 'message_type'   => $msg->message_type,
@@ -83,14 +83,14 @@ class MessageController extends Controller
 
         $readIds = MessageRead::where('user_id', $user->id)->pluck('message_id')->toArray();
         $inbox   = ClubMessage::forUser($user)
-            ->with(['sender:id,name'])
+            ->with(['sender:id,name,profile_photo'])
             ->latest()
             ->get()
             ->map(fn($msg) => [
                 'id'           => $msg->id,
                 'title'        => $msg->title,
                 'body'         => $msg->body,
-                'sender'       => ['name' => $msg->sender->name],
+                'sender'       => ['name' => $msg->sender->name, 'profile_photo' => $msg->sender->profile_photo],
                 'is_read'      => in_array($msg->id, $readIds),
                 'created_at'   => $msg->created_at->format('d M Y, H:i'),
                 'message_type' => $msg->message_type,
@@ -101,7 +101,7 @@ class MessageController extends Controller
             $q->whereIn('training_groups.id', $user->trainingGroups()->pluck('training_groups.id'));
         })->whereHas('roles', fn($q) => $q->where('name', 'Athlete'))
           ->orderBy('name')
-          ->get(['id', 'name']);
+          ->get(['id', 'name', 'profile_photo']);
 
         return Inertia::render('Messages/Index', [
             'role'     => 'coach',
@@ -116,14 +116,14 @@ class MessageController extends Controller
     {
         $readIds  = MessageRead::where('user_id', $user->id)->pluck('message_id')->toArray();
         $messages = ClubMessage::forUser($user)
-            ->with(['sender:id,name'])
+            ->with(['sender:id,name,profile_photo'])
             ->latest()
             ->get()
             ->map(fn($msg) => [
                 'id'           => $msg->id,
                 'title'        => $msg->title,
                 'body'         => $msg->body,
-                'sender'       => ['name' => $msg->sender->name],
+                'sender'       => ['name' => $msg->sender->name, 'profile_photo' => $msg->sender->profile_photo],
                 'is_read'      => in_array($msg->id, $readIds),
                 'created_at'   => $msg->created_at->format('d M Y, H:i'),
                 'message_type' => $msg->message_type,

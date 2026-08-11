@@ -2,6 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm, router } from '@inertiajs/react';
 import { FormEventHandler, useState } from 'react';
 import axios from 'axios';
+import UserAvatar from '@/Components/UserAvatar';
 
 /* ─── Types ─── */
 
@@ -21,7 +22,7 @@ interface InboxMessage {
     id: number;
     title: string;
     body: string;
-    sender: { name: string };
+    sender: { name: string; profile_photo?: string | null };
     is_read: boolean;
     created_at: string;
     message_type: 'regular' | 'important';
@@ -135,6 +136,11 @@ function InboxList({ messages }: { messages: InboxMessage[] }) {
                     <button className="w-full text-left p-5" onClick={() => open(msg)}>
                         <div className="flex items-start gap-3">
                             <div className={`w-2.5 h-2.5 rounded-full mt-1.5 flex-shrink-0 ${msg.is_read ? 'bg-transparent' : msg.message_type === 'important' ? 'bg-red-500' : 'bg-indigo-500'}`} />
+                            <UserAvatar
+                                name={msg.sender.name}
+                                photo={msg.sender.profile_photo}
+                                className="w-9 h-9 rounded-xl text-sm"
+                            />
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center justify-between gap-2 mb-0.5">
                                     <div className="flex items-center gap-2 min-w-0">

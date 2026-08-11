@@ -38,6 +38,7 @@ class AttendanceController extends Controller
                 return [
                     'athlete_id'   => $athlete->id,
                     'name'         => $athlete->name,
+                    'profile_photo' => $athlete->profile_photo,
                     'status'       => $att ? $att->status : 'absent',
                     'base_points'  => $att ? $att->base_points : $defaultPoints,
                     'extra_points' => $att ? $att->extra_points : 0,
@@ -91,6 +92,7 @@ class AttendanceController extends Controller
             return [
                 'athlete_id'   => $athlete->id,
                 'name'         => $athlete->name,
+                'profile_photo' => $athlete->profile_photo,
                 'status'       => $att ? $att->status : 'absent',
                 'base_points'  => $att ? $att->base_points : $defaultPoints,
                 'extra_points' => $att ? $att->extra_points : 0,

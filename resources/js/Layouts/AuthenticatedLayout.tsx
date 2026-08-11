@@ -1,4 +1,5 @@
 import Dropdown from '@/Components/Dropdown';
+import UserAvatar from '@/Components/UserAvatar';
 import NavLink from '@/Components/NavLink';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
 import { Link, usePage } from '@inertiajs/react';
@@ -221,15 +222,11 @@ export default function Authenticated({
                         {/* Right: User Menu */}
                         <div className="hidden lg:flex items-center gap-3 shrink-0">
                             <div className="flex items-center gap-2">
-                                <div className="w-8 h-8 rounded-full overflow-hidden border border-indigo-200 shrink-0">
-                                    {(user as any).profile_photo ? (
-                                        <img src={(user as any).profile_photo.startsWith('http://') || (user as any).profile_photo.startsWith('https://') || (user as any).profile_photo.startsWith('blob:') || (user as any).profile_photo.startsWith('data:') ? (user as any).profile_photo : ((user as any).profile_photo.startsWith('/') ? (user as any).profile_photo : '/' + (user as any).profile_photo)} alt={user.name} className="w-full h-full object-cover" />
-                                    ) : (
-                                        <div className="w-full h-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-sm">
-                                            {user.name.charAt(0).toUpperCase()}
-                                        </div>
-                                    )}
-                                </div>
+                                <UserAvatar
+                                    name={user.name}
+                                    photo={(user as any).profile_photo}
+                                    className="w-8 h-8 rounded-full text-sm border border-indigo-200"
+                                />
                                 <Dropdown>
                                     <Dropdown.Trigger>
                                         <button
@@ -351,15 +348,11 @@ export default function Authenticated({
 
                     <div className="border-t border-gray-200 pb-3 pt-4 px-4">
                         <div className="flex items-center gap-3 mb-3">
-                            <div className="w-9 h-9 rounded-full overflow-hidden border border-indigo-200 shrink-0">
-                                {(user as any).profile_photo ? (
-                                    <img src={(user as any).profile_photo.startsWith('http://') || (user as any).profile_photo.startsWith('https://') || (user as any).profile_photo.startsWith('blob:') || (user as any).profile_photo.startsWith('data:') ? (user as any).profile_photo : ((user as any).profile_photo.startsWith('/') ? (user as any).profile_photo : '/' + (user as any).profile_photo)} alt={user.name} className="w-full h-full object-cover" />
-                                ) : (
-                                    <div className="w-full h-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold">
-                                        {user.name.charAt(0).toUpperCase()}
-                                    </div>
-                                )}
-                            </div>
+                            <UserAvatar
+                                name={user.name}
+                                photo={(user as any).profile_photo}
+                                className="w-9 h-9 rounded-full text-sm border border-indigo-200"
+                            />
                             <div>
                                 <p className="text-sm font-semibold text-gray-900">{user.name}</p>
                                 <p className="text-xs text-gray-500">{user.email}</p>

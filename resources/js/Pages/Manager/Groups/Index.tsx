@@ -2,6 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm, router } from '@inertiajs/react';
 import { FormEventHandler, useState } from 'react';
 import Modal from '@/Components/Modal';
+import UserAvatar from '@/Components/UserAvatar';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 interface ScheduleSlot {
@@ -50,6 +51,7 @@ interface Group {
 interface Coach {
     id: number;
     name: string;
+    profile_photo?: string | null;
 }
 
 // ── Constants ──────────────────────────────────────────────────────────────
@@ -579,9 +581,12 @@ export default function GroupsIndex({ groups, coaches, athletes, ageCategories, 
                                             editingGroup.coaches.map((coach) => (
                                                 <div key={coach.id} className="flex items-center justify-between bg-indigo-50 border border-indigo-100 rounded-xl px-3 py-2">
                                                     <div className="flex items-center gap-2.5">
-                                                        <div className="w-7 h-7 rounded-full bg-indigo-500 flex items-center justify-center text-white text-[11px] font-bold shadow-sm shrink-0">
-                                                            {coach.name.charAt(0).toUpperCase()}
-                                                        </div>
+                                                        <UserAvatar
+                                                            name={coach.name}
+                                                            photo={coach.profile_photo}
+                                                            className="w-7 h-7 rounded-full text-[11px] shadow-sm"
+                                                            fallbackClassName="bg-indigo-500 text-white"
+                                                        />
                                                         <span className="text-sm font-medium text-indigo-900">{coach.name}</span>
                                                         <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-600 font-semibold">Coach</span>
                                                     </div>
@@ -627,9 +632,12 @@ export default function GroupsIndex({ groups, coaches, athletes, ageCategories, 
                                             editingGroup.athletes.map((athlete) => (
                                                 <div key={athlete.id} className="flex items-center justify-between bg-blue-50 border border-blue-100 rounded-xl px-3 py-2">
                                                     <div className="flex items-center gap-2.5 min-w-0">
-                                                        <div className="w-7 h-7 rounded-full bg-blue-500 flex items-center justify-center text-white text-[11px] font-bold shadow-sm shrink-0">
-                                                            {athlete.name.charAt(0).toUpperCase()}
-                                                        </div>
+                                                        <UserAvatar
+                                                            name={athlete.name}
+                                                            photo={athlete.profile_photo}
+                                                            className="w-7 h-7 rounded-full text-[11px] shadow-sm"
+                                                            fallbackClassName="bg-blue-500 text-white"
+                                                        />
                                                         <span className="text-sm font-medium text-blue-900 truncate">{athlete.name}</span>
                                                     </div>
                                                     <div className="flex items-center gap-2 shrink-0 ml-3">
@@ -913,9 +921,12 @@ export default function GroupsIndex({ groups, coaches, athletes, ageCategories, 
                                                     <div className="flex flex-wrap gap-1.5">
                                                         {group.coaches.map(coach => (
                                                             <span key={coach.id} className="inline-flex items-center gap-1.5 bg-indigo-50 border border-indigo-100 text-indigo-700 text-xs font-medium px-2.5 py-1 rounded-full">
-                                                                <span className="w-4 h-4 rounded-full bg-indigo-500 text-white text-[9px] font-bold flex items-center justify-center shrink-0">
-                                                                    {coach.name.charAt(0).toUpperCase()}
-                                                                </span>
+                                                                <UserAvatar
+                                                                    name={coach.name}
+                                                                    photo={coach.profile_photo}
+                                                                    className="w-4 h-4 rounded-full text-[9px]"
+                                                                    fallbackClassName="bg-indigo-500 text-white"
+                                                                />
                                                                 {coach.name}
                                                             </span>
                                                         ))}

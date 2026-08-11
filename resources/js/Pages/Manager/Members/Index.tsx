@@ -2,6 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm, Link } from '@inertiajs/react';
 import { FormEventHandler, useState, useRef, useEffect } from 'react';
 import { BELT_OPTIONS, getBeltBadgeStyle, getBeltStyle } from '@/beltHelpers';
+import UserAvatar from '@/Components/UserAvatar';
 
 interface AthleteProfile {
     belt_rank?: string | null;
@@ -667,17 +668,12 @@ export default function MembersIndex({ members }: { members: Member[] }) {
                                             <tr key={member.id} className="hover:bg-slate-50/60 transition-colors">
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center gap-3">
-                                                        {member.profile_photo ? (
-                                                            <img
-                                                                src={member.profile_photo.startsWith('http') || member.profile_photo.startsWith('blob:') || member.profile_photo.startsWith('data:') ? member.profile_photo : (member.profile_photo.startsWith('/') ? member.profile_photo : '/' + member.profile_photo)}
-                                                                alt={member.name}
-                                                                className="w-9 h-9 rounded-full object-cover border border-indigo-100 shrink-0"
-                                                            />
-                                                        ) : (
-                                                            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-100 to-blue-100 flex items-center justify-center text-indigo-700 font-bold text-sm border border-indigo-100 shrink-0">
-                                                                {member.name.charAt(0).toUpperCase()}
-                                                            </div>
-                                                        )}
+                                                        <UserAvatar
+                                                            name={member.name}
+                                                            photo={member.profile_photo}
+                                                            className="w-9 h-9 rounded-full text-sm border border-indigo-100"
+                                                            fallbackClassName="bg-gradient-to-br from-indigo-100 to-blue-100 text-indigo-700"
+                                                        />
                                                         <div>
                                                             <div className="flex items-center gap-2">
                                                                 <p className="font-semibold text-gray-900 text-sm">{member.name}</p>

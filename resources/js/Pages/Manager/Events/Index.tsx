@@ -1,10 +1,11 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router, useForm } from '@inertiajs/react';
 import { FormEventHandler, useRef, useState } from 'react';
+import UserAvatar from '@/Components/UserAvatar';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 interface Group { id: number; name: string }
-interface Coach { id: number; name: string }
+interface Coach { id: number; name: string; profile_photo?: string | null }
 
 interface Category {
     id: number;
@@ -18,7 +19,7 @@ interface Group {
     can_join?: boolean;
 }
 
-interface Coach { id: number; name: string }
+interface Coach { id: number; name: string; profile_photo?: string | null }
 
 interface Event {
     id: number;
@@ -264,7 +265,13 @@ export default function EventsIndex({ events, groups, coaches, categories = [] }
         };
         return (
             <button type="button" onClick={toggle}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${active ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-emerald-300'}`}>
+                className={`inline-flex items-center gap-2 pl-1.5 pr-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${active ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-emerald-300'}`}>
+                <UserAvatar
+                    name={c.name}
+                    photo={c.profile_photo}
+                    className="w-5 h-5 rounded-full text-[9px]"
+                    fallbackClassName={active ? 'bg-white/25 text-white' : 'bg-emerald-100 text-emerald-700'}
+                />
                 {c.name}
             </button>
         );
@@ -785,7 +792,17 @@ export default function EventsIndex({ events, groups, coaches, categories = [] }
                                                 <div>
                                                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Coaches</p>
                                                     <div className="flex flex-wrap gap-1">
-                                                        {ev.coaches.map(c => <span key={c.id} className="px-2 py-0.5 bg-emerald-50 border border-emerald-100 text-emerald-700 text-[10px] font-semibold rounded-md">{c.name}</span>)}
+                                                        {ev.coaches.map(c => (
+                                                            <span key={c.id} className="inline-flex items-center gap-1.5 pl-1 pr-2 py-0.5 bg-emerald-50 border border-emerald-100 text-emerald-700 text-[10px] font-semibold rounded-md">
+                                                                <UserAvatar
+                                                                    name={c.name}
+                                                                    photo={c.profile_photo}
+                                                                    className="w-4 h-4 rounded-full text-[8px]"
+                                                                    fallbackClassName="bg-emerald-500 text-white"
+                                                                />
+                                                                {c.name}
+                                                            </span>
+                                                        ))}
                                                     </div>
                                                 </div>
                                             )}

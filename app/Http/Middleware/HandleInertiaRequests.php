@@ -49,7 +49,10 @@ class HandleInertiaRequests extends Middleware
 
                 'user' => $request->user() ? [
                     ...$request->user()->toArray(),
-                    'profile_photo' => $request->user()->profile_photo ? asset($request->user()->profile_photo) : null,
+                    // Keep the stored relative path — the frontend resolves it (see
+                    // resolvePhotoUrl in Components/UserAvatar). Using asset() here made the
+                    // URL depend on APP_URL, which broke photos on other hosts.
+                    'profile_photo' => $request->user()->profile_photo ?: null,
                     'roles' => $request->user()->getRoleNames(),
                     'permissions' => $request->user()->getAllPermissions()->pluck('name'),
                     'club' => $request->user()->club ? [
@@ -89,14 +92,14 @@ class HandleInertiaRequests extends Middleware
                 return ClubMessage::forUser($user)
                     ->where('message_type', 'important')
                     ->whereNotIn('id', $readIds)
-                    ->with(['sender:id,name'])
+                    ->with(['sender:id,name,profile_photo'])
                     ->latest()
                     ->get()
                     ->map(fn($m) => [
                         'id'         => $m->id,
                         'title'      => $m->title,
                         'body'       => $m->body,
-                        'sender'     => ['name' => $m->sender->name],
+                        'sender'     => ['name' => $m->sender->name, 'profile_photo' => $m->sender->profile_photo],
                         'created_at' => $m->created_at->format('d M Y, H:i'),
                     ])
                     ->values()

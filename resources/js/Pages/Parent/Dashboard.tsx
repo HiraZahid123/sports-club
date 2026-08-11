@@ -1,6 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 import { getBeltBadgeStyle, getBeltStyle } from '@/beltHelpers';
+import UserAvatar from '@/Components/UserAvatar';
 
 export default function ParentDashboard({
     childrenData = [],
@@ -55,9 +56,12 @@ export default function ParentDashboard({
                                             <div className="p-5">
                                                 <div className="flex items-start justify-between mb-4">
                                                     <div className="flex items-center gap-3">
-                                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-100 to-blue-100 flex items-center justify-center text-indigo-700 font-bold border border-indigo-100">
-                                                            {child.name.charAt(0)}
-                                                        </div>
+                                                        <UserAvatar
+                                                            name={child.name}
+                                                            photo={child.profile_photo}
+                                                            className="w-10 h-10 rounded-full text-sm border border-indigo-100"
+                                                            fallbackClassName="bg-gradient-to-br from-indigo-100 to-blue-100 text-indigo-700"
+                                                        />
                                                         <div>
                                                             <p className="font-bold text-gray-900 text-sm">{child.name}</p>
                                                             <p className="text-xs text-gray-500">{child.group}</p>
