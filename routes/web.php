@@ -369,12 +369,15 @@ Route::middleware(['auth', 'verified', 'role:Athlete', \App\Http\Middleware\Chec
               ];
           });
 
-        $attendedEvents = \App\Models\EventRegistration::where('user_id', $user->id)
-            ->where('status', 'attended')
+        $upcomingEvents = \App\Models\EventRegistration::where('user_id', $user->id)
+            ->whereIn('status', ['registered', 'pending_approval'])
+            ->whereHas('event', function ($q) {
+                $q->where('start_date', '>=', now()->startOfDay());
+            })
             ->with(['event.coaches'])
             ->get();
 
-        $eventSchedules = $attendedEvents->map(function ($reg) {
+        $eventSchedules = $upcomingEvents->map(function ($reg) {
             $event = $reg->event;
             if (!$event) return null;
 
@@ -556,12 +559,15 @@ Route::middleware(['auth', 'verified', 'role:Athlete', \App\Http\Middleware\Chec
               ];
           });
 
-        $attendedEvents = \App\Models\EventRegistration::where('user_id', $athlete->id)
-            ->where('status', 'attended')
+        $upcomingEvents = \App\Models\EventRegistration::where('user_id', $athlete->id)
+            ->whereIn('status', ['registered', 'pending_approval'])
+            ->whereHas('event', function ($q) {
+                $q->where('start_date', '>=', now()->startOfDay());
+            })
             ->with(['event.coaches'])
             ->get();
 
-        $eventSchedules = $attendedEvents->map(function ($reg) {
+        $eventSchedules = $upcomingEvents->map(function ($reg) {
             $event = $reg->event;
             if (!$event) return null;
 

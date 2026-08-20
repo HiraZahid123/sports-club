@@ -21,7 +21,6 @@ export default function Leaderboard({ leaderboard = [] }: { leaderboard: Leaderb
 
     // Identify podium users
     const topThree = filteredLeaderboard.slice(0, 3);
-    const rest = filteredLeaderboard.slice(3);
 
     // Arrange top 3 as: 2nd, 1st, 3rd for podium layout
     const podiumOrder = [];
@@ -122,8 +121,8 @@ export default function Leaderboard({ leaderboard = [] }: { leaderboard: Leaderb
                             </div>
                         ) : (
                             <div className="divide-y divide-gray-50">
-                                {rest.map((ath, index) => {
-                                    const rank = index + 4;
+                                {filteredLeaderboard.map((ath, index) => {
+                                    const rank = index + 1;
                                     return (
                                         <div key={ath.id} className="flex items-center justify-between px-6 py-4 hover:bg-slate-50/60 transition-colors">
                                             <div className="flex items-center gap-4 min-w-0">
@@ -156,13 +155,6 @@ export default function Leaderboard({ leaderboard = [] }: { leaderboard: Leaderb
                                         </div>
                                     );
                                 })}
-
-                                {/* Handle cases where fewer than 4 athletes exist */}
-                                {filteredLeaderboard.length <= 3 && rest.length === 0 && (
-                                    <div className="text-center py-8 text-gray-400 italic text-xs">
-                                        All ranked athletes shown in the podium.
-                                    </div>
-                                )}
                             </div>
                         )}
                     </div>
