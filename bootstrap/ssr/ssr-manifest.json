@@ -169,13 +169,18 @@
     "/build/assets/SubscriptionLocked-DSfHv3Kk.js"
   ],
   "resources/js/Pages/Welcome.tsx": [
-    "/build/assets/Welcome-ZRgKXY5u.js"
+    "/build/assets/Welcome-u5BboqMW.js",
+    "/build/assets/ml-sports-original-Duj__58q.png"
   ],
   "resources/js/beltHelpers.ts": [
     "/build/assets/beltHelpers-6FZX55wB.js"
   ],
   "resources/js/dateHelpers.ts": [
     "/build/assets/dateHelpers-pzAD51Td.js"
+  ],
+  "resources/js/ml-sports-original.png": [
+    "/build/assets/Welcome-u5BboqMW.js",
+    "/build/assets/ml-sports-original-Duj__58q.png"
   ],
   "resources/js/ml-sports.png": [
     "/build/assets/ml-sports-BsguC5B3.js",
