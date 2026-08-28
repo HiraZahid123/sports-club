@@ -35,7 +35,7 @@ export default function RegisterClub() {
                 <div className="absolute -bottom-32 -right-16 w-96 h-96 bg-white/5 rounded-full" />
 
                 <Link href="/">
-                    <img src={mlSportsLogo} alt="ML Sports" className="h-11 w-auto object-contain brightness-0 invert" />
+                    <img src={mlSportsLogo} alt="ML Sports" className="h-16 w-auto object-contain brightness-0 invert" />
                 </Link>
 
                 <div className="relative">
@@ -72,7 +72,7 @@ export default function RegisterClub() {
             {/* Form panel */}
             <div className="flex-1 flex flex-col items-center justify-center px-6 py-12 bg-white overflow-y-auto">
                 <div className="lg:hidden flex items-center mb-8">
-                    <Link href="/"><img src={mlSportsLogo} alt="ML Sports" className="h-10 w-auto object-contain" /></Link>
+                    <Link href="/"><img src={mlSportsLogo} alt="ML Sports" className="h-14 w-auto object-contain" /></Link>
                 </div>
 
                 <div className="w-full max-w-lg">

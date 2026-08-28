@@ -51,7 +51,7 @@ export default function Authenticated({
                         {/* Left: Logo + Nav */}
                         <div className="flex items-center gap-2 lg:gap-6 min-w-0">
                             <Link href="/" className="flex items-center shrink-0">
-                                <img src={mlSportsLogo} alt="ML Sports" className="h-10 w-auto object-contain" />
+                                <img src={mlSportsLogo} alt="ML Sports" className="h-14 w-auto object-contain" />
                             </Link>
 
                             {(user as any).club && (

@@ -62,7 +62,7 @@ export default function RegisterChoice() {
             <div className="bg-white border-b border-gray-100 shadow-sm">
                 <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
                     <Link href="/">
-                        <img src={mlSportsLogo} alt="ML Sports" className="h-9 w-auto object-contain" />
+                        <img src={mlSportsLogo} alt="ML Sports" className="h-13 w-auto object-contain" />
                     </Link>
                     <p className="text-sm text-gray-500">
                         Already have an account?{' '}

@@ -11,7 +11,7 @@ export default function Welcome({ auth }: PageProps<{ laravelVersion: string, ph
             <nav className="fixed w-full z-50 bg-white/90 backdrop-blur-md border-b border-gray-100 shadow-sm">
                 <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
                     <Link href="/">
-                        <img src={mlSportsLogo} alt="ML Sports" className="h-10 w-auto object-contain" />
+                        <img src={mlSportsLogo} alt="ML Sports" className="h-14 w-auto object-contain" />
                     </Link>
                     <div className="hidden md:flex items-center gap-8 text-sm font-semibold text-gray-500">
                         <a href="#features" className="hover:text-indigo-600 transition-colors">Features</a>
@@ -293,7 +293,7 @@ export default function Welcome({ auth }: PageProps<{ laravelVersion: string, ph
                         <img 
                             src={mlSportsLogo} 
                             alt="ML SPORT Technologies" 
-                            className="h-8 w-auto mb-1" 
+                            className="h-12 w-auto mb-1" 
                         />
                         <p className="text-gray-600 text-xs">
                             &copy; 2026 ML SPORT Technologies OÜ. All rights reserved.
