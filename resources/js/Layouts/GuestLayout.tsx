@@ -11,8 +11,8 @@ export default function Guest({ children }: PropsWithChildren) {
                 <div className="absolute -bottom-32 -right-16 w-96 h-96 bg-white/5 rounded-full"></div>
                 <div className="absolute top-1/3 right-8 w-32 h-32 bg-white/5 rounded-full"></div>
 
-                <Link href="/" className="relative flex items-center">
-                    <img src={mlSportsLogo} alt="ML Sports" className="h-16 w-auto object-contain brightness-0 invert" />
+                <Link href="/" className="relative flex items-center bg-white rounded-xl px-4 py-2 shadow-sm w-fit">
+                    <img src={mlSportsLogo} alt="ML Sports" className="h-14 w-auto object-contain" />
                 </Link>
 
                 <div className="relative">

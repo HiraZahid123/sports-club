@@ -1,7 +1,7 @@
 {
   "node_modules/laravel-vite-plugin/inertia-helpers/index.js": [],
   "resources/js/Components/Checkbox.tsx": [
-    "/build/assets/Login-D45VC3gJ.js"
+    "/build/assets/Login-2grt27e4.js"
   ],
   "resources/js/Components/DangerButton.tsx": [
     "/build/assets/DeleteUserForm-C-yoJcrw.js"
@@ -40,7 +40,7 @@
     "/build/assets/AuthenticatedLayout-p-OsO1Gw.js"
   ],
   "resources/js/Layouts/GuestLayout.tsx": [
-    "/build/assets/GuestLayout-ml9-Gpto.js",
+    "/build/assets/GuestLayout-p8vobAaI.js",
     "/build/assets/ml-sports-transparent-C0uhSQAf.png"
   ],
   "resources/js/Pages/Athlete/Billing/Index.tsx": [
@@ -56,16 +56,16 @@
     "/build/assets/Schedule-C7x_G43j.js"
   ],
   "resources/js/Pages/Auth/ConfirmPassword.tsx": [
-    "/build/assets/ConfirmPassword-oTYiQDUy.js"
+    "/build/assets/ConfirmPassword-DsC4ALSk.js"
   ],
   "resources/js/Pages/Auth/ForgotPassword.tsx": [
-    "/build/assets/ForgotPassword-BDagCb1C.js"
+    "/build/assets/ForgotPassword-DjGpWsja.js"
   ],
   "resources/js/Pages/Auth/Login.tsx": [
-    "/build/assets/Login-D45VC3gJ.js"
+    "/build/assets/Login-2grt27e4.js"
   ],
   "resources/js/Pages/Auth/Register.tsx": [
-    "/build/assets/Register-DLWJn4OR.js"
+    "/build/assets/Register-D_nlbMun.js"
   ],
   "resources/js/Pages/Auth/RegisterChoice.tsx": [
     "/build/assets/RegisterChoice-BYGqcDYx.js"
@@ -80,10 +80,10 @@
     "/build/assets/RegisterJoin-DdrK0yDG.js"
   ],
   "resources/js/Pages/Auth/ResetPassword.tsx": [
-    "/build/assets/ResetPassword-DHAAslcN.js"
+    "/build/assets/ResetPassword-Dy1RQTP3.js"
   ],
   "resources/js/Pages/Auth/VerifyEmail.tsx": [
-    "/build/assets/VerifyEmail-DOQfpAzQ.js"
+    "/build/assets/VerifyEmail-w4hZW04k.js"
   ],
   "resources/js/Pages/Coach/Dashboard.tsx": [
     "/build/assets/Dashboard-DXCeVCWe.js"
@@ -184,7 +184,7 @@
     "/build/assets/ml-sports-original-Duj__58q.png"
   ],
   "resources/js/ml-sports-transparent.png": [
-    "/build/assets/GuestLayout-ml9-Gpto.js",
+    "/build/assets/GuestLayout-p8vobAaI.js",
     "/build/assets/ml-sports-transparent-C0uhSQAf.png"
   ],
   "resources/js/ml-sports.png": [
