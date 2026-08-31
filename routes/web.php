@@ -72,16 +72,62 @@ Route::middleware(['auth', 'verified', 'role:Manager|Super Admin'])->prefix('man
             ->where('status', 'paid')
             ->sum('amount');
 
+        $totalMembers = \App\Models\User::where('club_id', $clubId)
+            ->whereHas('roles', function ($q) {
+                $q->where('name', 'Athlete');
+            })->count();
+        $activeGroups = \App\Models\TrainingGroup::where('club_id', $clubId)->count();
+        $monthlyNetRevenue = $monthlyRevenue - $monthlyPayouts;
+        $overdueCount = \App\Models\Subscription::where('club_id', $clubId)->where('status', 'overdue')->count();
+
+        // ── Month-over-month comparisons (for the dashboard trend badges) ──
+        $startOfMonth = now()->startOfMonth();
+        $startOfLastMonth = now()->copy()->subMonthNoOverflow()->startOfMonth();
+        $endOfLastMonth = $startOfMonth->copy()->subSecond();
+
+        $totalMembersLastMonth = \App\Models\User::where('club_id', $clubId)
+            ->whereHas('roles', function ($q) {
+                $q->where('name', 'Athlete');
+            })->where('created_at', '<', $startOfMonth)->count();
+
+        $activeGroupsLastMonth = \App\Models\TrainingGroup::where('club_id', $clubId)
+            ->where('created_at', '<', $startOfMonth)->count();
+
+        $lastMonthRevenue = \App\Models\Payment::whereHas('subscription', function($q) use ($clubId) {
+            $q->where('club_id', $clubId);
+        })->whereBetween('payment_date', [$startOfLastMonth, $endOfLastMonth])->sum('amount');
+
+        $lastMonthPayouts = \App\Models\CoachPayout::where('club_id', $clubId)
+            ->whereBetween('payout_date', [$startOfLastMonth, $endOfLastMonth])
+            ->where('status', 'paid')
+            ->sum('amount');
+
+        $lastMonthNetRevenue = $lastMonthRevenue - $lastMonthPayouts;
+
+        // Overdue subscriptions already flagged before this month began ("carried over")
+        $overdueCarriedOver = \App\Models\Subscription::where('club_id', $clubId)
+            ->where('status', 'overdue')
+            ->where('updated_at', '<', $startOfMonth)
+            ->count();
+
+        $pctChange = function ($current, $previous) {
+            if ($previous == 0) {
+                return $current > 0 ? 100 : 0;
+            }
+            return (int) round((($current - $previous) / abs($previous)) * 100);
+        };
+
         $stats = [
-            'totalMembers' => \App\Models\User::where('club_id', $clubId)
-                ->whereHas('roles', function ($q) {
-                    $q->where('name', 'Athlete');
-                })->count(),
-            'activeGroups' => \App\Models\TrainingGroup::where('club_id', $clubId)->count(),
+            'totalMembers' => $totalMembers,
+            'activeGroups' => $activeGroups,
             'monthlyRevenue' => $monthlyRevenue,
             'monthlyPayouts' => $monthlyPayouts,
-            'monthlyNetRevenue' => $monthlyRevenue - $monthlyPayouts,
-            'overdueCount' => \App\Models\Subscription::where('club_id', $clubId)->where('status', 'overdue')->count(),
+            'monthlyNetRevenue' => $monthlyNetRevenue,
+            'overdueCount' => $overdueCount,
+            'totalMembersChange' => $pctChange($totalMembers, $totalMembersLastMonth),
+            'activeGroupsChange' => $activeGroups - $activeGroupsLastMonth,
+            'monthlyNetRevenueChange' => $pctChange($monthlyNetRevenue, $lastMonthNetRevenue),
+            'overdueChange' => $overdueCount - $overdueCarriedOver,
         ];
 
         // Dynamic recent activity

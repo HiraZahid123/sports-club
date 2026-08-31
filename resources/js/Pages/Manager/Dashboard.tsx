@@ -2,7 +2,18 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 import UserAvatar from '@/Components/UserAvatar';
 
+// Formats a signed value with an explicit "+" for positive/zero and a "%" suffix when requested.
+function formatChange(value: number, isPercent: boolean): string {
+    const sign = value > 0 ? '+' : value < 0 ? '−' : '+';
+    return `${sign}${Math.abs(value)}${isPercent ? '%' : ''}`;
+}
+
 export default function ManagerDashboard({ stats, recentActivity = [], leaderboard = [] }: { stats: any; recentActivity?: any[]; leaderboard?: any[] }) {
+    const totalMembersChange = Number(stats.totalMembersChange ?? 0);
+    const activeGroupsChange = Number(stats.activeGroupsChange ?? 0);
+    const monthlyNetRevenueChange = Number(stats.monthlyNetRevenueChange ?? 0);
+    const overdueChange = Number(stats.overdueChange ?? 0);
+
     const statCards = [
         {
             name: 'Total Athletes',
@@ -13,8 +24,9 @@ export default function ManagerDashboard({ stats, recentActivity = [], leaderboa
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
             ),
-            change: '+12%',
-            changeType: 'increase' as const,
+            // More athletes than last month is good news, so growth (>=0) reads as "increase".
+            change: formatChange(totalMembersChange, true),
+            changeType: totalMembersChange >= 0 ? 'increase' as const : 'decrease' as const,
             iconBg: 'bg-blue-50 text-blue-600',
             accent: 'border-blue-500',
             valueCls: 'text-blue-600',
@@ -28,8 +40,8 @@ export default function ManagerDashboard({ stats, recentActivity = [], leaderboa
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                 </svg>
             ),
-            change: '+2',
-            changeType: 'increase' as const,
+            change: formatChange(activeGroupsChange, false),
+            changeType: activeGroupsChange >= 0 ? 'increase' as const : 'decrease' as const,
             iconBg: 'bg-indigo-50 text-indigo-600',
             accent: 'border-indigo-500',
             valueCls: 'text-indigo-600',
@@ -44,8 +56,8 @@ export default function ManagerDashboard({ stats, recentActivity = [], leaderboa
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
             ),
-            change: '+18%',
-            changeType: 'increase' as const,
+            change: formatChange(monthlyNetRevenueChange, true),
+            changeType: monthlyNetRevenueChange >= 0 ? 'increase' as const : 'decrease' as const,
             iconBg: 'bg-emerald-50 text-emerald-600',
             accent: 'border-emerald-500',
             valueCls: 'text-emerald-600',
@@ -59,8 +71,9 @@ export default function ManagerDashboard({ stats, recentActivity = [], leaderboa
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
             ),
-            change: '-5',
-            changeType: 'decrease' as const,
+            // Fewer unpaid dues than last month is good news, so a drop (<=0) reads as "increase" (green).
+            change: formatChange(overdueChange, false),
+            changeType: overdueChange <= 0 ? 'increase' as const : 'decrease' as const,
             iconBg: 'bg-amber-50 text-amber-600',
             accent: 'border-amber-500',
             valueCls: 'text-amber-600',
