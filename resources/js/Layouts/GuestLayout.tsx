@@ -1,6 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { PropsWithChildren } from 'react';
-import mlSportsLogo from '../ml-sports.png';
+import mlSportsLogo from '../ml-sports-transparent.png';
 
 export default function Guest({ children }: PropsWithChildren) {
     return (
@@ -41,7 +41,7 @@ export default function Guest({ children }: PropsWithChildren) {
                     </div>
                 </div>
 
-                <p className="relative text-indigo-400 text-xs">&copy; 2026 SportClub Advanced. All rights reserved.</p>
+                <p className="relative text-indigo-400 text-xs">&copy; 2026 ML Sports Technologies. All rights reserved.</p>
             </div>
 
             {/* Form Panel */}

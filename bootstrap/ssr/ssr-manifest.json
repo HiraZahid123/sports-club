@@ -1,7 +1,7 @@
 {
   "node_modules/laravel-vite-plugin/inertia-helpers/index.js": [],
   "resources/js/Components/Checkbox.tsx": [
-    "/build/assets/Login-CHIAr0NT.js"
+    "/build/assets/Login-D45VC3gJ.js"
   ],
   "resources/js/Components/DangerButton.tsx": [
     "/build/assets/DeleteUserForm-C-yoJcrw.js"
@@ -40,7 +40,8 @@
     "/build/assets/AuthenticatedLayout-p-OsO1Gw.js"
   ],
   "resources/js/Layouts/GuestLayout.tsx": [
-    "/build/assets/GuestLayout-DJFTL4ox.js"
+    "/build/assets/GuestLayout-ml9-Gpto.js",
+    "/build/assets/ml-sports-transparent-C0uhSQAf.png"
   ],
   "resources/js/Pages/Athlete/Billing/Index.tsx": [
     "/build/assets/Index-QRooKcGr.js"
@@ -55,16 +56,16 @@
     "/build/assets/Schedule-C7x_G43j.js"
   ],
   "resources/js/Pages/Auth/ConfirmPassword.tsx": [
-    "/build/assets/ConfirmPassword-DzMOa5kS.js"
+    "/build/assets/ConfirmPassword-oTYiQDUy.js"
   ],
   "resources/js/Pages/Auth/ForgotPassword.tsx": [
-    "/build/assets/ForgotPassword-Cs0VE8u2.js"
+    "/build/assets/ForgotPassword-BDagCb1C.js"
   ],
   "resources/js/Pages/Auth/Login.tsx": [
-    "/build/assets/Login-CHIAr0NT.js"
+    "/build/assets/Login-D45VC3gJ.js"
   ],
   "resources/js/Pages/Auth/Register.tsx": [
-    "/build/assets/Register-C0LLoWhk.js"
+    "/build/assets/Register-DLWJn4OR.js"
   ],
   "resources/js/Pages/Auth/RegisterChoice.tsx": [
     "/build/assets/RegisterChoice-BYGqcDYx.js"
@@ -79,10 +80,10 @@
     "/build/assets/RegisterJoin-DdrK0yDG.js"
   ],
   "resources/js/Pages/Auth/ResetPassword.tsx": [
-    "/build/assets/ResetPassword-DbcJZ7Ww.js"
+    "/build/assets/ResetPassword-DHAAslcN.js"
   ],
   "resources/js/Pages/Auth/VerifyEmail.tsx": [
-    "/build/assets/VerifyEmail-XbKWvM00.js"
+    "/build/assets/VerifyEmail-DOQfpAzQ.js"
   ],
   "resources/js/Pages/Coach/Dashboard.tsx": [
     "/build/assets/Dashboard-DXCeVCWe.js"
@@ -181,6 +182,10 @@
   "resources/js/ml-sports-original.png": [
     "/build/assets/Welcome-u5BboqMW.js",
     "/build/assets/ml-sports-original-Duj__58q.png"
+  ],
+  "resources/js/ml-sports-transparent.png": [
+    "/build/assets/GuestLayout-ml9-Gpto.js",
+    "/build/assets/ml-sports-transparent-C0uhSQAf.png"
   ],
   "resources/js/ml-sports.png": [
     "/build/assets/ml-sports-BsguC5B3.js",
